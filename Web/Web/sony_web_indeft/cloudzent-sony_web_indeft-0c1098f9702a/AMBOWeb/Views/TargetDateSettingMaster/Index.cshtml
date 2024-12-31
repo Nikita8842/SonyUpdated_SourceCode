@@ -1,0 +1,83 @@
+﻿@model AMBOModels.MasterMaintenance.TargetDateSettingMaster
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script type="text/javascript" src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+
+
+
+            var dt = $("#dtTargetDate").DataTable({
+                serverSide: true,
+                processing: true,
+                scrollY: "330px",
+                ajax: {
+                    url: "@Url.Action("TargetDateSettingGrid", "Grid")",
+                    type: 'POST'
+                },
+
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "BranchName" },
+                    { data: "TargetDate" },
+
+                    //{
+                    //    data: function (data, type, row) {
+                    //        return '<a class="btnEdit"><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;';
+                    //    },
+                    //    orderable: false
+                    //}
+                ],
+
+                //fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            //$("#txtTargetDate").datepicker(options);
+
+            $("#btnEdit").click(function () {
+            $(location).attr("href", "@Url.Action("AddUpdateTargetUpdateDate", "TargetDateSettingMaster")");
+
+        });
+
+
+        });
+    </script>
+}
+
+
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Target Date Setting Master</a></li>
+                <li class="pull-right"><button id="btnEdit" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-edit"></i> Edit</button></li>
+                @*<li class="pull-right"><button style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtTargetDate" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>Target Date</th>
+                                @*<th>Quick Actions</th>*@
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

@@ -1,0 +1,183 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            //Grid initialization
+            dtFeedback = $('#dtFeedback').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [[0,'asc']],
+                ajax: {
+                    url: "@Url.Action("FeedbackMasterGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "FormName" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row, meta) {
+                            return '<a class="btnView text-primary" ><span data-toggle="tooltip" data-placement="left" title="View"><i class="fa fa-lg fa-eye"></i></span></a>'
+                                + '&emsp;<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"])
+                        $('td', row).eq(1).html('<span class="badge bg-green">Active</span>');
+                    else
+                        $('td', row).eq(1).html('<span class="badge bg-red">InActive</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr('href', '@Url.Action("CreateForm", "Feedback")');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtFeedback.row($(this).parent().parent()).data();
+                $('#txtFormId').val(data.FormId);
+                $('#displayFormName').html('Feedback Form: ' + data.FormName);
+                $('#modalDelete').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnView', function () {
+                var data = dtFeedback.row($(this).parent().parent()).data();
+                var form = document.createElement("form");
+                var element = document.createElement("input");
+                form.method = "POST";
+                form.action = '@Url.Action("ViewFeedbackFormDesign", "Feedback")';
+                element.value = data.FormId;
+                element.name = "FormId";
+                form.appendChild(element);
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            //Delete button click
+            $('body').on('click', '#btnDelete', function () {
+                var data = new Object();
+                data.FormId = $('#txtFormId').val();
+                if (data.FormId == null || data.FormId == undefined || data.FormId == 0 || data.FormId == '')
+                    common.notify('error','Could not initiate deletion of this record. Please contact your administrator.');
+                else
+                {
+                    common.ajax_post('@Url.Action("DeleteForm","Feedback")',data,'#DeleteLoad',
+                        //success
+                        function(output){
+                            if(output.MessageCode == MessageCodes.Acceptable.Accepted)
+                            {
+                                common.notify('success',output.Message);
+                                $('#modalDelete').modal('toggle');
+                                dtFeedback.ajax.reload();
+                            }
+                            else
+                                common.notify('error',output.Message);
+                        },
+                        //error
+                        function (output) {
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error','Could not delete this record. Please contact your administrator.');
+                        });
+                }
+            });
+
+            @*$("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcel", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.PerPiece) },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });*@
+        });
+    </script>
+}
+
+@section PageModals
+{
+    <!-- #region Delete form -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                @Html.CustomModalHeader("fa-trash", "Delete an existing Feedback Form")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtFormId", "FormId")
+                    <strong><span id="displayFormName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-pencil"></i> Feedback Forms</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtFeedback" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Form Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

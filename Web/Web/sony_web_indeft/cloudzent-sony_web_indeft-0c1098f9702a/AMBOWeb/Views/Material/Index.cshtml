@@ -1,0 +1,590 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+    .twitter-typeahead,.twitter-typeahead > input{
+    width:100%;
+    display: inherit;
+    }
+    
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/typeahead.js-master/dist/typeahead.bundle.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+
+<script type="text/javascript">
+    function reloadJS()
+    {
+        location.reload();
+    }
+    function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+</script>
+    <script>
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtMaterial')) {
+                $('#dtMaterial').DataTable().destroy();
+                $('#dtMaterial tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtMaterial').DataTable({
+                serverSide: true,
+                processing: true,
+                searching: false,
+                scrollX: "true",
+                scrollY: true,
+                fixedColumns: {
+                    leftColumns: 3
+                },
+                ajax: {
+                    url: "@Url.Action("MaterialMasterGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.MaterialIds = $('#ddlMaterial').val();
+                        d.ProductCatIds = $('#ddlProCat').val();
+                        d.SubProCatIds = $('#ddlSubPro').val();
+                        d.Status = $('#ddlStatus').val();
+                    }
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "Id", "visible": false },
+                    { data: "MaterialCode" },
+                    { data: "Name" },
+                    { data: "Description" },
+                    //{ data: "Division" },
+                    { data: "ProductCategory" },
+                    { data: "ProductSubCategory" },
+                    { data: "MOP" },
+                    { data: "ActiveStatus" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a data-toggle="tooltip" data-placement="right" title="Edit" class="edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a data-toggle="tooltip" data-placement="right" title="Delete" class="delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["ActiveStatus"] == "Active")
+                        $('td', row).eq(6).html('<span class="badge bg-green">' + data["ActiveStatus"] + '</span>');
+                    else
+                        $('td', row).eq(6).html('<span class="badge bg-red">' + data["ActiveStatus"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+        //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetMaterialDataforDD", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+
+                    $("#ddlMaterial").append($("<option></option>").val("").html("---All Materials---"));
+                    $(result).each(function () {
+                        $("#ddlMaterial").append($("<option></option>").val(this.ID).html(this.Name));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlMaterial").html("");
+                    $("#ddlMaterial").append($('<option></option>').val(0).html("---All Materials---"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetProductCategories", "Common")",
+                type: "GET",
+
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlProCat").append($("<option></option>").val("").html("---All Products---"));
+                    $(result).each(function () {
+                        $("#ddlProCat").append($("<option></option>").val(this.ID).html(this.CategoryName));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlProCat").html("");
+                    $("#ddlProCat").append($('<option></option>').val(0).html("---All Products---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetProductSubCategoryByCategoryId", "Common")",
+                type: "POST",
+                data: {CategoryId : 0 },
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSubPro").append($("<option></option>").val(0).html("---All Sub Categories---"));
+                    $(result).each(function () {
+                        $("#ddlSubPro").append($("<option></option>").val(this.ID).html(this.SubCategoryName));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSubPro").html("");
+                    $("#ddlSubPro").append($('<option></option>').val(0).html("---All Sub Categories---"));
+
+                }
+            });
+
+
+            $('#ddlMaterial').select2({ placeholder: "---All Materials---" });
+            $('#ddlProCat').select2({ placeholder: "---All Products---" });
+            $('#ddlSubPro').select2({ placeholder: "---All Sub Categories---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            $('#modalAddNew').on('shown.bs.modal', function () {
+
+                var data;
+
+                $.ajax({
+                    url: '@Url.Action("GetMaterialCodeList", "Material")',
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (result) {
+                        debugger;
+                        if(result!=null)
+                        {
+                            data = result;
+                            $("#txtMaterialCode").focus();
+
+                            var substringMatcher = function (strs) {
+                                debugger;
+                                return function findMatches(q, cb) {
+                                    var matches, substringRegex;
+
+                                    // an array that will be populated with substring matches
+                                    matches = [];
+
+                                    // regex used to determine if a string contains the substring `q`
+                                    substrRegex = new RegExp(q, 'i');
+
+                                    // iterate through the pool of strings and for any string that
+                                    // contains the substring `q`, add it to the `matches` array
+                                    $.each(strs, function (i, str) {
+                                        if (substrRegex.test(str)) {
+                                            matches.push(str);
+                                        }
+                                    });
+
+                                    cb(matches);
+                                };
+                            };
+
+                            $('.typeahead').typeahead({
+                                hint: true,
+                                highlight: true,
+                                minLength: 1
+                            },
+                            {
+                                //name: 'data',
+                                //displayKey: 'value',
+                                source: substringMatcher(data)
+                            });
+                            $('.tt-input').css("width:100%");
+                            $('.tt-hint').css("width:100%");
+                            //$('#txtMaterialCode').removeClass('typeahead');
+                            //$('.tt-input').css("position", "absolute");
+                            $('.tt-input').css("vertical-align", "");
+                            $('.tt-input').addClass('form-control');
+                            $('.tt-hint').css("vertical-align", "");
+                            $('.twitter-typeahead').css("display", "inherit");
+                            $('.tt-hint').addClass('form-control');
+
+                            //var div = document.getElementsByClassName("twitter-typeahead");
+                            //var pList = div.getElementsByTagName("span");
+
+                            //for(var i=0; i<pList.length; i++) {
+                            //    if(pList[i] != div.children[0]) {
+                            //        pList[i].style.display = "none";
+                            //    }
+                            //}
+                        }
+                    },
+                    error: function (data) {
+                        if (data.statusCode == 401 || data.status == 401) {
+                            var response = $.parseJSON(data.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Error while loading material code.')
+                    }
+                });
+
+            });
+
+            $('#modalAddNew').on('hidden.bs.modal', function () {
+                reloadJS();
+                $('#txtMaterialCode').val('');
+                $('#hdnMaterialId').val('');
+            });
+
+            $('#divDelete').on('hidden.bs.modal', function () {
+                $('#hdnMaterialId').val('');
+            });
+
+
+            $('body').on('click', ".edit", function () {
+                var data = dt.row($(this).parent().parent()).data();
+                var materialId = data.Id;
+                @*var url = "@System.Configuration.ConfigurationManager.AppSettings["URLInitial"].ToString()/Material/AddUpdateMaterial?MaterialId=" + materialId + "&Operation=Update";
+                window.location.href = url;*@
+
+                $(location).attr("href", "@Url.Action("AddUpdateMaterial", "Material")" + "?MaterialId=" + materialId + "&Operation=Update");
+            });
+
+
+            $('body').on('click', '.delete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                debugger;
+                $('#divDelete').modal('toggle');
+                $('#hdnMaterialId').val(data.Id);
+                $('#displayMaterialName').html(data.Name);
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.MaterialIds = $('#ddlMaterial').val();
+                modeldata.ProductCatIds = $('#ddlProCat').val();
+                modeldata.SubProCatIds = $('#ddlSubPro').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelMaterial", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Material),InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+        });
+
+        function Delete() {
+            debugger;
+            var MaterialId = $("#hdnMaterialId").val();
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteMaterial", "Material")',
+                data: { MaterialId: MaterialId },
+                success: function (data) {
+
+                    $("#divDelete").modal("toggle");
+                    common.notify('success', data.Message);
+                    dt.ajax.reload();
+                    //if (data.ErrorCode == 1)
+                    //    location.reload();
+                },
+                error: function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', data.Message);
+                }
+            });
+        }
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function ValidateMaterialCode() {
+            debugger;
+            if ($('#txtMaterialCode').val() == '' || $('#txtMaterialCode').val() == null || $('#txtMaterialCode').val() == undefined) {
+                common.notify('error', 'Please Enter Material Code');
+                $("#txtMaterialCode").focus();
+                return false
+            }
+            else if ($('#txtMaterialCode').val().length < 8) {
+                common.notify('error', 'Please Enter 8 digit Code')
+                $("#txtMaterialCode").focus();
+                return false
+            }
+            else {
+                var MaterialCode = $('#txtMaterialCode').val();
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ValidateMaterialCode", "Common")',
+                    data: { materialCode: MaterialCode },
+                    success: function (data) {
+
+                        if (data.ErrorCode == 1) {
+                            $(location).attr("href", "@Url.Action("AddUpdateMaterial", "Material")" + "?MaterialCode=" + MaterialCode)
+                        }
+                        else {
+                            common.notify('error', data.ErrorMessage);
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        //alert("OOPS! Something happened. Please try again.");
+                    }
+                });
+
+            }
+
+        }
+
+        function ClearMaterialCode() {
+
+            $('#txtMaterialCode').val('');
+            $("#txtMaterialCode").focus();
+            return false
+        }
+    </script>
+}
+@section PageModals
+{
+    <div class="modal fade" id="modalAddNew">
+        <div class="modal-dialog" style="margin-top:90px !important;">
+            <div class="modal-content">
+
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title"><i class="fa fa-search"> </i>  Search Material Code</h4>
+                </div>
+                <div class="modal-body" >
+                    <div class="form-group">
+                        
+                        @*<label class="control-label col-sm-4" for="txtMaterialName">Material Code</label>*@
+                        <div class="col-md-8">
+                            <div id="the-basics">
+                                <input type="text" class="typeahead form-control" id="txtMaterialCode" placeholder="Enter Material Code" onkeypress="return isNumberKey(event)" maxlength="8">
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary" id="btnSearch" onclick="return ValidateMaterialCode()"><i class="fa fa-search"></i> Search </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary" id="btnReset" onclick="return ClearMaterialCode()"><i class="fa fa-refresh"></i> Reset </button>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    @*<button type="button" class="btn btn-default pull-right" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>*@
+                    @*<button type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>*@
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+    <div class="modal fade" id="divDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmDelete">
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class='fa fa-trash'></i> Delete Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        @Html.Hidden("ID", "", new { id = "hdnMaterialId" })
+                        <strong><span id="displayMaterialName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Delete();"><i class="fa fa-check"></i>Yes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    
+                    <div class="col-lg-4">
+                        <label>Product Categories:</label>
+                        @Html.DropDownList("ddlProCat", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlProCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Sub Product:</label>
+                        @Html.DropDownList("ddlSubPro", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlSubPro", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Material:</label>
+                        @Html.DropDownList("ddlMaterial", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlMaterial", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                         new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Material Master</a></li>
+                <li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtMaterial" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Material Code</th>
+                                <th>Material Name</th>
+                                <th>Description</th>
+                                @*<th>Division</th>*@
+                                <th>Prod. Category</th>
+                                <th>Prod. Sub Category</th>
+                                <th>MOP</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

@@ -1,0 +1,354 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.UpdateRegionForm
+@section PageCSS{
+
+}
+
+@section PageJS{
+
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+    function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+        var dtRegionGrid;
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtRegion')) {
+                $('#dtRegion').DataTable().destroy();
+                $('#dtRegion tbody').empty();
+                //dt.destroy();
+            }            
+
+            //Grid initialization
+            dtRegionGrid = $('#dtRegion').DataTable({
+                searching: false,
+                processing: true,
+                order: [[ 1, "asc" ]],
+                ajax: {
+                    url: "@Url.Action("GetRegionGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.RegionIds = $('#ddlRegion').val();
+                        d.Status = $('#ddlStatus').val();                    
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "RegionName" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row) {
+                            debugger;
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Active")
+                        $('td', row).eq(1).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(1).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+            
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetRegion", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlRegion").append($("<option></option>").val(0).html("---All regions---"));
+                    $(result).each(function () {
+                        $("#ddlRegion").append($("<option></option>").val(this.ID).html(this.RegionName));
+                    });               
+                    
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlRegion").html("");
+                    $("#ddlRegion").append($('<option></option>').val(0).html("---All regions---"));
+                
+                }
+            });
+
+            $('#ddlRegion').select2({ placeholder: "---All regions---" });        
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function resetAddForm() {
+            $('#txtAddRegionName').val('');
+            $('#AddradioA, #AddradioI').iCheck('uncheck');
+            $("#AddRegionForm").validate().resetForm();
+            $("#AddRegionForm").find('.has-error').removeClass('has-error');
+            $("#AddRegionForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetUpdateForm() {
+            $('#txtUpdateRegionName').val('');
+            $('#txtUpdateRegionID').val('');
+            $('#UpdateradioA, #UpdateradioI').iCheck('uncheck');
+            $("#UpdateRegionForm").validate().resetForm();
+            $("#UpdateRegionForm").find('.has-error').removeClass('has-error');
+            $("#UpdateRegionForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetDeleteForm() {
+            $('#txtDeleteRegionID').val('');
+            $('#displayRegionName').html('');
+        }
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            //Modal popup hide/show events
+            $('#modalAdd').on('shown.bs.modal', function () {
+                $('#txtAddRegionName').focus();
+                $('#AddradioA').iCheck('check');
+            });
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+            $('#modalUpdate').on('shown.bs.modal', function () { $('#txtUpdateRegionName').focus(); });
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+            $('#modalDelete').on('hidden.bs.modal', function () { resetDeleteForm(); });
+            //Modal popup hide/show events till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtRegionGrid.row($(this).parent().parent()).data();
+                $('#txtUpdateRegionID').val(data.ID);
+                $('#txtUpdateRegionName').val(data.RegionName);
+                if (data.Status == 'Active')
+                    $('#UpdateradioA').iCheck('check');
+                else
+                    $('#UpdateradioI').iCheck('check');
+                $('#modalUpdate').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtRegionGrid.row($(this).parent().parent()).data();
+                if (data.Status == 'Active') {
+                    $('#txtDeleteRegionID').val(data.ID);
+                    $('#displayRegionName').html(data.RegionName);
+                    $('#modalDelete').modal('toggle');
+                }
+                else
+                    common.notify('error', 'Region: '+data.RegionName+' is already inactive.');
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.RegionIds = $('#ddlRegion').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelRegion", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Region), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+    </script>
+    <script type="text/javascript" src="~/Content/js/validations/region.js"></script>
+}
+
+@section PageModals
+{
+    <!-- #region Add form -->
+    <div class="modal fade" id="modalAdd">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddLoad">
+                @using (Html.BeginForm("Create", "Region", FormMethod.Post, new { @id = "AddRegionForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-plus", "Add a new region")
+                    <div class="modal-body">
+                        @Html.AmboTextboxFor(Model => Model.RegionName, "txtAddRegionName", "Region Name", "Enter Region Name Here...", "", InputTypes.AlphaNumericWithSpace)
+                        @*@Html.CustomTextBox("txtAddRegionName", "RegionName", "Region Name", "Enter Region Name here...", InputTypes.AlphaNumericWithSpace)*@
+                        @Html.Ambo2RadioButtonGroupFor(Model => Model.IsActive, "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                        @*@Html.Custom2RadioButtonGroup("IsActive", "Status","AddradioA","true","Active", "AddradioI", "false", "InActive")*@
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left btn-flat" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnSubmit" type="submit" onclick="reloadJS();" class="btn btn-primary btn-flat"><i class="fa fa-plus"></i> Add Region</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Add form -->
+
+    <!-- #region Update form -->
+    <div class="modal fade" id="modalUpdate">
+        <div class="modal-dialog">
+            <div class="modal-content" id="UpdateLoad">
+                @using (Html.BeginForm("Update", "Region", FormMethod.Post, new { @id = "UpdateRegionForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-pencil", "Update an existing region")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtUpdateRegionID", "ID")
+                        @Html.AmboTextboxFor(Model => Model.RegionName, "txtUpdateRegionName", "Region Name", "Enter Region Name Here...","", InputTypes.AlphaNumericWithSpace)
+                        @*@Html.CustomTextBox("txtUpdateRegionName", "RegionName", "Region Name", "Enter Region Name here...", InputTypes.AlphaNumericWithSpace)*@
+                        @Html.Ambo2RadioButtonGroupFor(Model => Model.IsActive, "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")
+                        @*@Html.Custom2RadioButtonGroup("IsActive", "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")*@
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left btn-flat" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnSubmit" type="submit" onclick="reloadJS();" class="btn btn-primary btn-flat"><i class="fa fa-pencil"></i> Update Region</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Update form -->
+
+    <!-- #region Delete form -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad" >
+                @using (Html.BeginForm("Delete", "Region", FormMethod.Post, new { @id = "DeleteRegionForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-trash", "Delete an existing region")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtDeleteRegionID", "ID")
+                       Are you sure you want to inactive the region <strong><span id="displayRegionName"></span></strong> ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left btn-flat" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnDelete" type="submit" onclick="reloadJS();" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Yes</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Region Master Filters</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Region:</label>
+                        @Html.DropDownList("ddlRegion", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlRegion", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                         new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                    <div class="col-lg-3 col-lg-offset-1">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> Region Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtRegion" class="table table-bordered table-striped datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Region Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

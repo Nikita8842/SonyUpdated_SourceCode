@@ -1,0 +1,59 @@
+﻿@model APIAccessLayer.Helper.Envelope<IEnumerable<AMBOModels.UserManagement.OfferedEmployeeGridData>>
+
+<div class="col-lg-12">
+    <div class="box box-solid box-primary">
+        <div class="box-body">
+            <div class="pull-right" style="display: inline-flex">
+                <button id="btnBackOffered" type="button" class="btn btn-primary btn-flat btnBackOffered"><i class="fa fa-arrow-left"></i> Back</button>
+            </div>
+            <table id="dtOfferedEmployee" class="table table-bordered table-striped datatable dtoffered " style="width:100%">
+                <thead>
+                    <tr>
+                        <th class="hidden">Id</th>
+                        <th>Login Id</th>
+                        <th>FirstName</th>
+                        <th>LastName</th>
+                        <th>Branch</th>
+                        <th>State</th>
+                        <th>City</th>
+                        <th>Role</th>
+                        <th>Agency</th>
+                        <th>Status</th>
+                        @if(Model.Data != null && Model.MessageCode == (int)APIAccessLayer.Helper.Acceptable.Found && Model.Data.FirstOrDefault().RoleName != "RDI")
+                        {
+                        <th data-orderable="false">Quick Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Data != null && Model.MessageCode == (int)APIAccessLayer.Helper.Acceptable.Found)
+                    {
+                        foreach (AMBOModels.UserManagement.OfferedEmployeeGridData row in Model.Data)
+                        {
+                            <tr>
+                                <td class="hidden">@row.Id</td>
+                                <td>@row.LoginId</td>
+                                <td>@row.FirstName</td>
+                                <td>@row.LastName</td>
+                                <td>@row.BranchName</td>
+                                <td>@row.StateName</td>
+                                <td>@row.CityName</td>
+                                <td>@row.Role</td>
+                                <td>@row.AgencyName</td>
+                    <td>@row.Status</td>
+                    @if(row.RoleName != "RDI")
+                    {
+                    <td>
+                        <a class="btnOfferedEdit"><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;
+                        
+                    </td>
+                    }
+                </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+

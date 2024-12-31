@@ -1,0 +1,505 @@
+﻿@model AMBOModels.Mappings.AssignTargetToSFAGet
+@using System.Data;
+
+@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section PageCSS{
+    <style>
+    .ui-datepicker-calendar {
+        display: none;
+    }
+</style>
+}
+
+
+
+<div class="row" id="targetfilter">
+
+    <div class="col-lg-12">
+        <div class="box box-solid">
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>Target Month : </label>
+                            @Html.TextBoxFor(m => m.TargetDate, new { @class = "form-control input-sm", @id = "txtMonth" }) 
+                            @Html.ValidationMessageFor(m => m.TargetDate, "", new { @Class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>Branch : </label>
+                            @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "txtBranch", @value=Model.BranchId })
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button id="btnShowData" class="btn btn-flat btn-primary"><i class="fa fa-list"> Show Data</i></button>
+                            @*<a href="@Url.Action("Show", "AssignTargetToSFA")" id="btnShowData" class="btn btn-flat btn-primary"><i class="fa fa-download"> Show Data</i></a>*@
+                        </div>
+                    </div>
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button id="btnDownloadData" class="btn btn-flat btn-success"><i class="fa fa-download"> Download Format</i></button>
+                        </div>
+                    </div>
+                    
+                    @*<div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <a href="@Url.Action("UploadData", "AssignTargetToSFA")" id="btnDownloadFormat" class="btn btn-flat btn-success"><i class="fa fa-upload"> Upload Data</i></a>
+                        </div>
+                    </div>*@
+                </div>
+                <div class="row">
+
+                    @*@Html.HiddenFor(m => m.AssignTargetToSFAUpload.TargetDate, new {@id = "txttargetdateupload" });*@
+                    
+                    <div class="col-lg-5 text-center">
+                        <br />
+                        <div class="form-group">
+                            @*<label>Select File For Upload</label>*@
+                            <input type="file" id="fileUpload" name="file" class="form-control input-sm" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 text-center">
+                        <br />
+                        
+                        <div class="form-group"> 
+                            <button type="submit" id="btnUpload" class="btn btn-flat btn-primary"><i class="fa fa-upload"> Upload</i></button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="row" id="gridrow">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Data</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtTargetToSFA" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                @*<th>Id</th>*@
+                                <th>Branch</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>Dealer Code</th>
+                                <th>Master Code</th>
+                                <th>Dealer Name</th>
+                                <th>SFA Category</th>
+                                <th>Incentive Cat</th>
+                                <th>Target Cat</th>
+                                <th>Product Category</th>
+                                <th>Qty Target</th>
+                                <th>Value Target</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridrowoutput">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Data</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtTargetToSFAOutput" class="table table-bordered nowrap table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>Dealer Code</th>
+                                <th>Master Code</th>
+                                <th>Dealer Name</th>
+                                <th>SFA Category</th>
+                                <th>Incentive Cat</th>
+                                <th>Target Cat</th>
+                                <th>Product Category</th>
+                                <th>Qty Target</th>
+                                <th>Value Target</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @*@if (Model != null)
+                            {
+                                foreach (DataRow row in Model.AssignTargetToSFAUpload.dtAsset.Rows)
+                                {
+                                    <tr>
+                                        @foreach (DataColumn col in Model.AssignTargetToSFAUpload.dtAsset.Columns)
+                                        {
+                                            <td>@row[col.ColumnName]</td>
+                                        }
+                                    </tr>
+                                }
+                            }*@
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+
+@Html.Hidden("Status", (string)ViewBag.Status, new { id = "Status", @name = "result" })
+@Html.Hidden("Message", (string)ViewBag.Message, new { id = "Message" })
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            debugger;
+            var currentDate = new Date();
+            var currentDay = currentDate.getDate();
+           
+            
+     
+            
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#txtBranch").append($("<option></option>").val("0").html("Select branch"));
+                    $(result).each(function () {
+                        $("#txtBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+
+                    @if( Model != null && Model.BranchId != 0)
+                    {
+                        <text>
+                            $("#txtBranch").val(@Model.BranchId);
+                        </text>
+                    }
+                },
+                error: function (data) {
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', "Error occured while loading branch.")
+                }
+            });
+
+            $("#txtBranch").select2();
+
+            if ($('#Message').val() != null && $('#Message').val() != "") {
+                if ($('#Status').val() == '302') {
+                    common.notify('success', $('#Message').val());
+                }
+                else if ($('#Status').val() == '404' || $('#Status').val() == '0') {
+                    common.notify('error', $('#Message').val());
+                }
+            }
+
+            var date = new Date();
+            var year = date.getFullYear(); //get year
+            var month = date.getMonth(); //get month
+
+            $('#txtMonth').datepicker({
+                startView: "months",
+                minViewMode: "months",
+                format: "myyyy",
+                autoclose: true,
+                startDate: new Date(year, month, '01'), //set it here
+                endDate: new Date(year + 1, month - 1, '31')
+            });
+
+            //if ($('#txtMonth').val() != null && $('#txtMonth').val() != 0 && $('#txtMonth').val() != undefined)
+            //{
+            //    debugger;
+            //    $('#txttargetdateupload').val() = $('#txtMonth').val();
+            //}
+
+            $("#btnDownloadData").click(function () {
+                if (Save()) {
+                    $(location).attr("href", "@Url.Action("Download", "AssignTargetToSFA")" + "?TargetDate=" + $("#txtMonth").val() + "&BranchId=" + $("#txtBranch").val());
+                }
+            });
+
+
+
+            $("#btnShowData").click(function () {
+                debugger;
+                if (Save()) {
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("Show", "AssignTargetToSFA")",
+                        data: { TargetDate: $("#txtMonth").val(), BranchId: $("#txtBranch").val() },
+                        //contentType: "application/json; charset=utf-8",
+                        //dataType: "json",
+                        beforeSend: function () {
+                            var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                            $("#gridrow").append(loader);
+                        },
+                        success: function (data) {
+                            if (data != null) {
+                                debugger;
+                                if ($.fn.dataTable.isDataTable('#dtTargetToSFA')) {
+                                    $('#dtTargetToSFA').DataTable().destroy();
+                                    $('#dtTargetToSFA tbody').empty();
+                                }
+                                $("#gridrowoutput").addClass("hidden");
+                                $("#gridrow").removeClass("hidden");
+                                dttargettosfadata = $('#dtTargetToSFA').DataTable({
+                                    scrollX: true,
+                                    scrollY: true,
+                                    data: data,
+                                    order: [[0, "asc"]],
+
+                                    columns: [
+                                               //{ data: "Id", "visible": false },
+                                               { data: "Branch" },
+                                               { data: "City" },
+                                               { data: "Location" },
+                                               { data: "SFACode" },
+                                               { data: "SFAName" },
+                                               { data: "DealerCode" },
+                                               { data: "MasterCode" },
+                                               { data: "DealerName" },
+                                               { data: "SFACategory" },
+                                               { data: "IncentiveCategory" },
+                                               { data: "TargetCategory" },
+                                               { data: "ProductCategory" },
+                                               { data: "QtyTarget" },
+                                               { data: "ValueTarget" },
+                                    ]
+
+                                });
+                            }
+                            else {
+                                $("#gridrowoutput").addClass("hidden");
+                                $("#gridrow").removeClass("hidden");
+                                if ($.fn.dataTable.isDataTable('#dtTargetToSFA')) {
+                                    $('#dtTargetToSFA').DataTable().destroy();
+                                    $('#dtTargetToSFA tbody').empty();
+                                }
+                                $('#dtTargetToSFA').DataTable({
+                                   // scrollX: true,
+                                    scrollY: true
+                                });
+                                common.notify('error', 'No data found');
+                            }
+
+                        },
+                        error: function (result) {
+                            debugger;
+                            if (result.statusCode == 401 || result.status == 401) {
+                                var response = $.parseJSON(result.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            $("#gridrowoutput").addClass("hidden");
+                            $("#gridrow").removeClass("hidden");
+                            if ($.fn.dataTable.isDataTable('#dtTargetToSFA')) {
+                                $('#dtTargetToSFA').DataTable().destroy();
+                                $('#dtTargetToSFA tbody').empty();
+                            }
+                            $('#dtTargetToSFA').DataTable({
+                                scrollX: true,
+                                scrollY: true
+                            });
+                            common.notify('error', 'No data found');
+                        },
+                        complete: function () {
+                            $("#gridrow").find('.overlay').remove();
+                        }
+                    });
+                }
+
+
+            });
+
+            $("#btnUpload").click(function () {
+                if (Savefile()) {
+                    debugger;
+                    var formData = new FormData();
+                    var file = document.getElementById("fileUpload").files[0];
+                    formData.append("TargetDate", $("#txtMonth").val());
+                    formData.append("file", file);
+
+                    //var modeldata = new Object();
+                    //modeldata.TargetDate = $("#txtMonth").val();
+                    //var data = new FormData();
+                    //data.append("file", $("#fileUpload").get(0).files[0]);
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UploadData", "AssignTargetToSFA")',
+                        data: formData,
+                        dataType: 'json',
+                        contentType: false,
+                        processData: false,
+                        beforeSend: function () {
+                            var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                            if ($("#gridrow").hasClass("hidden"))
+                                $("#gridrowoutput").append(loader);
+                            else
+                                $("#gridrow").append(loader);
+                        },
+                        success: function (response) {
+                            debugger;
+                            if (currentDay >= "10" && response.Data != null)
+                            {
+                                
+                                common.notify('error', "AssignTargetToSFA is uploaded in between First 10 Days of each Month");
+                            }
+                          else if (response.Data != null) {
+                                if ($.fn.dataTable.isDataTable('#dtTargetToSFAOutput')) {
+                                    $('#dtTargetToSFAOutput').DataTable().destroy();
+                                    $('#dtTargetToSFAOutput tbody').empty();
+                                }
+                                $("#gridrow").addClass("hidden");
+                                $("#gridrowoutput").removeClass("hidden");
+                                dtTargetToSFAOutput = $('#dtTargetToSFAOutput').DataTable({
+                                    "scrollX": true,
+                                    "scrollY": true,
+                                    data: response.Data,
+                                    order: [[0, "asc"]],
+
+                                    columns: [
+                                               //{ data: "Id", "visible": false },
+                                               { data: "Branch" },
+                                               { data: "City" },
+                                               { data: "Location" },
+                                               { data: "SFACode" },
+                                               { data: "SFAName" },
+                                               { data: "DealerCode" },
+                                               { data: "MasterCode" },
+                                               { data: "DealerName" },
+                                               { data: "SFACategory" },
+                                               { data: "IncentiveCategory" },
+                                               { data: "TargetCategory" },
+                                               { data: "ProductCategory" },
+                                               { data: "QtyTarget" },
+                                               { data: "ValueTarget" },
+                                               { data: "status" },
+                                               { data: "Reason" },
+                                    ]
+                                });
+                                common.notify('success', response.Message);
+
+                                
+                            }
+                            
+
+                            else {
+                                common.notify('error', response.Message);
+                            }
+                        },
+                        error: function (output) {
+                            debugger;
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message);
+                        },
+                        complete: function () {
+                            $("#gridrow").find('.overlay').remove();
+                            $("#gridrowoutput").find('.overlay').remove();
+                        }
+                    });
+                }
+            });
+
+            @if( Model != null && Model.BranchId != 0)
+            {
+                <text>
+
+                    $('#txtBranch').attr('readonly', 'readonly');
+                </text>
+            }
+
+        });
+
+        function Save() {
+            if ($("#txtMonth").val() == null || $("#txtMonth").val() == "") {
+                common.notify('error', "Please select Target Month");
+                return false;
+            }
+            return true
+        }
+
+        function Savefile() {
+            debugger;
+
+            if ($("#txtMonth").val() == null || $("#txtMonth").val() == "") {
+                common.notify('error',"Please select Target Month");
+                return false;
+            }
+
+            var fileval = $('#fileUpload').val();
+            if (fileval == '' || fileval == null) {
+                common.notify('error', "Please select an Excel file to upload data");
+                return false;
+            }
+
+            var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+            /*Checks whether the file is a valid excel file*/
+            if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                debugger;                
+                common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                return false;
+            }
+
+            //if ($('#txtBranch').val() == 0 || $("#txtBranch").val() == "") {
+            //    common.notify('error', "Please select Branch");
+            //    return false;
+            //}
+            return true;
+        }
+
+    </script>
+}

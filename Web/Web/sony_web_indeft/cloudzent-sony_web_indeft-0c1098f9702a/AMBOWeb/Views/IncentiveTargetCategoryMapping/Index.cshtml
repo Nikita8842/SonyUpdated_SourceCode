@@ -1,0 +1,125 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Mappings.IncentiveTargetCategoryMapping
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var dt = $('#dtIncentiveTargetCategoryMapping').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: "@Url.Action("IncentiveTargetCategoryMappingGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "IncentiveCategoryName" },
+                    { data: "StatusName" },
+                    {
+                        data: function (data, type, row) {
+
+                            return '<form action="@Url.Action("Update","IncentiveTargetCategoryMapping")" method="post">' +
+                                '<input type="hidden" name="IncentiveCatId" value="' + data.IncentiveCategoryId + '"/>' +
+                            '<a class="btnEdit" data-toggle="tooltip" data-placement="right" title="Edit">' +
+                                '<span><i class="fa fa-lg fa-pencil"></i></span></a>' +
+                            '</form>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["StatusName"] == "Active")
+                        $('td', row).eq(1).html('<span class="badge bg-green">' + data["StatusName"] + '</span>');
+                    else
+                        $('td', row).eq(1).html('<span class="badge bg-red">' + data["StatusName"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr("href", "@Url.Action("Create", "IncentiveTargetCategoryMapping")");
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                $(this).parent().submit();
+                @*var data = dt.row($(this).parent().parent()).data();
+                $(location).attr("href", "@Url.Action("Update", "IncentiveTargetCategoryMapping")" + "?IncentiveCatId=" + data.IncentiveCategoryId);*@
+            });
+
+            $("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelIncentiveCategory", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.IncentiveCategory), SearchVal : $("#dtIncentiveTargetCategoryMapping_filter > input").val() },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Incentive Target Category Mapping</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtIncentiveTargetCategoryMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Incentive Category Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E90F58A1-CD2D-4294-9CB1-7F78EB437579}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AMBOModels</RootNamespace>
+    <AssemblyName>AMBOModels</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ABSTRACT\DataTableAbstract.cs" />
+    <Compile Include="ABSTRACT\MasterAbstract.cs" />
+    <Compile Include="GlobalAccessible\GlobalCommon.cs" />
+    <Compile Include="Global\ErrorModel.cs" />
+    <Compile Include="IncentiveManagement\BaseIncentive.cs" />
+    <Compile Include="IncentiveManagement\DeviationApproval.cs" />
+    <Compile Include="IncentiveManagement\DeviationFinalUpload.cs" />
+    <Compile Include="IncentiveManagement\DeviationUploadByRDI.cs" />
+    <Compile Include="IncentiveManagement\FestivalIncentive.cs" />
+    <Compile Include="IncentiveManagement\PerPieceIncentive.cs" />
+    <Compile Include="Mappings\AssignTargetToSFA.cs" />
+    <Compile Include="Mappings\DealerClassificationMapping.cs" />
+    <Compile Include="Mappings\DealerSFAMapping.cs" />
+    <Compile Include="Mappings\EmployeeStructureMapping.cs" />
+    <Compile Include="Mappings\IncentiveCategorySFAMapping.cs" />
+    <Compile Include="Mappings\IncentiveTargetCategoryMapping.cs" />
+    <Compile Include="Mappings\ProdDefUnderTargetCat.cs" />
+    <Compile Include="Mappings\ProductCategorySFAMapping.cs" />
+    <Compile Include="Mappings\ReportQSRQuantity.cs" />
+    <Compile Include="Mappings\SalesPICOutletMapping.cs" />
+    <Compile Include="Mappings\UserBranchChannelPCMapping.cs" />
+    <Compile Include="MasterMaintenance\AssetMaster.cs" />
+    <Compile Include="MasterMaintenance\BroadcastMessageMaster.cs" />
+    <Compile Include="MasterMaintenance\ChannelMaster.cs" />
+    <Compile Include="MasterMaintenance\CityMaster.cs" />
+    <Compile Include="MasterMaintenance\ClassificationTypeMaster.cs" />
+    <Compile Include="MasterMaintenance\CompetitorMaster.cs" />
+    <Compile Include="MasterMaintenance\CompetitorModelMaster.cs" />
+    <Compile Include="MasterMaintenance\CompetitorProductMaster.cs" />
+    <Compile Include="MasterMaintenance\DivisionMaster.cs" />
+    <Compile Include="MasterMaintenance\FeedbackMaster.cs" />
+    <Compile Include="MasterMaintenance\GridOutput.cs" />
+    <Compile Include="MasterMaintenance\GridVariables.cs" />
+    <Compile Include="MasterMaintenance\IncentiveCalculationDateSetting.cs" />
+    <Compile Include="MasterMaintenance\LocationMaster.cs" />
+    <Compile Include="MasterMaintenance\MasterMaintenance.cs" />
+    <Compile Include="MasterMaintenance\MaterialMaster.cs" />
+    <Compile Include="MasterMaintenance\ModelGrid.cs" />
+    <Compile Include="MasterMaintenance\DealerMaster.cs" />
+    <Compile Include="MasterMaintenance\ProductCategoryGroupMaster.cs" />
+    <Compile Include="MasterMaintenance\ProductCategoryMaster.cs" />
+    <Compile Include="MasterMaintenance\ProductDefinitionUnderTargetCategory.cs" />
+    <Compile Include="MasterMaintenance\ProductSubCategoryMaster.cs" />
+    <Compile Include="MasterMaintenance\ProductTargetCategoryMaster.cs" />
+    <Compile Include="MasterMaintenance\RegionMaster.cs" />
+    <Compile Include="MasterMaintenance\RoleRightsMappingMaster.cs" />
+    <Compile Include="MasterMaintenance\SalaryMaster.cs" />
+    <Compile Include="MasterMaintenance\SFALevelMaster.cs" />
+    <Compile Include="MasterMaintenance\SFASubLevelMaster.cs" />
+    <Compile Include="MasterMaintenance\ShiftMaster.cs" />
+    <Compile Include="MasterMaintenance\StateMaster.cs" />
+    <Compile Include="MasterMaintenance\TargetDateSettingMaster.cs" />
+    <Compile Include="MasterMaintenance\TargetTypeMaster.cs" />
+    <Compile Include="MasterMaintenance\TrainingMaster.cs" />
+    <Compile Include="Modules\AssetAssignmentToRDI.cs" />
+    <Compile Include="Modules\AssetAssignmentToSFA.cs" />
+    <Compile Include="Modules\AssetCollectionFromSFA.cs" />
+    <Compile Include="Modules\DealerMasterCodeUpdate.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reports\ComboSalesReport.cs" />
+    <Compile Include="Reports\CompetitionSFACountReport.cs" />
+    <Compile Include="Reports\CompetitionDisplayReport.cs" />
+    <Compile Include="Reports\DailySalesReportIMEI.cs" />
+    <Compile Include="Reports\DailySalesWithAttributesReport.cs" />
+    <Compile Include="Reports\DailyTimingReport.cs" />
+    <Compile Include="Reports\DisplayReport.cs" />
+    <Compile Include="Reports\FestivalTargetvsAchievementReport.cs" />
+    <Compile Include="Reports\IncentiveReport.cs" />
+    <Compile Include="Reports\MessageReport.cs" />
+    <Compile Include="Reports\MonthlyAttendanceReport.cs" />
+    <Compile Include="Reports\ReportsGrid.cs" />
+    <Compile Include="Reports\StockReport.cs" />
+    <Compile Include="Reports\TargetVsAchievementReport.cs" />
+    <Compile Include="Reports\TrainingReport.cs" />
+    <Compile Include="UserManagement\SFAMasterforHR.cs" />
+    <Compile Include="UserManagement\UserManagement.cs" />
+    <Compile Include="UserValidation\BaseSession.cs" />
+    <Compile Include="UserValidation\UserValidationModel.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

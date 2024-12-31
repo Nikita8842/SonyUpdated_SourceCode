@@ -1,0 +1,305 @@
+﻿@using AMBOWeb.Classes;
+@model AMBOModels.Mappings.UserBranchChannelPCMapping
+
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            function init() {
+                try {
+                    $('#ddBranch').select2({ multiple: true, placeholder: 'Select Branches' });
+                    $('#ddDivision').select2({ multiple: true, placeholder: 'Select SFA Divisions' });
+                    $('#ddProdCat').select2({ multiple: true, placeholder: 'Select Categories' });
+                    $('#ddChannel').select2({ multiple: true, placeholder: 'Select Channels' });
+                    $('#ddRole').select2({ placeholder: 'Select Role' });
+                    $('#ddUser').select2({ placeholder: 'Select User' });
+                    $('#ddRole').focus();
+                }
+                catch (ex) {
+                    common.notify('error', 'Could not initialize form. Please try after some time.');
+                    console.log(ex);
+                }
+            }
+
+            function getDivisionsDD() {
+                common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabForm", function (divisions) {
+                    $("#ddDivision").html("");
+                    $.each(divisions, function (i, division) {
+                        $("#ddDivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                    });
+                    $('#ddDivision').val(null).change();
+                    @if(Model.DivisionIds != null)
+                    {
+                        @Html.Raw("$('#ddDivision').val([" + String.Join(",", Model.DivisionIds) + "]).change();")
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddDivision").html("");
+                });
+            }
+
+            function getBranchDD() {
+                common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabForm", function (branches) {
+                    $("#ddBranch").html("");
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    @if(Model.BranchIds != null)
+                    {
+                        @Html.Raw("$('#ddBranch').val([" + String.Join(",", Model.BranchIds) + "]).change();")
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                });
+            }
+
+            function getRolesDD() {
+                common.ajax_get("@Url.Action("GetRoles", "Common")", null, "#tabForm", function (roles) {
+                    $("#ddRole").html("");
+                    $.each(roles, function (i, role) {
+                        if (role.Name != 'SFA') {
+                            $("#ddRole").append($('<option></option>').val(role.RoleId).html(role.Name));
+                        }
+                    });
+                    $('#ddRole').val(null).change();
+                    @if(Model.RoleId != 0)
+                    {
+                        @Html.Raw("$('#ddRole').val(" + Model.RoleId +").change();")
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddRole").html("");
+                });
+            }
+
+            function getChannelsDD() {
+                common.ajax_get("@Url.Action("GetChannels", "Common")", null, "#tabForm", function (channels) {
+                    $("#ddChannel").html("");
+                    $.each(channels, function (i, channel) {
+                        $("#ddChannel").append($('<option></option>').val(channel.Id).html(channel.ChannelName));
+                    });
+                    $('#ddChannel').val(null).change();
+                    @if(Model.ChannelIds != null)
+                    {
+                        @Html.Raw("$('#ddChannel').val([" + String.Join(",", Model.ChannelIds) + "]).change();")
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddChannel").html("");
+                });
+            }
+
+            function getProdCatsDD() {
+                common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                    $("#ddProdCat").html("");
+                    $.each(categories, function (i, category) {
+                        $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                    });
+                    $('#ddProdCat').val(null).change();
+                    @if(Model.ProdCatIds != null)
+                    {
+                        @Html.Raw("$('#ddProdCat').val(["+ String.Join(",", Model.ProdCatIds) + "]).change();")
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddProdCat").html("");
+                });
+            }
+
+            $('#ddRole').on('change', function () {
+                if (!(this.value == null || this.value == undefined || this.value == 0))
+                {
+                    var url = '@Url.Action("GetAllActiveUsersByRole", "Common")';
+                    var data = new Object();
+                    data.roleId = this.value;
+                    common.ajax_post(url, data, "#tabForm", function (users) {
+                        $("#ddUser").html("");
+                        $.each(users, function (i, user) {
+                            $("#ddUser").append($('<option></option>').val(user.EmployeeId).html(user.UserFullName));
+                        });
+                        $('#ddUser').val(null).change();
+                        @if(Model.UserIdForMapping != 0)
+                        {
+                            @Html.Raw("$('#ddUser').val(" + Model.UserIdForMapping + ").change();")
+                        }
+                    }, function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddUser").html("");
+                    });
+                }
+                
+            });
+
+            $('#btnBack').on('click', function (e) {
+                $(location).attr('href', '@Url.Action("Index", "UserBranchChannelPCMapping")');
+            });
+
+            getRolesDD();
+            getDivisionsDD();
+            getBranchDD();
+            getChannelsDD();
+            getProdCatsDD();
+            init();
+
+            $('#ddUser').on('change', function () {
+                var UserId = $(this).val();
+                if (!(UserId == null || UserId == undefined || UserId == 0)) {
+                    $('#ddBranch').parent().parent().parent().removeClass('hidden');
+                    $('#ddChannel').parent().parent().parent().removeClass('hidden');
+                    $('#ddProdCat').parent().parent().parent().removeClass('hidden');
+                    $('#ddDivision').parent().parent().parent().removeClass('hidden');
+                    @if(!Model.isUpdate)
+                    {
+                        @Html.Raw("$('#ddProdCat > option').prop('selected', 'selected');")
+                        @Html.Raw("$('#ddProdCat').trigger('change');")
+                        @Html.Raw("$('#ddDivision > option').prop('selected', 'selected');")
+                        @Html.Raw("$('#ddDivision').trigger('change');")
+                    }
+                }
+            });
+
+            @if (IsPost && Model.SubmitMessage != null && Model.SubmitMessage != "")
+            {
+                @Html.Raw("common.notify('error','" + Model.SubmitMessage + "');")
+            }
+
+            @if(Model.isUpdate)
+            {
+               <text>
+            $('#ddRole').attr('readonly', 'readonly');
+            $('#ddUser').attr('readonly', 'readonly');
+        </text>
+            }
+        });
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model.isUpdate)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update existing Mapping")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new Mapping")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Manage", "UserBranchChannelPCMapping", FormMethod.Post, new { @id = "formUserBranchChannelPCMapping" }))
+                    {
+                        @Html.HiddenFor(m => m.isUpdate)
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="ddRole">Role</label>
+                                    @Html.DropDownListFor(m => m.RoleId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddRole", @style = "width:100%" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="ddUser">User</label>
+                                    @Html.DropDownListFor(m => m.UserIdForMapping, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddUser", @style = "width:100%" })
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row hidden">
+                                <div class="col-lg-12 col-md-12">
+                                    @Html.AmboDropdownMultipleFor(Model => Model.BranchIds, "ddBranch", "Branch:", "ddBranch")
+                                        @*@Html.DropDownListFor(m => m.BranchIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })*@
+                                </div>
+                            </div>
+
+                            <div class="row hidden">
+                                <div class="col-lg-12 col-md-12">
+                                    @Html.AmboDropdownMultipleFor(Model => Model.ChannelIds, "ddChannel", "Channel:", "ddChannel")
+                                        @*@Html.DropDownListFor(m => m.ChannelIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddChannel", @style = "width:100%" })*@
+                                </div>
+                            </div>
+
+                            <div class="row hidden">
+                                <div class="col-lg-12 col-md-12">
+                                    @Html.AmboDropdownMultipleFor(Model => Model.ProdCatIds, "ddProdCat", "Product Categories:", "ddProdCat")
+                                        @*@Html.DropDownListFor(m => m.ProdCatIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddProdCat", @style = "width:100%" })*@
+                                </div>
+                            </div>
+
+                            <div class="row hidden">
+                                <div class="col-lg-12 col-md-12">
+                                    @Html.AmboDropdownMultipleFor(Model => Model.DivisionIds, "ddDivision", "SFA Divisions:", "ddDivision")
+                                        @*@Html.DropDownListFor(m => m.DivisionIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddDivision", @style = "width:100%" })*@
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                        <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

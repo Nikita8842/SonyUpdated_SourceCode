@@ -1,0 +1,88 @@
+﻿@model AMBOModels.MasterMaintenance.IncentiveCalculationDateSetting
+
+
+@section PageCSS{
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @Html.Raw("<i class=\"fa fa-pencil\"></i> Set Incentive Calculation Date")
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("UpdateIncentiveCalculationDate", "IncentiveCalculationDateSetting", FormMethod.Post, new { id = "formTargetDateSetting" }))
+                    {
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label ">Month <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Month)</span>
+                                    @Html.TextBoxFor(m => m.Month, new { Id = "txtMonth", @class = "form-control input-sm", autocomplete = "off" })
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label ">Collection Day<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.CollectionDay)</span>
+                                    @Html.TextBoxFor(m => m.CollectionDay, new { Id = "txtCollectionDay", @class = "form-control input-sm", maxlength="5", autocomplete = "off",onkeypress = "return isNumber(event)" })
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary" id="btnSubmit">Save</button>
+                                    @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default", onclick = "response" })
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            $('#txtMonth').val(@ViewBag.IMonth);
+            $('#txtCollectionDay').val(@ViewBag.ICollectionDay);
+
+            debugger;
+            $('#txtMonth').datepicker({
+                autoclose: true,
+                format: "myyyy",
+                startView: "months",
+                minViewMode: "months"
+            });
+
+        });
+        function isNumber(evt) {
+            evt = (evt) ? evt : window.event;
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                return false;
+            }
+            return true;
+        }
+
+    </script>
+}

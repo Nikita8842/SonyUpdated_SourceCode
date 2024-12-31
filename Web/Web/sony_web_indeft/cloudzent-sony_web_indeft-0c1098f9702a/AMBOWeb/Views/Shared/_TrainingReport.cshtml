@@ -1,0 +1,49 @@
+﻿@model System.Data.DataTable
+@using System.Data;
+<div class="tab-pane active" id="tabData">
+    <table id="dtTrainingReport" class="table table-bordered table-striped table-hover nowrap datatable" style="width:100%">
+        <thead>
+            @{
+                int count = 0;
+                if (Model != null && Model != null)
+                {
+                    <tr>
+                        @foreach (var column in Model.Columns)
+                        {
+                            if (column.ToString() != "Id")
+                            {
+                                <th>@column</th>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </thead>
+        <tbody>
+            @{
+                int count1 = 0;
+                if (Model != null && Model.Rows.Count > 0)
+                {
+                    foreach (DataRow Data in Model.Rows)
+                    {
+                        <tr>
+                            @foreach (DataColumn col in Model.Columns)
+                            {
+                                count1++;
+                                if (col.ToString() != "Id")
+                                {
+                                    <td>@Data[col]</td>
+                                }
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td style="text-align:center">No Data Found</td></tr>
+                }
+            }
+        </tbody>
+
+    </table>
+</div>

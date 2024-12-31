@@ -1,0 +1,250 @@
+﻿@model AMBOModels.IncentiveManagement.CreateFestivalIncentiveSlab
+@using AMBOWeb.Classes
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabData", function (prodcats) {
+                $(".ddProdCat").html("");
+                $.each(prodcats, function (i, prodcat) {
+                    $(".ddProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                });
+                @if(IsPost)
+                {
+                    if(Model.ProductCategoryIds != null)
+                    {
+                        if(Model.TargetCategoryIds != null)
+                        {
+                            @Html.Raw("$('.ddProdCat').val(['" + String.Join("','", Model.ProductCategoryIds) + "']).trigger('change', [{ value: ['" + String.Join("','", Model.TargetCategoryIds) + "']}]);")
+                        }
+                        else
+                        {
+                            @Html.Raw("$('.ddProdCat').val(['" + String.Join("','", Model.ProductCategoryIds) + "']).change();")
+                        }
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('.ddProdCat').val(null).change();")
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddProdCat").html("");
+            });
+        }
+
+        function linkProdCatTargetCatCatDD() {
+            $('.ddProdCat').on('change', function (e, targetcat) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == '')) {
+                    var data = new Object();
+                    data.ProductCategoryIds = $(this).val();
+                    common.ajax_post("@Url.Action("GetTargetCategoriesByProductCategories", "Common")", data, '#tabForm',
+                    function (output) {
+
+                        if (output.MessageCode == MessageCodes.Acceptable.Found) {
+                            $('.ddTargetCat').html('');
+                            $.each(output.Data, function (i) {
+                                $('.ddTargetCat').append($('<option>', { value: output.Data[i].TargetCategoryId }).text(output.Data[i].TargetCategoryName));
+                            });
+                            if (!(targetcat == null || targetcat == undefined || targetcat.value == null || targetcat.value == undefined ||
+                                targetcat.value == '0' && targetcat.value == ''))
+                                $('.ddTargetCat').val(targetcat.value).change();
+                            else
+                                $('.ddTargetCat').val(null).change();
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    },
+                function (data) {
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('.ddTargetCat').html('');
+                    $('.ddTargetCat').val(null).change();
+                    common.notify('error', 'No target categories found for selected product categories.');
+                });
+
+                }
+            });
+        }
+
+        function init() {
+            try {
+                $('#txtSchemeName').prop('disabled', true);
+                $('#txtDateFrom').prop('disabled', true);
+                $('#txtDateTo').prop('disabled', true);
+                $('.ddTargetCat').select2({
+                    placeholder: 'Select Target Categories'
+                });
+                $('.ddProdCat').select2({
+                    placeholder: 'Select Product Categories'
+                });
+                $('.ddProdCat').focus();
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        function ValidateForm()
+        {
+            if ($('#ddAddProdCat').val() == null || $('#ddAddProdCat').val() == undefined || $('#ddAddProdCat').val() == "") {
+                common.notify('error', 'Please select at least one product category.');
+                return false;
+            }
+            return true;
+        }
+
+        function DownloadExcel() {
+
+            if (ValidateForm())
+            {
+                var data = new Object();
+                data.SchemeId = $('#txtSchemeId').val();
+                data.ProductCategoryIds = $('#ddAddProdCat').val();
+
+                common.ajax_post('@Url.Action("DownloadSlab", "FestivalIncentive")', data, '#tabForm', function (output) {
+                    if (output.status)
+                        window.location = '@Url.Action("Download", "FestivalIncentive")' + '?fileGuid=' + output.FileGuid
+                                      + '&filename=' + output.FileName;
+                    else
+                        common.notify('error', output.message);
+                }, function (output) {
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to download festival incentive definition excel file. Please contact your administrator.');
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            getProdCatDD();
+            linkProdCatTargetCatCatDD();
+            init();
+            $('#btnDownload').click(function () { DownloadExcel(); });
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Index", "FestivalIncentive")');
+            });
+
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-pencil"></i> Festival Incentive Slab Definition
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("UploadSlab", "FestivalIncentive", FormMethod.Post, new { @id = "AddFestivalIncentiveForm", enctype = "multipart/form-data" }))
+                    {
+                        @Html.HiddenFor(m => m.SchemeId, new { @id = "txtSchemeId" })
+                        <div class="row">
+                            <div class="col-lg-4">
+                                @Html.AmboTextboxFor(m => m.SchemeName, "txtSchemeName", "Scheme Name", "Enter Scheme Name Here...", "disabled", InputTypes.AlphaNumericSymbol1WithSpace)
+                            </div>
+                            <div class="col-lg-4">
+                                @Html.AmboTextboxFor(m => m.DateFrom, "txtDateFrom", "Date From", "Enter Start Date Here...", "disabled", "")
+                            </div>
+                            <div class="col-lg-4">
+                                @Html.AmboTextboxFor(m => m.DateTo, "txtDateTo", "Date To", "Enter End Date Here...", "disabled", "")
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                @Html.AmboDropdownMultipleFor(m => m.ProductCategoryIds, "ddAddProdCat", "Applicable Product Categories", "ddProdCat")
+                            </div>
+                            <div class="col-lg-12">
+                                @Html.AmboDropdownMultipleFor(m => m.TargetCategoryIds, "ddAddTargetCat", "Applicable Basic Target Categories", "ddTargetCat")
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnDownload" type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-lg-offset-1">
+                                <div class="form-group">
+                                    <label>@*Choose file for upload*@</label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button onclick="$('#fileChooser').click();" type="button" class="btn btn-primary">Browse...</button>
+                                        </div>
+                                        <input id="fileChooserValue" type="text" class="form-control" disabled>
+                                        <input name="ExcelUploadFile" type="file" class="hidden" id="fileChooser" onchange="$('#fileChooserValue').val(document.getElementById('fileChooser').files[0].name);" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

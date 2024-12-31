@@ -1,0 +1,254 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.CreateFeedbackForm
+@section PageCSS{
+}
+
+@section PageJS{
+    <script>
+        /// <reference path="~/Content/js/common.js"/>
+
+        function init() {
+            try {
+                $('#txtFormName').focus();
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        function AddNewTitle(title,index)
+        {
+            var html = "";
+            html += '<li id="title_' + index + '"><big><b><input type="hidden" value="' + title + '" class="titleData">' + title + '</b></big>&nbsp;&nbsp;<small><a style="cursor:pointer" class="removeTitle">(Remove)</a>&nbsp;&nbsp;<a style="cursor:pointer" class="addSubTitle">(Add Subtitle)</a></small><input class="txtSubTitle hidden input-sm form-control" value="" name="SubTitles" style="width:50%" type="text" placeholder="Enter Subtitle Here and Press Enter"/><ul></ul></li>';
+            return html;
+        }
+
+        function ValidateFormDesign() {
+            var x = false;
+            if ($('#designArea > ol li').length == 0)
+                return true;
+            var titles = $('#designArea > ol').children();
+            titles.each(function (index, li) {
+                debugger;
+                var subtitles = $(li).find('[name=SubTitles]');
+                if (subtitles.length == 0)
+                    x = true;
+            });
+            return x;
+        }
+
+        $(document).ready(function () {
+            init();
+            $('body').on('keypress', '#txtTitleName', function (e) {
+                if (e.which == 13)
+                    $('#btnSubmitTitle').trigger('click');
+            });
+
+            $('body').on('click', '.addSubTitle', function () {
+                var input = $(this).parent().parent().find('input');
+                if (input.hasClass('hidden'))
+                {
+                    input.removeClass('hidden');
+                    $('#designArea > ol').find('input').not(input).addClass('hidden');
+                    input.focus();
+                }
+                else
+                    input.addClass('hidden');
+            });
+
+            $('body').on('click', '.removeTitle', function () {
+                $(this).parent().parent().remove();
+            });
+
+            $('body').on('click', '.removeSubTitle', function () {
+                $(this).parent().remove();
+            });
+
+            $('body').on('keypress', '.txtSubTitle', function (e) {
+                if (e.which == 13)
+                {
+                    var subtitle = $(this).val();
+                    if (subtitle == null || subtitle == undefined || subtitle.trim() == '')
+                        common.notify('error', 'Cannot add empty sub section.');
+                    else if (subtitle.length < 5)
+                        common.notify('error', 'Length of a sub section should be greater than 5 characters.');
+                    else {
+                        $(this).parent().find('ul').append('<li><input type="hidden" value="'+subtitle+'" class="subtitleData"/>' + subtitle + '&nbsp;&nbsp;<a style="cursor:pointer" class="removeSubTitle"><small>(x)</small></a></li>');
+                        $(this).val('');
+                    }
+                }
+            });
+
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Forms", "Feedback")');
+            });
+
+            $('body').on('click', '#btnSubmitTitle', function () {
+                var subtitles = "";
+                var title = $('#txtTitleName').val();
+                if (title == null || title == undefined || title.trim() == '')
+                    common.notify('error', 'Cannot add empty section name.');
+                else if (title.length < 4)
+                    common.notify('error', 'Section Name cannot be less than 4 characters.');
+                else
+                {
+                    var index = $("#designArea > ol").children().length;
+                    $('#designArea > ol').append(AddNewTitle(title, index));
+                    $('#txtTitleName').val(null);
+                }
+            });
+
+            $('body').on('click', '#btnSubmit', function () {
+                var formName = $('#txtFormName').val();
+                if (formName == null || formName == undefined || formName.trim() == '')
+                    common.notify('error', 'Please enter feedback form name.');
+                else if(formName.length < 5)
+                    common.notify('error', 'Feedback Form name cannot be less than 5 characters.');
+                else if(ValidateFormDesign())
+                    common.notify('error', 'Invalid Form Design.');
+                else
+                {
+                    var data = new Object();
+                    data.FormName = formName;
+                    data.Titles = new Array();
+
+                    var titles = $('#designArea > ol').children();
+                    titles.each(function (index, li) {
+                        var titleName = $(li).find('input.titleData').first().val();
+                         subtitles = $(li).children().find('input.subtitleData');
+
+                        var subTitleArray = new Array();
+
+                        subtitles.each(function (index, sli) {
+                            debugger;
+                            // subTitleArray[index] = $(sli).find('input.subtitleData').first().val();
+                            subTitleArray[index] = $(sli).first().val();
+                        });
+
+                        data.Titles.push({
+                            TitleName: titleName,
+                            SubTitles: subTitleArray
+                        });
+                    });
+
+                    common.ajax_post('@Url.Action("CreateForm","Feedback")', data, '#tabForm', function (output) {
+                        //success case here
+                        if(output.MessageCode == MessageCodes.Acceptable.Created)
+                        {
+                            $('#txtFormName').val('');
+                            $('#designArea > ol').children().remove();
+                            common.notify('success', output.Message);
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    }, function (output) {
+                        //error case here
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Unable to submit feedback form design. Please contact your administrator.');
+                    });
+                }
+            });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+
+}
+
+<div class="row">
+    <div class="col-lg-8 col-lg-offset-2">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-plus"></i> Create new Feedback Form
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    <div class="row">
+                        <div class="col-lg-8 col-lg-offset-2">
+                            <div class="row">
+                                <div class="col-lg-7">
+                                    <div class="form-group">
+                                        <label for="txtSchemeName">Form Name</label>
+                                        @if (Model == null)
+                                        {
+                                            <input type="text" class="form-control input-sm" id="txtFormName" placeholder="Enter Form Name Here..." />
+                                        }
+                                        else
+                                        {
+                                            <input value="@Model.FormName" type="text" class="form-control input-sm" id="txtFormName" placeholder="Enter Form Name Here..." disabled />
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-lg-5"><br />
+                                    @if (Model == null)
+                                    {
+                                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload</button>
+                                    }
+                                    <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-lg-offset-2">
+                            <div class="box box-solid box-primary">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title">Form Design</h3>
+                                </div>
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div id="designArea" class="col-lg-12" style="margin-left:40px">
+                                            <ol>
+                                                @if (Model != null)
+                                                {
+                                                    foreach(AMBOModels.MasterMaintenance.FeedbackTitles titles in Model.Titles)
+                                                    {
+                                                        string html = "";
+                                                        html += "<li><big><b>" + titles.TitleName + "</b></big><ul>";
+                                                        foreach(string subtitle in titles.SubTitles)
+                                                        {
+                                                            html += "<li>" + subtitle + "</li>";
+                                                        }
+                                                        html += "</ul></li>";
+                                                        @Html.Raw(html)
+                                                    }
+                                                }
+                                            </ol>
+                                        </div>
+                                    </div>
+                                    @if (Model == null)
+                                    {
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="input-group">
+                                                    <div class="input-group-btn">
+                                                        <button id="btnSubmitTitle" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> Add Title</button>
+                                                    </div>
+                                                    <input id="txtTitleName" class="form-control input-sm" type="text" placeholder="Enter Title Name Here..." />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

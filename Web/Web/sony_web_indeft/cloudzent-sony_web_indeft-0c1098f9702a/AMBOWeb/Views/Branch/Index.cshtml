@@ -1,0 +1,377 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtBranch')) {
+                $('#dtBranch').DataTable().destroy();
+                $('#dtBranch tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dtBranchGrid = $('#dtBranch').DataTable({
+                searching: false,
+                processing: true,
+                order: [[2, "asc"]],
+                ajax: {
+                    url: "@Url.Action("GetBranchGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.BranchIds = $('#ddlBranch').val();
+                        d.BranchCodeIds = $('#ddlBranchCode').val();
+                        d.Status = $('#ddlStatus').val();
+                    
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "BranchCode" },
+                    { data: "BranchName" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    },
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Active")
+                        $('td', row).eq(2).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(2).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+
+                    //$("#ddlBranchCode").append($("<option></option>").val(0).html("---All Codes---"));
+                    $(result).each(function () {
+                        $("#ddlBranchCode").append($("<option></option>").val(this.BranchId).html(this.BranchCode));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+
+                    $("#ddlBranch").html("");
+                    //$("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                    $("#ddlBranchCode").html("");
+                    //$("#ddlBranchCode").append($('<option></option>').val(0).html("---All Codes---"));
+
+                }
+            });
+
+            $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddlBranchCode').select2({ placeholder: "---All Codes---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function resetAddForm() {
+            $('#txtAddBranchCode').val('');
+            $('#txtAddBranchName').val('');
+            $('#AddradioA, #AddradioI').iCheck('uncheck');
+            $("#AddBranchForm").validate().resetForm();
+            $("#AddBranchForm").find('.has-error').removeClass('has-error');
+            $("#AddBranchForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetUpdateForm() {
+            $('#txtUpdateBranchID').val('');
+            $('#txtUpdateBranchCode').val('');
+            $('#txtUpdateBranchName').val('');
+            $('#UpdateradioA, #UpdateradioI').iCheck('uncheck');
+            $("#UpdateBranchForm").validate().resetForm();
+            $("#UpdateBranchForm").find('.has-error').removeClass('has-error');
+            $("#UpdateBranchForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetDeleteForm() {
+            $('#txtDeleteBranchID').val('');
+            $('#displayBranchName').html('');
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            //Modal popup hide/show events
+            $('#modalAdd').on('shown.bs.modal', function () {
+                resetAddForm();
+                $('#txtAddBranchCode').focus();
+                $('#AddradioA').iCheck('check');
+            });
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+            $('#modalUpdate').on('shown.bs.modal', function () {
+                $('#txtUpdateBranchCode').focus();
+                $("#UpdateBranchForm").find('.has-success').removeClass('has-success');
+            });
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+            $('#modalDelete').on('hidden.bs.modal', function () { resetDeleteForm(); });
+            //Modal popup hide/show events till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtBranchGrid.row($(this).parent().parent()).data();
+                $('#txtUpdateBranchID').val(data.ID);
+                $('#txtUpdateBranchCode').val(data.BranchCode);
+                $('#txtUpdateBranchName').val(data.BranchName);
+                if (data.Status == 'Active')
+                    $('#UpdateradioA').iCheck('check');
+                else
+                    $('#UpdateradioI').iCheck('check');
+                $('#modalUpdate').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtBranchGrid.row($(this).parent().parent()).data();
+                if (data.Status == 'Active') {
+                    $('#txtDeleteBranchID').val(data.ID);
+                    $('#displayBranchName').html(data.BranchName);
+                    $('#modalDelete').modal('toggle');
+                }
+                else
+                    common.notify('error', 'Branch: ' + data.BranchName + ' is already inactive.');
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.BranchIds = $('#ddlBranch').val();
+                modeldata.BranchCodeIds = $('#ddlBranchCode').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelBranch", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Branch),InputParam : modeldata  },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+        });
+        });
+
+    </script>
+    <script src="~/Content/js/validations/branch.js"></script>
+}
+
+@section PageModals
+{
+    <!-- #region Add form -->
+    <div class="modal fade" id="modalAdd">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddLoad">
+                @using (Html.BeginForm("Create", "Branch", FormMethod.Post, new { @id = "AddBranchForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-plus", "Add a new branch")
+                    <div class="modal-body">
+                        @Html.CustomTextBox("txtAddBranchCode", "BranchCode", "Branch Code", "Enter Branch Code here...", InputTypes.AlphaNumericSymbol1)
+                        @Html.CustomTextBox("txtAddBranchName", "BranchName", "Branch Name", "Enter Branch Name here...", InputTypes.AlphaNumericSymbol1WithSpace)
+                        @Html.Custom2RadioButtonGroup("IsActive", "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnSubmit" type="submit" class="btn btn-primary" onclick="reload();"><i class="fa fa-plus"></i> Add Branch</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Add form -->
+    <!-- #region Update form -->
+    <div class="modal fade" id="modalUpdate">
+        <div class="modal-dialog">
+            <div class="modal-content" id="UpdateLoad">
+                @using (Html.BeginForm("Update", "Branch", FormMethod.Post, new { @id = "UpdateBranchForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-pencil", "Update an existing branch")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtUpdateBranchID", "ID")
+                        @Html.CustomTextBox("txtUpdateBranchCode", "BranchCode", "Branch Code", "Enter Branch Code here...", InputTypes.AlphaNumericWithSpace)
+                        @Html.CustomTextBox("txtUpdateBranchName", "BranchName", "Branch Name", "Enter Branch Name here...", InputTypes.AlphaNumericWithSpace)
+                        @Html.Custom2RadioButtonGroup("IsActive", "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnSubmit" type="submit"  onclick="reload();" class="btn btn-primary"><i class="fa fa-pencil"></i> Update Branch</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Update form -->
+    <!-- #region Delete form -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                @using (Html.BeginForm("Delete", "Branch", FormMethod.Post, new { @id = "DeleteBranchForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-trash", "InActive an existing branch")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtDeleteBranchID", "ID")
+                        Are you sure you want to inactive the region <strong><span id="displayBranchName"></span></strong> ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Delete form -->
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Branch Master Filters</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownList("ddlBranch", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Branch Code:</label>
+                        @Html.DropDownList("ddlBranchCode", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranchCode", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                         new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> Branch Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtBranch" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Branch Code</th>
+                                <th>Branch Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

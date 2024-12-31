@@ -1,0 +1,205 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            //Grid initialization
+            dtPerPieceIncentiveGrid = $('#dtPerPieceIncentive').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [[1,'asc']],
+                ajax: {
+                    url: "@Url.Action("PerPieceIncentiveGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "SchemeName" },
+                    { data: "Applicability" },
+                    {
+                        data: "DateFrom",
+                        render: function (data, type, row, meta) {
+                            var m_names = new Array("Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec");
+                            var datefrom = new Date(parseInt(data.substr(6)));
+                            var curr_date = datefrom.getDate();
+                            var curr_month = datefrom.getMonth();
+                            var curr_year = datefrom.getFullYear();
+                            return m_names[curr_month]
+                            + "-" + curr_year;
+                        }
+                    },
+                    {
+                        data: "DateTo",
+                        render: function (data, type, row, meta) {
+                            var m_names = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+                            var datefrom = new Date(parseInt(data.substr(6)));
+                            var curr_date = datefrom.getDate();
+                            var curr_month = datefrom.getMonth();
+                            var curr_year = datefrom.getFullYear();
+                            return m_names[curr_month]
+                            + "-" + curr_year;
+                        }
+                    },
+                    {
+                        data: function (data, type, row, meta) {
+                            return '<form method="post" action="@Url.Action("GetPerPieceIncentiveDefinitionBySchemeId", "PerPieceIncentive")"><input name="SchemeId" type="hidden" value="'+data.SchemeId+'"/><a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a></form>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr('href', '@Url.Action("Create", "PerPieceIncentive")');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtPerPieceIncentiveGrid.row($(this).parent().parent()).data();
+                $('#txtDeleteSchemeId').val(data.SchemeId);
+                $('#displaySchemeName').html('Scheme: ' + data.SchemeName);
+                $('#modalDelete').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '#btnDelete', function () {
+                var data = new Object();
+                data.SchemeId = $('#txtDeleteSchemeId').val();
+                if(data.SchemeId == null || data.SchemeId == undefined || data.SchemeId == 0 || data.SchemeId == '')
+                    common.notify('error','Could not initiate deletion of this record. Please contact your administrator.');
+                else
+                {
+                    common.ajax_post('@Url.Action("Delete","PerPieceIncentive")',data,'#DeleteLoad',
+                        //success
+                        function(output){
+                            if(output.MessageCode == MessageCodes.Acceptable.Accepted)
+                            {
+                                common.notify('success',output.Message);
+                                $('#modalDelete').modal('toggle');
+                                dtPerPieceIncentiveGrid.ajax.reload();
+                            }
+                            else
+                                common.notify('error',output.Message);
+                        },
+                        //error
+                        function (output) {
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error','Could not delete this record. Please contact your administrator.');
+                        });
+                }
+            });
+
+            //Edit button click
+            $('body').on('click', '.btnEdit', function () {
+                var form = $(this).parent();
+                form.submit();
+            });
+
+            $("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelPerPiece", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.PerPiece) },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+        });
+    </script>
+}
+
+@section PageModals
+{
+    <!-- #region Delete form -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-trash", "Delete an existing Per Piece Incentive Definition")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtDeleteSchemeId", "SchemeId")
+                        <strong><span id="displaySchemeName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-pencil"></i> Per Piece Incentive Definition</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                            <table id="dtPerPieceIncentive" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Scheme Name</th>
+                                        <th>Applicability</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Quick Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

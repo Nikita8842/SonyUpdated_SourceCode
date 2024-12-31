@@ -1,0 +1,142 @@
+﻿@using AMBOWeb.Classes
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            dtSalesPICOutletMapping = $('#dtSalesPICOutletMapping').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: "@Url.Action("SalesPICOutletMappingGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "SalesPICName" },
+                    { data: "BranchName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtMappingID').val(0);
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr('href', '@Url.Action("Create","SalesPICOutletMapping")');
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtSalesPICOutletMapping.row($(this).parent().parent()).data();
+                $(location).attr('href', '@Url.Action("Update","SalesPICOutletMapping")' + '?SalesPICId=' + data.SalesPICId);
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtSalesPICOutletMapping.row($(this).parent().parent()).data();
+                $('#txtMappingID').val(data.SalesPICId);
+                $('#displayMappingName').html('Sales PIC: ' + data.SalesPICName);
+                $('#modalDelete').modal('toggle');
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete", "SalesPICOutletMapping")";
+                var data = new Object();
+                data.SalesPICId = $("#txtMappingID").val();
+
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.MessageCode == MessageCodes.Acceptable.Created) {
+                        common.notify('success', output.Message);
+                        dtSalesPICOutletMapping.ajax.reload();
+                        $('#modalDelete').modal('toggle');
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing mapping</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtMappingID", "MappingId")
+                    <strong><span id="displayMappingName"></span></strong> will no longer be mapped to any Non-SFA outlet. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-user-plus"></i> Sales PIC Outlet Mapping</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                @*<li class="pull-right"><button style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtSalesPICOutletMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Sales PIC Name</th>
+                                <th>Branch Name</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

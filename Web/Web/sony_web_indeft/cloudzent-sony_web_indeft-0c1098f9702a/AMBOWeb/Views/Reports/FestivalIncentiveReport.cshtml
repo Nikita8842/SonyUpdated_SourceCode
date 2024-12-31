@@ -1,0 +1,523 @@
+﻿@model AMBOModels.Reports.FestivalIncentiveReport
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                    debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    if ('@ViewBag.BranchId' != 0) {
+                        $('#ddBranch').val(@ViewBag.BranchId);
+                        $('#ddBranch').attr("disabled", "disabled");
+                        getSFADD();
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+        function getSFADD() {
+            var BranchId = @ViewBag.BranchId;
+            if(BranchId == 0 || BranchId != '')
+                var BranchId = $("#ddBranch").val();
+            if (BranchId != null && BranchId != '' && BranchId != 0) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSFAByBranch", "Common")',
+                    data: { branchId: BranchId },
+                    success: function (sfa) {
+                        $("#ddSFA").html(""); // clear before appending new list
+                        $("#ddSFA").append($('<option></option>').val(0).html("---All SFA---"));
+                        $.each(sfa, function (i, sfadet) {
+                            debugger;
+                            $("#ddSFA").append($('<option></option>').val(sfadet.EmployeeId).html(sfadet.SFAFullName));
+                        });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddSFA").html("");
+                        $('#ddSFA').attr("placeholder", "---All SFA---");
+                    }
+                });
+            }
+            else {
+                $("#ddSFA").html("");
+                $('#ddSFA').attr("placeholder", "---All SFA---");
+            }
+        }
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabForm", function (divisions) {
+                $("#ddDivision").html("");
+                $.each(divisions, function (i, division) {
+                    $("#ddDivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                    $("#ddDivision").val(null).change();
+                });
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDivision").html("");
+            });
+        }
+        function getProdCatsDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+        function getSchemeDD() {
+            debugger;
+            common.ajax_get("@Url.Action("GetAllFestivalScheme", "Common")", null, "#tabForm", function (categories) {
+                $("#ddScheme").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddScheme").append($('<option></option>').val(category.Id).html(category.SchemeName));
+                });
+                $('#ddScheme').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddScheme").html("");
+            });
+        }
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+
+            if ($('#ddFestivalScheme').val() == null || $('#ddFestivalScheme').val() == undefined || $('#ddFestivalScheme').val() == "") {
+                output.status = false;
+                output.message = "Please select Festival Scheme.";
+                return output;
+            }
+
+            return output;
+        }
+        function init() {
+            $('#ddFestivalScheme').select2({ placeholder: "---Festival Scheme---" });
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddDivision').select2({ placeholder: "---All Division---" });
+            $('#ddProdCat').select2({ placeholder: "---All Product---" });
+            $('#ddScheme').select2({ placeholder: "---All Scheme---" });
+
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+
+
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function Search() {
+            debugger;
+            var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                if ($.fn.dataTable.isDataTable('#dtFestivalIncentiveReport')) {
+                    $('#dtFestivalIncentiveReport').DataTable().destroy();
+                    $('#dtFestivalIncentiveReport tbody').empty();
+                    //dtBaseIncentiveReport.destroy();
+                }
+                var d = new Object();
+                d.BranchId = $('#ddBranch').val();
+                d.SFAId = $('#ddSFA').val();
+                d.DivisionId = $('#ddDivision').val();
+                d.FestivalSchemeId = $('#ddFestivalScheme').val();
+                d.ProductCategoryId = $('#ddProdCat').val();
+
+                $('#dtFestivalIncentiveReport').DataTable({
+                    processing: true,
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Type here for search...",
+                        processing: "Please wait while we fetch data..."
+                    },
+                });
+                $('.dataTables_processing', $('#dtFestivalIncentiveReport').closest('.dataTables_wrapper')).show();
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetFestivalIncentiveReport", "Reports")',
+                    data: {objGridData:d},
+                    success: function (Data) {
+                        debugger;
+                        var Btr = "";
+                        for (var i = 0; i < Data.FestivalIncentiveData.length; i++) {
+                            debugger;
+                            var Str = '<tr>';
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SchemeName + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].StartDate + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].EndDate + "</td>";
+
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].BranchName + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].City + "</td>";
+
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].Location + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SFACode + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SFAName + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SFAType + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SFALevel + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SFADivision + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].Dealer + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].Channel + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].DealerState + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].MasterCode + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].DealerCode + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].IncentiveCategory + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].FestivalIncentiveAmount + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].ProposedDeviation + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].ApprovedDeviationAmount + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].Reasons + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].FirstHeader + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].FirstRemark + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SecondHeader + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].SecondRemark + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].FinalPayableAmount + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].HORemark + "</td>";
+                            Str = Str + "<td>" + Data.FestivalIncentiveData[i].DeviationStage + "</td>";
+                            Str = Str + '</tr>';
+                            Btr = Btr + Str;
+                        }
+                        if ($.fn.dataTable.isDataTable('#dtFestivalIncentiveReport')) {
+                            $('#dtFestivalIncentiveReport').DataTable().destroy();
+                            $('#dtFestivalIncentiveReport tbody').empty();
+                            //dtBaseIncentiveReport.destroy();
+                        }
+                        $("#dtFestivalIncentiveReport tbody").empty();
+                        $("#dtFestivalIncentiveReport tbody").append(Btr);
+                        $("#dtFestivalIncentiveReport").DataTable({
+                            scrollX: true
+                        });
+                    },
+                    error: function (output) {
+                        //if (output.statusCode == 401 || output.status == 401) {
+                        //    var response = $.parseJSON(output.responseText);
+
+                        //    if (response.isRedirect) {
+                        //        window.location.href = '../Login/Index';
+                        //        return;
+                        //    }
+                        //}
+                    }
+                });
+            }
+            else {
+                common.notify('error', result.message);
+            }
+
+        }
+        function getFestivalScheme() {
+            debugger;
+            var SDate = $("#txtFromDate").val();
+            var EDate = $("#txtToDate").val();
+            var SDt = SDate.split('/');
+            var EDt = EDate.split('/');
+            var Obj = new Object();
+            Obj.StartDate = SDt[2] + "-" + SDt[1] + "-" + SDt[0];
+            Obj.EndDate = EDt[2] + "-" + EDt[1] + "-" + EDt[0];
+            if(SDate != null && EDate != null && SDate != "" && EDate != "")
+            {
+                $.ajax({
+                    type: "Post",
+                    url: '@Url.Action("GetAllFestivalScheme", "Common")',
+                    data: JSON.stringify(Obj) ,
+                    contentType: "application/json; charset=utf-8",
+                    datatype: JSON,
+                    success: function (schemes) {
+                        debugger;
+                        $("#ddFestivalScheme").html(""); // clear before appending new list
+                        $.each(schemes, function (i, fscheme) {
+                            $("#ddFestivalScheme").append($('<option></option>').val(fscheme.Id).html(fscheme.SchemeName));
+                        });
+                        $('#ddFestivalScheme').val(null).change();
+                        @*if ('@ViewBag.FestivalSchemeId' != 0) {
+                        $('#ddFestivalScheme').val(@ViewBag.FestivalSchemeId);
+                        $('#ddFestivalScheme').attr("disabled", "disabled");
+                    }*@
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddFestivalScheme").html("");
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            getBranchDD();
+            init();
+            getDivisionsDD();
+            getProdCatsDD();
+            getSchemeDD();
+
+            if ($.fn.dataTable.isDataTable('#dtFestivalIncentiveReport')) {
+                dtFestivalIncentiveReport.destroy();
+            }
+            $('#dtFestivalIncentiveReport').DataTable({
+                scrollX: true
+            });
+
+            $("#btnDownload").click(function () {
+                debugger;
+                var d = new Object();
+                d.BranchId = $('#ddBranch').val();
+                d.SFAId = $('#ddSFA').val();
+                d.DivisionId = $('#ddDivision').val();
+                d.FestivalSchemeId = $('#ddFestivalScheme').val();
+                d.ProductCategoryId = $('#ddProdCat').val();
+
+                if(d.BranchId == null)
+                    d.BranchId = "0";
+                if(d.SFAId == null)
+                    d.SFAId = "0";
+                if(d.DivisionId == null)
+                    d.DivisionId = "0";
+                //if(d.FestivalSchemeId == null)
+                //    d.FestivalSchemeId = "0";
+                if(d.ProductCategoryId == null)
+                    d.ProductCategoryId = "0";
+
+                var result = ValidateFilters();
+                if (result.status) {
+                    window.location = "../Reports/FestivalIncentiveExport?BranchId=" + d.BranchId + "&SFAId="+d.SFAId + "&DivisionId="+d.DivisionId + "&FestivalSchemeId="+d.FestivalSchemeId+ "&ProductCategoryId="+d.ProductCategoryId;
+                }
+                else
+                {
+                    common.notify('error', result.message);
+                }
+
+
+            });
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Festival Incentive Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", onchange = "getSFADD();" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA:</label>
+                        @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Division:</label>
+                        @Html.DropDownListFor(m => m.DivisionId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddDivision", @Class = "form-control input-sm" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Scheme:</label>
+                        @Html.DropDownListFor(m => m.SchemeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddScheme", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label>From Date:</label>
+                            <input type="text" class="form-control input-sm" id="txtFromDate" autocomplete = "off" placeholder="Select From Date" name="FromDate"  onchange="getFestivalScheme();" />
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label>To Date:</label>
+                            <input type="text" class="form-control input-sm" id="txtToDate" autocomplete = "off" placeholder="Select To Date" name="ToDate" onchange="getFestivalScheme();"/>
+                        </div>
+                    </div>
+                  
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label>Festival Scheme:</label>
+                            @Html.DropDownList("Id", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddFestivalScheme", @Class = "form-control input-sm" })
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Product Category:</label>
+                        @Html.DropDownListFor(m => m.ProdCatId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddProdCat", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <button class="btn btn-flat btn-primary" onclick="Search();" style="margin-top: 21px;"><i class="fa fa-search"></i> Search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*<div class="row hidden" id="divDataTable">*@
+<div class="row" id="divDataTable">
+    <div class="col-lg-12">
+        <div class="box box-primary">
+            <div class="box-body">
+
+                <table id="dtFestivalIncentiveReport" class="table table-bordered table-striped nowrap reportstable">
+                    <thead>
+                        <tr>
+                            <th>Scheme Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Branch</th>
+                            <th>City</th>
+                            <th>Location</th>
+                            <th>SFA Code</th>
+                            <th>SFA Name</th>
+                            <th>SFA Type</th>
+                            <th>SFA Level</th>
+                            <th>SFA Division</th>
+                            <th>Dealer</th>
+                            <th>Channel</th>
+                            <th>Dealer State</th>
+                            <th>Master Code</th>
+                            <th>Dealer Code</th>
+                            <th>Incentive Category</th>
+                            <th>Festival Incentive Amount</th>
+                            <th>Proposed Deviation</th>
+                            <th>Approved Deviation Amount</th>
+                            <th>Reasons</th>
+                            <th>First Header</th>
+                            <th>First Remark</th>
+                            <th>Second Header</th>
+                            <th>Second Remark</th>
+                            <th>Final Payable Amount</th>
+                            <th>HO Remark</th>
+                            <th>Deviation Stage</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                @*</div>*@
+                @*</div>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i>Festival Incentive Report</a></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div id="divData" class="tab-content">
+
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

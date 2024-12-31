@@ -1,0 +1,345 @@
+﻿@model AMBOModels.Reports.DailyTimingReportInput
+@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    @*<script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>*@
+    <script type="text/javascript">
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddBranch').val(Branch).change();
+                        $('#ddBranch').attr('readonly', 'readonly');
+                    }
+                    else
+                        $('#ddBranch').val(null).change();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+        function getSFADD() {
+            var BranchId = $("#ddBranch").val();
+            if (BranchId != null && BranchId != '' && BranchId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSFAByBranch", "Common")',
+                    data: { branchId: BranchId },
+                    success: function (sfa) {
+                        $("#ddSFA").html(""); // clear before appending new list
+                        $.each(sfa, function (i) {
+                            $('#ddSFA').append($('<option>', { value: sfa[i].EmployeeId }).text(sfa[i].SFAFullName));
+                        });
+                        $('#ddSFA').val(null).change();
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddSFA").html("");
+                        $('#ddSFA').attr("placeholder", "---All SFA---");
+                    }
+                });
+            }
+            else {
+                $("#ddSFA").html("");
+                $('#ddSFA').attr("placeholder","---All SFA---" );
+            }
+        }
+
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddType').select2({ placeholder: "---All Attendance Type---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select From Date.";
+                return output;
+            }
+            if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+                output.status = false;
+                output.message = "Please select To Date.";
+                return output;
+            }
+            if (!ValidateFromToDate()) {
+                output.status = false;
+                output.message = "To Date Can't be less than From Date";
+                return output;
+            }
+
+            if (!ValidateCurrentDate()) {
+                output.status = false;
+                output.message = "From/To Date Can't be future Date  ";
+                return output;
+            }
+
+            return output;
+        }
+
+        function Search() {
+        
+            var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                if ($.fn.dataTable.isDataTable('#dtDailyTimingReport')) {
+                    $('#dtDailyTimingReport').DataTable().destroy();
+                    $('#dtDailyTimingReport tbody').empty();
+
+                }
+
+                dtDailyTimingReportReport = $('#dtDailyTimingReport').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    searching: false,
+                    sorting: false,
+                    scrollX: true,
+                    ajax: {
+                        url: "@Url.Action("TodayTimingReport", "Reports")",
+                        type: 'POST',
+                        data: function (d) {
+                            d.StartDate = $('#txtFromDate').val();
+                            d.EndDate = $('#txtToDate').val();
+                            d.BranchId = $('#ddBranch').val();
+                            d.SFAId = $('#ddSFA').val();
+                            d.AttType = $('#ddType').val();
+                        }
+                    },
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Type here for search...",
+                        processing: "Please wait while we fetch data..."
+                    },
+                    columns: [
+                            { data: "Region" },
+                            { data: "BranchName" },
+                            { data: "MasterCode" },
+                            { data: "DealerCode" },
+                            { data: "DealerName" },
+                            { data: "DealerLocation" },
+                            { data: "DealerCity" },
+                            { data: "SFACode" },
+                            { data: "SFALevel" },
+                            { data: "SFACategory" },
+                            { data: "SFALocation" },
+                            { data: "SFAName" },
+                            { data: "IncentiveCategory" },
+                             { data: "StoreLocation" },
+                            { data: "Attendance" },
+                            { data: "ShiftName" },
+                            { data: "TimeIn" },
+                            { data: "TimeOut" },
+                            { data: "TotalWorkingHrs" },
+                            { data: "ImagePath", render: getImg },
+                            { data: "SalesStatus" },
+                            { data: "CoreSalesStatus" },
+                            { data: "CreationDate" },
+                            { data: "IMEI1" }
+                    ]
+                });
+            }
+            else {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+
+
+        $(document).ready(function () {
+            getBranchDD();
+            init();
+        });
+        function getImg(data, type, full, meta) {
+        
+            if (data != "")
+                return '<a class="imgatt" data-toggle="modal"><img src="' + '@System.Configuration.ConfigurationManager.AppSettings["ReportAPIUrl"].ToString()' + data + '"  height="50px" width="50px"/></a>';
+            else
+                return '<img src="../Content/img/default.png" height="50px" width="50px"/>';
+        }
+
+
+        function ValidateDownloadFilter() {
+            var result = ValidateFilters();
+            if (!result.status) {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+
+
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Daily Timing Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                @using (Html.BeginForm("ExportDailyTimingReport", "Reports", FormMethod.Post, new { id = "formExportDailyTimingReport" }))
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <label>Branch:</label>
+                            @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", onchange = "getSFADD();" })
+                        </div>
+                        <div class="col-lg-4">
+                            <label>SFA:</label>
+                            @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })
+                        </div>
+                        <div class="col-lg-4">
+                            <label>Type:</label>
+                            @Html.DropDownListFor(m => m.AttType, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddType", @Class = "form-control input-sm" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>From Date:</label>
+                                <input type="text" class="form-control input-sm"  name="StartDate" id="txtFromDate" autocomplete="off" placeholder="Select From Date" />
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>To Date:</label>
+                                <input type="text" class="form-control input-sm" name="EndDate" id="txtToDate" autocomplete="off" placeholder="Select To Date" />
+                            </div>
+                        </div>
+                        @*<div class="col-lg-4">
+                                <div class="form-group">
+                                    <button class="btn btn-flat btn-primary" onclick="Search();"style="margin-top: 21px;"><i class="fa fa-search"></i> Search</button>
+                                </div>
+                            </div>*@
+                    </div>
+
+                    <div class="row" >
+                        <div class="col-lg-6 col-lg-offset-4">
+                            <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                            <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                            <button id="btnDownload" type="submit" class="btn btn-success btn-flat" onclick="return ValidateDownloadFilter();"><i class="fa fa-download"></i> Download to Excel</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> Daily Timing Report</a></li>
+                @*<li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtDailyTimingReport" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Region</th>
+                                <th>Branch Name</th>
+                                <th>Master Code</th>
+                                <th>Dealer Code</th>
+                                <th>Dealer Name</th>
+                                <th>Dealer Location</th>
+                                <th>Dealer City</th>
+                                <th>SFA Code</th>
+                                <th>SFA Level</th>
+                                <th>SFA Category</th>
+                                <th>SFA Location</th>
+                                <th>SFA Name</th>
+                                <th>Incentive Category</th>
+                                <th>Store Location</th>
+                                <th>Attendance</th>
+                                <th>Shift</th>
+                                <th>Time In</th>
+                                <th>Time Out</th>
+                                <th>Total Working Hrs</th>
+                                <th>Image</th>
+                                <th>Sales</th>
+                                <th>Core Sales</th>
+                                <th>Date</th>
+                                <th>IMEI</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

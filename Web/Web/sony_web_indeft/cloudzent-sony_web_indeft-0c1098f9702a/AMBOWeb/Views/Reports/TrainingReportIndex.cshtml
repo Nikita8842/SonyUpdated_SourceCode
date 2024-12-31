@@ -1,0 +1,383 @@
+﻿@model AMBOModels.Reports.TrainingReport
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+
+        function getBranchDD()
+        {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+
+                    $("#ddBranch").html(""); // clear before appending new list
+                    //$("#ddBranch").append($('<option></option>').val(0).html("----All Branches------"));
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null);
+                    debugger;
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddBranch').val(Branch).change();
+                        $('#ddBranch').attr('readonly', 'readonly');
+                        getTrainingsDD();
+                    }
+                    @*@if( Model != null && Model.BranchId != 0)
+                    {
+                        <text>
+                            $("#ddBranch").val(@Model.BranchId);
+                        </text>
+                    }*@
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+
+        function getChannelsDD() {
+            common.ajax_get("@Url.Action("GetChannels", "Common")", null, '#filterBox',
+            function (output) {
+                $('#ddChannel').html('');
+                $.each(output, function (i) {
+                    $('#ddChannel').append($('<option>', { value: output[i].Id }).text(output[i].ChannelName));
+                });
+                $('#ddChannel').val(null).change();
+            },
+            function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $('#ddChannel').html('');
+                common.notify('error', 'No Channel(s) found.');
+            });
+
+        }
+
+        function getTrainingsDD() {
+            debugger;
+            var data = new Object();
+            data.BranchId = $('#ddBranch').val();
+            data.ChannelId = $('#ddChannel').val();
+            common.ajax_post("@Url.Action("GetTrainings", "Common")", data, '#filterBox',
+                    function (output) {
+                        $('#ddTraining').html('');
+                        $.each(output, function (i) {
+                            $('#ddTraining').append($('<option>', { value: output[i].Id }).text(output[i].CourseName));
+                        });
+                        $('#ddTraining').val(null).change();
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddTraining').html('');
+                    common.notify('error', 'No Training(s) found.');
+                });
+
+        }
+
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddChannel').select2({ placeholder: "---All Channels---" });
+            $('#ddTraining').select2({ placeholder: "---Select Training---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select From Date.";
+                return output;
+            }
+
+            if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+                output.status = false;
+                output.message = "Please select To Date.";
+                return output;
+            }
+
+            if ($('#ddTraining').val() == 0 || $('#ddTraining').val() == null || $('#ddTraining').val() == '') {
+                output.status = false;
+                output.message = "Please select training.";
+                return output;
+            }
+
+            if (!ValidateFromToDate())
+            {
+                output.status = false;
+                output.message = "To Date Can't be less than From Date";
+                return output;
+            }
+
+            if (!ValidateCurrentDate()) {
+                output.status = false;
+                output.message = "From/To Date Can't be future Date  ";
+                return output;
+            }
+
+            return output;
+        }
+        function ValidateDownloadFilter() {
+            var result = ValidateFilters();
+            if (!result.status) {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+        function Search() {
+            debugger;
+
+            var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                $("#divData").html("");
+                if ($.fn.dataTable.isDataTable('#dtTrainingReport')) {
+                    //$('#dtDailySalesIMEI').DataTable().destroy();
+                    //$('#dtDailySalesIMEI tbody').empty();
+                    dtTrainingReport.destroy();
+                }
+                var Obj = new Object();
+                Obj.FromDate = $("#txtFromDate").val();
+                Obj.ToDate = $("#txtToDate").val();
+                Obj.TrainingId = parseInt($("#ddTraining").val());
+                Obj.BranchId = parseInt($("#ddBranch").val());
+                
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("TrainingReport", "Reports")',
+                    data: {objGridData:Obj},
+                    beforeSend: function () {
+                        var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#gridtable").append(loader);
+                    },
+                    success: function (Data) {
+                        $("#divData").html(Data);
+                        $("#dtTrainingReport").DataTable(
+                    {
+                        bSort: false,
+                        scrollX: true,
+                        scrollY: true,
+                    });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    },
+                    complete: function () {
+                        $("#gridtable").find('.overlay').remove();
+                    }
+                });
+            }
+            else {
+                common.notify('error', result.message);
+            }
+        }
+
+
+        $(document).ready(function () {
+            getBranchDD();
+            getChannelsDD();
+            getTrainingsDD();
+            init();
+
+            $("#btnDownload").click(function () {
+
+
+                var result = ValidateFilters();
+
+                if(result==false)
+                {
+                    common.notify('error', result.message);
+                    return false;
+                }
+                var Obj = new Object();
+                Obj.FromDate = $("#txtFromDate").val();
+                Obj.ToDate = $("#txtToDate").val();
+                Obj.TrainingId = parseInt($("#ddTraining").val());
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("TrainingReportExcel", "Reports")',
+                    data: {objGridData:Obj},
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"No Data Found");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+            if('@Session["TrainingNoData"].ToString()' == "1")
+            {
+                common.notify('error',"No data found");
+                System.Web.HttpContext.Current.Session["TrainingNoData"] = "0";
+            }
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Training Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                @using (Html.BeginForm("TrainingReportExcel", "Reports", FormMethod.Post, new { id = "formDailySalesIMEI" }))
+                {
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>From Date:</label>
+                                <input type="text" class="form-control input-sm" id="txtFromDate" autocomplete="off" placeholder="Select From Date" name="FromDate" />
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>To Date:</label>
+                                <input type="text" class="form-control input-sm" id="txtToDate" autocomplete="off" placeholder="Select To Date" name="ToDate" />
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <label>Branch:</label>
+                            @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", @onchange= "getTrainingsDD()" })
+                        </div>
+                        <div class="col-lg-3">
+                            <label>Channel:</label>
+                            @Html.DropDownListFor(m => m.ChannelId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddChannel", @Class = "form-control input-sm", @onchange = "getTrainingsDD()" })
+                        </div>
+                    </div>
+                    <div class="row">                        
+                        <div class="col-lg-4">
+                            <label>Training:</label>
+                            @Html.DropDownListFor(m => m.TrainingId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddTraining", @Class = "form-control input-sm" })
+                        </div>
+                    </div>
+                    <div class="row" >
+                        <div class="col-lg-6 col-lg-offset-4">
+                            <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                            <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                            <button id="btnDownload" type="button" class="btn btn-success btn-flat" onclick="return ValidateDownloadFilter();"><i class="fa fa-download"></i> Download to Excel</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i>Training Report</a></li>                
+            </ul>
+            <div id="divData" class="tab-content">
+
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

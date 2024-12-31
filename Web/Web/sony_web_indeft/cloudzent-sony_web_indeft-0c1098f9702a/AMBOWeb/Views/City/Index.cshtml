@@ -1,0 +1,578 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+function ChangeValue(_val)
+	    {
+	        if(_val=="4000")
+	        {
+	            $('#ddlStatus').val('');
+	        }
+	    }
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtCity')) {
+                $('#dtCity').DataTable().destroy();
+                $('#dtCity tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dtCityGrid = $('#dtCity').DataTable({
+                searching: false,
+                processing: true,
+                order: [[4, "asc"]],
+                ajax: {
+                    url: "@Url.Action("GetCityGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.RegionIds = $('#ddlRegion').val();
+                        d.StateIds = $('#ddlState').val();
+                        d.CityTypeIds = $('#ddlCityType').val();
+                        d.CityIds = $('#ddlCity').val();
+                        d.Status = $('#ddlStatus').val();
+                    
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "CityName" },
+                    { data: "CityTypeName" },
+                    { data: "StateName" },
+                    { data: "RegionName" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Active")
+                        $('td', row).eq(4).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(4).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetAllCities", "City")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;                   
+
+                    //$("#ddlCity").append($("<option></option>").val("").html("---All Cities---"));
+                    $(result).each(function () {
+                        $("#ddlCity").append($("<option></option>").val(this.ID).html(this.CityName));
+                    });                    
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCity").html("");
+                    //$("#ddlCity").append($('<option></option>').val(0).html("---All Cities---"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetStates", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlState").append($("<option></option>").val("").html("---All States---"));
+                    $(result).each(function () {
+                        $("#ddlState").append($("<option></option>").val(this.ID).html(this.StateName));
+                    });
+
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlState").html("");
+                    //$("#ddlState").append($('<option></option>').val(0).html("---All States---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetRegion", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlRegion").append($("<option></option>").val("").html("---All Regions---"));
+                    $(result).each(function () {
+                        $("#ddlRegion").append($("<option></option>").val(this.ID).html(this.RegionName));
+                    });
+
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlRegion").html("");
+                    //$("#ddlRegion").append($('<option></option>').val(0).html("---All Regions---"));
+                }
+            });
+
+            
+            $.ajax({
+                url: "@Url.Action("GetCityTypes", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlCityType").append($("<option></option>").val("").html("---All City Types---"));
+                    $(result).each(function () {
+                        $("#ddlCityType").append($("<option></option>").val(this.CityTypeId).html(this.CityType));
+                    });            
+                    
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCityType").html("");
+                    //$("#ddlCityType").append($('<option></option>').val(0).html("---All City Types---"));                
+                }
+            });
+
+            $('#ddlCity').select2({ placeholder: "---All Cities---" });
+            $('#ddlCityType').select2({ placeholder: "---All City Types---" });
+            $('#ddlState').select2({ placeholder: "---All States---" });
+            $('#ddlRegion').select2({ placeholder: "---All Regions---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function getRegionDD()
+        {
+            common.ajax_get("@Url.Action("GetRegion", "Common")", null, '#AddLoad, #UpdateLoad',
+                function (data) {
+                    $('.ddRegion').html('');
+                    $.each(data, function (i) {
+                        $('.ddRegion').append($('<option>', { value: data[i].ID }).text(data[i].RegionName));
+                    });
+                    $('.ddRegion').val(null).change();
+                },
+                function (data) {
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('.ddRegion').html('');
+                    $('.ddRegion').val(null).change();
+                    common.notify('error', 'Could not initialize Region dropdown. Please contact your administrator.');
+                });
+        }
+
+        function getCityTypeDD()
+        {
+            common.ajax_get("@Url.Action("GetCityTypes", "Common")", null, '#AddLoad, #UpdateLoad',
+            function (data) {
+                $('.ddCityType').html('');
+                $.each(data, function (i) {
+                    $('.ddCityType').append($('<option>', { value: data[i].CityTypeId }).text(data[i].CityType));
+                });
+                $('.ddCityType').val(null).change();
+            },
+            function (data) {
+                if (data.statusCode == 401 || data.status == 401) {
+                    var response = $.parseJSON(data.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $('.ddCityType').html('');
+                $('.ddCityType').val(null).change();
+                common.notify('error', 'Could not initialize City Type dropdown. Please contact your administrator.');
+            });
+        }
+
+        function linkRegionStateDD()
+        {
+            $('.ddRegion').on('change', function (e, state) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == ''))
+                {
+                    common.ajax_post("@Url.Action("GetStateByRegion", "Common")", { regionId: $(this).val() }, '#AddLoad, #UpdateLoad',
+                    function (data) {
+                        $('.ddState').html('');
+                        $.each(data, function (i) {
+                            $('.ddState').append($('<option>', { value: data[i].ID }).text(data[i].StateName));
+                        });
+                        if (!(state == null || state == undefined || state.value == null || state.value == undefined ||
+                            state.value == '0' && state.value == ''))
+                            $('.ddState').val(state.value).change();
+                        else
+                            $('.ddState').val(null).change();
+                    },
+                function (data) {
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('.ddState').html('');
+                    $('.ddState').val(null).change();
+                    common.notify('error', 'No state found for selected region.');
+                });
+
+                }
+            });
+        }
+
+        function init() {
+            $('.ddRegion').select2({ placeholder: 'Select Region' });
+            $('.ddState').select2({ placeholder: 'Select State' });
+            $('.ddCityType').select2({ placeholder: 'Select City Type' });
+        }
+
+        function resetAddForm() {
+            $('#ddAddRegion').val(null).change();
+            $('#ddAddState').val(null).change();
+            $('#ddAddCityType').val(null).change();
+            $('#txtAddCityName').val('');
+            $('#AddradioA, #AddradioI').iCheck('uncheck');
+            $("#AddCityForm").validate().resetForm();
+            $("#AddCityForm").find('.has-error').removeClass('has-error');
+            $("#AddCityForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetUpdateForm() {
+            $('#txtUpdateCityID').val('');
+            $('#ddUpdateRegion').val(null).change();
+            $('#ddUpdateState').val(null).change();
+            $('#ddUpdateCityType').val(null).change();
+            $('#txtUpdateCityName').val('');
+            $('#UpdateradioA, #UpdateradioI').iCheck('uncheck');
+            $("#UpdateCityForm").validate().resetForm();
+            $("#UpdateCityForm").find('.has-error').removeClass('has-error');
+            $("#UpdateCityForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetDeleteForm() {
+            $('#txtDeleteCityID').val('');
+            $('#displayCityName').html('');
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            //Modal popup hide/show events
+            $('#modalAdd').on('shown.bs.modal', function () {
+                resetAddForm();
+                $('#ddAddRegion').focus();
+                $('#AddradioA').iCheck('check');
+            });
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+            $('#modalUpdate').on('shown.bs.modal', function () {
+                $('#ddUpdateRegion').focus();
+                $("#UpdateCityForm").find('.has-success').removeClass('has-success');
+            });
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+            $('#modalDelete').on('hidden.bs.modal', function () { resetDeleteForm(); });
+            //Modal popup hide/show events till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+                $('.text-blue').hide();
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtCityGrid.row($(this).parent().parent()).data();
+                $('#txtUpdateCityID').val(data.ID);
+                $("#ddUpdateRegion").val(data.RegionId).trigger('change', [{ value: data.StateId}]);
+                $("#ddUpdateCityType").val(data.CityTypeId).change();
+                $('#txtUpdateCityName').val(data.CityName);
+                if (data.Status == 'Active')
+                    $('#UpdateradioA').iCheck('check');
+                else
+                    $('#UpdateradioI').iCheck('check');
+                $('#modalUpdate').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtCityGrid.row($(this).parent().parent()).data();
+                if (data.Status == 'Active') {
+                    $('#txtDeleteCityID').val(data.ID);
+                    $('#displayCityName').html(data.CityName);
+                    $('#modalDelete').modal('toggle');
+                }
+                else
+                    common.notify('error', 'City: ' + data.CityName + ' is already inactive.');
+            });
+
+            getRegionDD();
+            getCityTypeDD();
+            linkRegionStateDD();
+            init();
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.RegionIds = $('#ddlRegion').val();
+                modeldata.StateIds = $('#ddlState').val();
+                modeldata.CityTypeIds = $('#ddlCityType').val();
+                modeldata.CityIds = $('#ddlCity').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelCity", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.City), InputParam : modeldata   },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+        });
+
+        });
+    </script>
+    <script src="~/Content/js/validations/city.js"></script>
+}
+
+@section PageModals
+{
+    <!-- #region Add form -->
+<div class="modal fade" id="modalAdd">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddLoad">
+            @using (Html.BeginForm("Create", "City", FormMethod.Post, new { @id = "AddCityForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-plus", "Add a new city")
+                <div class="modal-body">
+                    @Html.CustomDropDown("ddAddRegion", "RegionID", "Region Name", "ddRegion")
+                    @Html.CustomDropDown("ddAddState", "StateId", "State Name", "ddState")
+                    @Html.CustomDropDown("ddAddCityType", "CityTypeId", "City Type", "ddCityType")
+                    @Html.CustomTextBox("txtAddCityName", "CityName", "City Name", "Enter City Name here...", InputTypes.AlphaNumericWithSpace)
+                    @Html.Custom2RadioButtonGroup("IsActive", "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Add City</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Add form -->
+
+        <!-- #region Update form -->
+<div class="modal fade" id="modalUpdate">
+    <div class="modal-dialog">
+        <div class="modal-content" id="UpdateLoad">
+            @using (Html.BeginForm("Update", "City", FormMethod.Post, new { @id = "UpdateCityForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-pencil", "Update an existing city")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtUpdateCityID", "ID")
+                    @Html.CustomDropDown("ddUpdateRegion", "RegionID", "Region Name", "ddRegion")
+                    @Html.CustomDropDown("ddUpdateState", "StateId", "State Name", "ddState")
+                    @Html.CustomDropDown("ddUpdateCityType", "CityTypeId", "City Type", "ddCityType")
+                    @Html.CustomTextBox("txtUpdateCityName", "CityName", "City Name", "Enter City Name here...", InputTypes.AlphaNumericWithSpace)
+                    @Html.Custom2RadioButtonGroup("IsActive", "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-pencil"></i> Update City</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Update form -->
+
+    <!-- #region Delete form -->
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            @using (Html.BeginForm("Delete", "City", FormMethod.Post, new { @id = "DeleteCityForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-trash", "InActive an existing city")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtDeleteCityID", "ID")
+                    Are you sure you want to inactive the region <strong><span id="displayCityName"></span></strong> ?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">City Master Filters</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Region:</label>
+                        @Html.DropDownList("ddlRegion", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlRegion", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+
+                    <div class="col-lg-4">
+                        <label>State:</label>
+                        @Html.DropDownList("ddlState", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlState", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>City:</label>
+                        @Html.DropDownList("ddlCity", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCity", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                 
+                  
+                </div>
+                <div class="row">
+             
+                    <div class="col-lg-4">
+                        <label>City Type:</label>
+                        @Html.DropDownList("ddlCityType", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCityType", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                        new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm" , @onchange = "ChangeValue(this.value);" })
+                    </div>
+
+                    <div class="col-lg-4">
+                        <br />
+                        <button style="margin-top:2px" class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>  
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> City Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtCity" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>City Name</th>
+                                <th>City Type</th>
+                                <th>State Name</th>
+                                <th>Region Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

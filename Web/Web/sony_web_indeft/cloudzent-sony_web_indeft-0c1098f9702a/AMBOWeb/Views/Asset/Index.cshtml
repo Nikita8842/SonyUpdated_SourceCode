@@ -1,0 +1,338 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.AssetMaster
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var dt = $('#dtAsset').DataTable({
+                serverSide: true,
+                processing: true,
+                scrollY: true,
+                ajax: {
+                    url: "@Url.Action("AssetMasterGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "ProductCode" },
+                    { data: "ProductName" },
+                    { data: "Category" },
+                    { data: "Type" },
+                    { data: "ActiveStatus" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["ActiveStatus"] == "Active")
+                        $('td', row).eq(4).html('<span class="badge bg-green">' + data["ActiveStatus"] + '</span>');
+                    else
+                        $('td', row).eq(4).html('<span class="badge bg-red">' + data["ActiveStatus"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            $('#ddType').append($('<option>', { value: '' }).text('---Select Type---'));
+            $('#ddType').append($('<option>', { value: 'SID' }).text('SID'));
+            $('#ddType').append($('<option>', { value: 'Non-SID' }).text('Non-SID'));
+            $('#ddType').select2();
+
+            $('#modalAddEdit').on('shown.bs.modal', function () {
+                $('#txtProductCode').focus();
+            });
+            $('#modalAddEdit').on('hidden.bs.modal', function () {
+                $('#txtAssetID').val('');
+                $('#txtProductCode').val('');
+                $('#txtProductName').val('');
+                $('#txtCategory').val('');
+                $('#ddType').val('').trigger('change');
+            });
+            
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtAssetID').val('');
+                //$('#displayAssetName').val('');
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new asset');
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalAddEditTitle').html('<i class="fa fa-pencil"></i> Update an existing asset');
+                $('#modalAddEdit').modal('toggle');
+                $('#txtAssetID').val(data.Id);
+                $('#txtProductCode').val(data.ProductCode);
+                $('#txtProductName').val(data.ProductName);
+                $('#txtCategory').val(data.Category);
+                $('#ddType').val(data.Type).trigger('change');
+                if(data.ActiveStatus == "Active")
+                    $("#radioStatusA").iCheck('check');
+                else
+                    $("#radioStatusI").iCheck('check');
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtAssetID').val(data.Id);
+                $('#displayAssetName').html(data.ProductCode + "-" + data.ProductName);
+            });
+
+            $('body').on('click', '#btnSubmit', function () {
+                if(validate())
+                {
+                    var data = new Object();
+                    var url = '';
+                    if ($("#txtAssetID").val() == '')//add
+                    {
+                        url = '@Url.Action("Create","Asset")';
+                    }
+                    else//update
+                    {
+                        url = '@Url.Action("Update","Asset")';
+                        data.Id = $("#txtAssetID").val();
+                    }
+                    data.ProductCode = $("#txtProductCode").val();
+                    data.ProductName = $("#txtProductName").val();
+                    data.Category = $("#txtCategory").val();
+                    data.Type = $("#ddType").val();
+                    data.Status = $('#radioStatusA').is(':checked') ? true : false;
+
+                    var ajaxCall = common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                        if (output.Data) {
+                            $('#modalAddEdit').modal('toggle');
+                            common.notify('success', output.Message);
+                            dt.ajax.reload();
+                        }
+                        else {
+
+                            common.notify('error', output.Message);
+                        }
+                    },
+                    function (output) {
+                        if (output.status == 401 || output.statusCode == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', output.Message);
+                    });
+                }
+
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete","Asset")";
+                var data = new Object();
+                data.Id = $("#txtAssetID").val();
+
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.status == 401 || output.statusCode == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+            $("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelAsset", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Asset) },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.status == 401 || returnValue.statusCode == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+
+            function validate()
+            {
+                
+                var key1 = $('#txtProductCode').val();
+                var key2 = $('#txtProductName').val();
+                var key3 = $('#txtCategory').val();
+                
+                var regex = new RegExp("^[a-zA-Z0-9 ]+$");
+                if(key1 != "")
+                {                  
+                    if (!regex.test(key1)) {
+                        event.preventDefault();
+                        common.notify('error','Special Characters not allowed in Product Code')
+                        return false;
+                    }
+                }
+                if(key2 != "")
+                {
+                    if (!regex.test(key2) ) {
+                        event.preventDefault();
+                        common.notify('error','Special Characters not allowed in Product Name')
+                        return false;
+                    }
+                }
+
+                if(key3 != "")
+                {
+                    if (!regex.test(key3) ) {
+                        event.preventDefault();
+                        common.notify('error','Special Characters not allowed in Category')
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        });
+    </script>
+}
+
+@section PageModals
+{
+<div class="modal fade" id="modalAddEdit">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddEditLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalAddEditTitle"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.Id, new { @id = "txtAssetID" })
+                <div class="form-group">
+                    <label for="txtProductCode">Product Code<span class="text-danger">*</span></label>><span class="text-danger">@Html.ValidationMessageFor(m => m.ProductCode)</span>
+                    @Html.TextBoxFor(m => m.ProductCode, new { @class = "form-control", @id = "txtProductCode", @placeholder = "Enter Product Code" })
+                </div>
+                <div class="form-group">
+                    <label for="txtProductName">Product Name<span class="text-danger">*</span></label>><span class="text-danger">@Html.ValidationMessageFor(m => m.ProductName)</span>
+                    @Html.TextBoxFor(m => m.ProductName, new { @class = "form-control", @id = "txtProductName", @placeholder = "Enter Product Name" })
+                </div>
+                <div class="form-group">
+                    <label for="txtCategory">Category<span class="text-danger">*</span></label>><span class="text-danger">@Html.ValidationMessageFor(m => m.Category)</span>
+                    @Html.TextBoxFor(m => m.Category, new { @class = "form-control", @id = "txtCategory", @placeholder = "Enter Category" })
+                </div>
+                <div class="form-group">
+                    <label for="ddType">Type<span class="text-danger">*</span></label>><span class="text-danger">@Html.ValidationMessageFor(m => m.Type)</span>
+                    @Html.DropDownListFor(m => m.Type, new List<SelectListItem>(), new { @class = "form-control", @id = "ddType", @style = "width:100%" })
+                </div>
+                <div class="form-group">
+                    <label for="radioStatus">Status<span class="text-danger">*</span></label>><span class="text-danger">@Html.ValidationMessageFor(m => m.Status)</span><br />
+                    @Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA" }) Active
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    @Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI" }) InActive
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing asset</h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.Id, new { @id = "txtAssetID" })
+                <strong><span id="displayAssetName"></span></strong> will be deleted from the system. Are you sure to proceed?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i>  Asset Management</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtAsset" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Product Code</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

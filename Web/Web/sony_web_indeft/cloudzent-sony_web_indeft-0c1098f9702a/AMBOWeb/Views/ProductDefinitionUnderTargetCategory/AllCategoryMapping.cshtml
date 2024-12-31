@@ -1,0 +1,338 @@
+﻿@using AMBOWeb.Classes;
+@model AMBOModels.Mappings.ProdDefUnderTargetCatforAllMat
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        TargetCategoryArray = new Array();
+        dtColumns = new Array();
+        var dt;
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#filterBox", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+
+        function initializeTable()
+        {
+            debugger;
+            var data = new Object();
+            data.ProductCategoryId = $("#ddProdCat").val();
+            data.ProductSubCategoryId = $("#ddProdSubCat").val();
+
+            if (data.ProductCategoryId.length ===0 || data.ProductCategoryId == '') {
+                common.notify("error", "Please select a product category.");
+                return;
+            }
+
+            //if (isNaN(data.ProductSubCategoryId) || data.ProductSubCategoryId == 0) {
+            //    common.notify("error", "Please select a product sub category.");
+            //    return;
+            //}
+            common.ajax_post('@Url.Action("SearchAllMaterial", "ProductDefinitionUnderTargetCategory")', data, '#filterBox',
+                //success function
+                function (output) {
+                    if (output.Data != null) {
+                        var rows = output.Data.objGridRows;
+                        if (rows != null) {
+                            if (output.Data.TargetCategoryList != null) {
+                                if (dt) {
+                                    dt.destroy();
+                                    $('#dtProductsWithTargets').empty();
+                                }
+                                dtColumns = new Array();
+                                dtColumns.push({ data: "ProductCategoryId", visible: false, title: "ProductCategoryId" });
+                                dtColumns.push({ data: "ProductCategoryName", title: "Product CategoryName" });
+                                dtColumns.push({ data: "ProductSubCategoryId", visible: false, title: "ProductSubCategoryId" });
+                                dtColumns.push({ data: "ProductSubCategoryName", title: "Product Sub Category Name" });
+                                dtColumns.push({ data: "MaterialCode", title: "Material Code" });
+                                dtColumns.push({ data: "MaterialName", title: "Material Name" });
+                                dtColumns.push({ data: "MOP", title: "MOP" });
+
+                                $('#dtProductsWithTargets thead tr').html('');
+
+                                $('#dtProductsWithTargets thead tr').append('<th>Product Category ID</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>Product Category Name</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>Product Sub Category ID</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>Product Sub Category Name</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>Material Code</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>Material Name</th>');
+                                $('#dtProductsWithTargets thead tr').append('<th>MOP</th>');
+
+                                TargetCategoryArray = new Array();
+
+                                $.each(output.Data.TargetCategoryList, function (y, category) {
+                                    TargetCategoryArray.push({ Id: y, TargetCategoryId: category.TargetCategoryId, TargetCategoryName: category.TargetCategoryName });
+                                    $('#dtProductsWithTargets thead tr').append('<th>' + category.TargetCategoryName + '</th>');
+                                    dtColumns.push({
+                                        data: "TargetCategoryId_" + category.TargetCategoryId + "",
+                                        render: function (data, type, row, meta) {
+                                            return '<input type="checkbox" class="inputicheck" id="Target_' + category.TargetCategoryId + '_Material_' + row["MaterialCode"] + '" ' + row["TargetCategoryId_" + category.TargetCategoryId] + '/>';
+                                        },
+                                        title: category.TargetCategoryName
+                                    });
+                                });
+
+                                dt = $('#dtProductsWithTargets').DataTable({
+                                    searching: true,
+                                    ordering: true,
+                                    columns: dtColumns,
+                                    scrollCollapse: true,
+                                    scrollY: "200px",
+                                    paging: false,
+                                    lengthChange: false,
+                                    info: true,
+                                    autoWidth: false,
+                                    //"fnDrawCallback": function (oSettings) {
+                                    //    $('.inputicheck').iCheck({
+                                    //        checkboxClass: 'icheckbox_flat-blue',
+                                    //        radioClass: 'iradio_flat-blue'
+                                    //    });
+                                    //}
+                                });
+
+                                //add rows to data table
+
+                                for (i in rows) {
+                                    var dataForInsert = new Object();
+                                    dataForInsert.ProductCategoryId = rows[i].ProductCategoryId;
+                                    dataForInsert.ProductCategoryName = rows[i].ProductCategoryName;
+                                    dataForInsert.ProductSubCategoryId = rows[i].ProductSubCategoryId;
+                                    dataForInsert.ProductSubCategoryName = rows[i].ProductSubCategoryName;
+                                    dataForInsert.MaterialCode = rows[i].MaterialCode;
+                                    dataForInsert.MaterialName = rows[i].MaterialName;
+                                    dataForInsert.MOP = rows[i].MOP;
+                                    $.each(TargetCategoryArray, function (j, targets) {
+                                            dataForInsert["TargetCategoryId_" + targets.TargetCategoryId] = '';
+                                            $.each(rows[i].SelectedTargetCategoryIds, function (x) {
+
+                                                if (rows[i].SelectedTargetCategoryIds[x].TargetCategoryId == targets.TargetCategoryId) {
+                                                    dataForInsert["TargetCategoryId_" + targets.TargetCategoryId] = 'checked';
+                                                }
+                                            });
+                                        });
+                                    dt.row.add(dataForInsert).draw(false);
+                                }
+                                //$('.inputicheck').iCheck({
+                                //    checkboxClass: 'icheckbox_flat-blue',
+                                //    radioClass: 'iradio_flat-blue'
+                                //});
+                                $('#dataBox').parent().parent().removeClass('hidden');
+                                dt.columns.adjust().draw();
+                                $('.dataTables_scrollBody').css('max-height', 405);
+
+                            }
+                            else
+                                common.notify('error', output.Message);
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    }
+                    else
+                        common.notify('error', output.Message);
+                },
+                //error function
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    dt.clear().draw();
+                    common.notify('error', 'Unable to search products on basis of category and sub category. Please contact your administrator.');
+                });
+
+        }
+        $(document).ready(function () {
+
+
+            getProdCatDD();
+            $("#ddProdCat").on('change', function () {
+                if(this.value != null && this.value != undefined && this.value != '' && this.value != 0)
+                {
+                    var data = new Object();
+                    data.ProductIds = $("#ddProdCat").val();
+                    common.ajax_post('@Url.Action("GetSubCategoryforMultipleProducts", "Common")', data, "#filterBox", function (subcategories) {
+                        $("#ddProdSubCat").html("");
+                        $.each(subcategories, function (i, subcategory) {
+                            $("#ddProdSubCat").append($('<option></option>').val(subcategory.Id).html(subcategory.Name));
+                        });
+                        $('#ddProdSubCat').val(null).change();
+                    }, function (output) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                        $("#ddProdSubCat").html("");
+                    });
+                }
+            });
+
+            $('#btnSearch').click(function () {
+                initializeTable();
+            });
+
+            $('#btnSubmit').click(function () {
+                var datamanage = new Object();
+                datamanage.objGridRows = new Array();
+                dt.rows().every(function (index, tableLoop, rowLoop) {
+                    var rowdata = this.data();
+                    datamanage.objGridRows[index] = new Object();
+                    datamanage.objGridRows[index].ProductCategoryId = rowdata.ProductCategoryId;
+                    datamanage.objGridRows[index].ProductSubCategoryId = rowdata.ProductSubCategoryId;
+                    datamanage.objGridRows[index].ProductCategoryName = rowdata.ProductCategoryName;
+                    datamanage.objGridRows[index].ProductSubCategoryName = rowdata.ProductSubCategoryName;
+                    datamanage.objGridRows[index].MaterialCode = rowdata.MaterialCode;
+                    datamanage.objGridRows[index].MaterialName = rowdata.MaterialName;
+                    datamanage.objGridRows[index].MOP = rowdata.MOP;
+                    datamanage.objGridRows[index].SelectedTargetCategoryIds = new Array();
+
+                    $.each(TargetCategoryArray, function (i, target) {
+                        //var status = $('#Target_' + target.TargetCategoryId + '_Material_' + row.MaterialCode).parent('[class*="icheckbox"]').hasClass("checked");
+                        //var status = $('#Target_' + target.TargetCategoryId + '_Material_' + row.MaterialCode).iCheck('update')[0].checked;
+                        if (($('#Target_' + target.TargetCategoryId + '_Material_' + rowdata.MaterialCode).is(':checked') == true))
+                        datamanage.objGridRows[index].SelectedTargetCategoryIds.push({
+                                TargetCategoryId: target.TargetCategoryId
+                            });
+                    });
+                    //row.counter++; // update data source for the row
+
+                    //this.invalidate();
+                });
+                console.log(datamanage);
+                common.ajax_post('@Url.Action("Manage", "ProductDefinitionUnderTargetCategory")', datamanage, '#dataBox',
+                    //success function
+                    function (output) {
+                        if (output.Data)
+                        {
+                            common.notify('success', output.Message);
+                            dt.clear().draw();
+                            $('#dataBox').parent().parent().addClass('hidden');
+                            $('#ddProdCat').val(null).change();
+                            $('#ddProdSubCat').val(null).change();
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    },
+                    //error function
+                    function (output) {
+                        debugger;
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Unknown error occured. Please contact your administrator.');
+                    }
+                    );
+            });
+
+            $('#btnBack').click(function () { $(location).attr('href','@Url.Action("Index", "ProductDefinitionUnderTargetCategory")');});
+            $('#ddProdCat').select2({
+                placeholder: 'Select Product Category'
+            });
+            $('#ddProdSubCat').select2({
+                placeholder: 'Select Product Sub Category'
+            });
+
+
+        });
+    </script>
+}
+
+@section PageModals
+{
+
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border">
+                <h3 class="box-title">Filters</h3>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-5 col-md-5">
+                        <div class="form-group">
+                            @Html.AmboDropdownMultipleFor(x => x.ProductCategoryId, "ddProdCat", "Product Category(s)", "ddProdCat")
+
+
+                            @*< label for="ddProdCat">Product Category</label>
+                            <select id="ddProdCat" class="form-control input-sm" multiple="multiple"></select>*@
+                            @*@Html.DropDownListFor(m=>m.ProductCategoryId, new List<SelectListItem>(), new { @id = "ddProdCat", @class="form-control input-sm"})*@
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-5">
+                        <div class="form-group">
+                            @Html.AmboDropdownMultipleFor(x => x.ProductSubCategoryId, "ddProdSubCat", "Product Sub Category(s)", "ddProdSubCat")
+                            @*<label for="ddProdSubCat">Product Sub Category</label>
+                            <select id="ddProdSubCat" class="form-control input-sm" multiple="multiple"></select>*@
+                            @*@Html.DropDownListFor(m => m.ProductSubCategoryId, new List<SelectListItem>(), new { @id = "ddProdSubCat", @class = "form-control input-sm" })*@
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        <br />
+                        <button type="button" id="btnSearch" class="btn btn-primary btn-flat"><i class="fa fa-search"></i> Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="dataBox">
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <table id="dtProductsWithTargets" class="table table-striped table-hover table-bordered datatable" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="box-footer">
+                <div class="row">
+                    <div class="col-lg-12 text-center">
+                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                        <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

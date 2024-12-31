@@ -1,0 +1,387 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.RoleRightsMappingMaster
+
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function ()
+        {
+            dt = $('#dtRoleRights').DataTable({
+                //serverSide: true,
+                processing: true,
+                scrollX: true,
+                scrollY: true,
+
+                ajax: {
+                    url: "@Url.Action("GetRoleRightsMappingGrid", "Grid")",
+                    type: 'POST',
+                    dataSrc: '',
+                },
+                language: {
+                    //search: "",
+                    //searchPlaceholder: "Type here for search...",
+                    processing: "Hang on. Waiting for response..."
+                },
+                columns: [
+                    //{ data: "RoleRightsId", "visible": false },
+                    { data: "RoleName" },
+                    { data: "ModuleName" },
+                    { data: "SubModuleName" },
+                    { data: "ViewPermission" },
+                    { data: "CreatePermission" },
+                    { data: "EditPermission" },
+                    { data: "DeletePermission" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="edit" data-toggle="tooltip" data-placement="right" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;';
+                                //+ '<a class="delete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["ViewPermission"] == "YES")
+                        $('td', row).eq(3).html('<span class="badge bg-green">' + data["ViewPermission"] + '</span>');
+                    else
+                        $('td', row).eq(3).html('<span class="badge bg-red">' + data["ViewPermission"] + '</span>');
+
+                    if (data["CreatePermission"] == "YES")
+                        $('td', row).eq(4).html('<span class="badge bg-green">' + data["CreatePermission"] + '</span>');
+                    else
+                        $('td', row).eq(4).html('<span class="badge bg-red">' + data["CreatePermission"] + '</span>');
+
+                    if (data["EditPermission"] == "YES")
+                        $('td', row).eq(5).html('<span class="badge bg-green">' + data["EditPermission"] + '</span>');
+                    else
+                        $('td', row).eq(5).html('<span class="badge bg-red">' + data["EditPermission"] + '</span>');
+
+                    if (data["DeletePermission"] == "YES")
+                        $('td', row).eq(6).html('<span class="badge bg-green">' + data["DeletePermission"] + '</span>');
+                    else
+                        $('td', row).eq(6).html('<span class="badge bg-red">' + data["DeletePermission"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            $('#modalAdd').on('shown.bs.modal', function () {
+                resetAddForm();
+                $('#ddAddRegion').focus();
+                $('#AddradioA').iCheck('check');
+            });
+
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+
+           
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+            });
+
+            $('body').on('click', '.edit', function () {
+                var data = dt.row($(this).parent().parent()).data();               
+                initializeUpdateModal(data);
+                $('#modalUpdate').modal('toggle');
+            });
+
+            getRoleDD();
+            getModuleDD();
+            init();
+
+            $("#btnSelectall").click(function () {
+
+                $("#ddlSubModule > option").prop("selected", "selected");
+                $("#ddlSubModule").trigger("change");
+
+            });
+
+            $("#btnDselectAll").click(function () {
+
+                $("#ddlSubModule").val(null).trigger("change");
+
+            });
+        });
+
+        function init() {
+
+                $('#ddlRole').select2({ placeholder: 'Select Role' });
+                $('#ddlModule').select2({ placeholder: 'Select Module' });
+
+        }
+
+        function getRoleDD() {
+            common.ajax_get("@Url.Action("GetRoles", "Common")", null, null, function (roles) {
+                $("#ddlRole").html("");
+                $.each(roles, function (i, role) {
+                    $("#ddlRole").append($('<option></option>').val(role.RoleId).html(role.Name));
+                });
+                @*var RoleId = @Model.RoleId;
+                if(RoleId != null)
+                {
+                    $('#ddlRole').val(RoleId).change();
+
+                }*@
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddlRole").html("");
+            });
+        }
+
+        function getModuleDD() {
+            common.ajax_get("@Url.Action("GetAllModules", "Common")", null, null, function (modules) {
+                $("#ddlModule").html("");
+                $.each(modules, function (i, module) {
+                    $("#ddlModule").append($('<option></option>').val(module.ModuleId).html(module.ModuleName));
+                });
+                @*var ModuleId = @Model.ModuleId;
+                if(ModuleId != null)
+                {
+                    $('#ddlModule').val(ModuleId).change();
+
+                }*@
+                //$('#ddlModule').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddlModule").html("");
+            });
+        }
+
+        function resetAddForm() {
+            $('#ddlRole').val(null).change();
+            $('#ddlModule').val(null).change();
+            $('#ddlSubModule').val(null).change();
+
+        }
+
+        function resetUpdateForm() {
+            $('#txtRoleRightId').val('');
+            $('#ddlRole').val(null).change();
+            $('#ddlModule').val(null).change();
+            $('#ddlSubModule').val(null).change();
+
+        }
+
+        function getSubModules() {
+            var url = '@Url.Action("GetSubModulesByModuleId", "Common")';
+            var data = new Object();
+            data.ModuleId = $("#ddlModule").val();
+            common.ajax_post(url, data, null, function (submodules) {
+                $("#ddlSubModule").html("");
+                $.each(submodules, function (i, submodule) {
+                    $("#ddlSubModule").append(
+                        $('<option></option>').val(submodule.SubModuleId).html(submodule.SubModuleName));
+                });
+                $('#ddlSubModule').select2({ placeholder: 'Select Role' });
+                $('#ddlSubModule').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddlSubModule").html("");
+            });
+        }
+
+        function initializeUpdateModal(data) {
+            try {
+                $("#txtRoleRightId").val(data.RoleRightsId);
+                $("#txtRole").val(data.RoleName);
+                $("#txtModule").val(data.ModuleName);
+                $("#txtSubModule").val(data.SubModuleName);
+                if (data.ViewPermission == 'YES')
+                    $('#cbViewU').iCheck('check');
+                else
+                    $('#cbViewU').iCheck('uncheck');
+                if (data.CreatePermission == 'YES')
+                    $('#cbCreateU').iCheck('check');
+                else
+                    $('#cbCreateU').iCheck('uncheck');
+                if (data.EditPermission == 'YES')
+                    $('#cbEditU').iCheck('check');
+                else
+                    $('#cbEditU').iCheck('uncheck');
+                if (data.DeletePermission == 'YES')
+                    $('#cbDeleteU').iCheck('check');
+                else
+                    $('#cbDeleteU').iCheck('uncheck');
+            }
+            catch (ex) {
+                console.log(ex);
+                common.notify('error', 'Unable to edit this mapping. Please try after some time.')
+            }
+        }
+    </script>
+
+}
+
+@section PageModals
+{
+
+<div class="modal fade" id="modalAdd">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddLoad">
+            @using (Html.BeginForm("Create", "RoleRightMapping", FormMethod.Post, new { @id = "AddRoleRightsForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-plus", "Map a new Role Rights")
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="ddlRole">Role</label>
+                        @Html.DropDownListFor(m => m.RoleId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlRole", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddlModule">Module Name</label>
+                        @Html.DropDownListFor(m => m.ModuleId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlModule", @style = "width:100%", @onchange= "getSubModules();" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddlSubModule">Sub Module Name</label> <a id="btnSelectall">Select All</a> / <a id="btnDselectAll">Remove All</a>
+                        @Html.DropDownListFor(m => m.SubModuleIds, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlSubModule", @style = "width:100%", @multiple="multiple" })
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="ddlSubModule">View</label>
+                            @Html.CheckBoxFor(m => m.ViewPermission, new { @class = "form-control input-sm", @id = "cbView", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="ddlSubModule">Create</label>
+                            @Html.CheckBoxFor(m => m.CreatePermission, new { @class = "form-control input-sm", @id = "cbCreate", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="ddlSubModule">Edit</label>
+                            @Html.CheckBoxFor(m => m.EditPermission, new { @class = "form-control input-sm", @id = "cbEdit", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="ddlSubModule">Delete</label>
+                            @Html.CheckBoxFor(m => m.DeletePermission, new { @class = "form-control input-sm", @id = "cbDelete", @style = "width:100%" })
+                        </div>
+                    </div>
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Add Rights</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalUpdate">
+    <div class="modal-dialog">
+        <div class="modal-content" id="UpdateLoad">
+            @using (Html.BeginForm("Update", "RoleRightMapping", FormMethod.Post, new { @id = "UpdateRoleRightsForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-plus", "Edit Role Rights Mapping")
+                @Html.HiddenFor(m=>m.RoleRightsId, new { @id="txtRoleRightId"})
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label >Role</label>
+                        @Html.TextBox("RoleName",null, new { @class = "form-control input-sm", @id = "txtRole", @style = "width:100%", @readonly="readonly" })
+                    </div>
+                    <div class="form-group">
+                        <label >Module Name</label>
+                        @Html.TextBox("ModuleName", null, new { @class = "form-control input-sm", @id = "txtModule", @style = "width:100%", @readonly = "readonly" })
+                    </div>
+                    <div class="form-group">
+                        <label >Sub Module Name</label> 
+                        @Html.TextBox("SubModuleName", null, new { @class = "form-control input-sm", @id = "txtSubModule", @style = "width:100%", @readonly = "readonly" })
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>View</label>
+                            @Html.CheckBoxFor(m => m.ViewPermission, new { @class = "form-control input-sm", @id = "cbViewU", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label >Create</label>
+                            @Html.CheckBoxFor(m => m.CreatePermission, new { @class = "form-control input-sm", @id = "cbCreateU", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>Edit</label>
+                            @Html.CheckBoxFor(m => m.EditPermission, new { @class = "form-control input-sm", @id = "cbEditU", @style = "width:100%" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>Delete</label>
+                            @Html.CheckBoxFor(m => m.DeletePermission, new { @class = "form-control input-sm", @id = "cbDeleteU", @style = "width:100%" })
+                        </div>
+                    </div>
+                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnSubmitU" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Update Rights</button>
+                    </div>
+            }
+        </div>
+    </div>
+</div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Data</a></li>
+                @*<li class="pull-right"><a href="@Url.Action("AddUpdateDealer", "Dealer")" style="margin-top:2px" id="btnAddDealer" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</a></li>*@
+                <li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                @*<li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtRoleRights" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                @*<th>ID</th>*@
+                                <th>Role</th>
+                                <th>Module Name</th>
+                                <th>Sub Module Name</th>
+                                <th>View Permission</th>
+                                <th>Create Permission</th>
+                                <th>Edit Permission</th>
+                                <th>Delete Permission</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

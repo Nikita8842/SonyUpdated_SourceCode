@@ -1,0 +1,331 @@
+﻿@model AMBOModels.UserManagement.EmployeeFormData
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            debugger;
+
+            function init()
+            {
+                try
+                {
+                    $('#ddBranch').select2();
+                    $('#ddRole').select2();
+                    $('#txtEmployeeCode').focus();
+                    @if (Model.isUpdate)
+                    {
+                        @Html.Raw("$('#txtLoginId').prop('readonly',true);");
+                        @Html.Raw("$('#txtEmployeeCode').prop('readonly',true);");
+
+                        if (Model.Status)
+                        {
+                            @Html.Raw("$('#radioStatusA').iCheck('check');");
+                        }
+                        else
+                        {
+                            @Html.Raw("$('#radioStatusI').iCheck('check');");
+                        }
+
+                    }
+                    else
+                    {
+                        @Html.Raw("$('#radioStatusA').iCheck('check');");
+                        }
+
+                    }
+                catch(ex)
+                {
+                    common.notify('error','Could not initialize form. Please try after some time.');
+                }
+            }
+
+            function getRolesDD() {
+                common.ajax_get("@Url.Action("GetRoles", "Common")", null, "#tabForm", function (roles) {
+                    $("#ddRole").html("");
+                    $("#ddRole").append($('<option></option>').val(0).html("---Select Role---"));
+                    $.each(roles, function (i, role) {
+                        if(role.Name != 'SFA')
+                        {
+                            $("#ddRole").append($('<option></option>').val(role.RoleId).html(role.Name));
+                        }
+                    });
+                    var RoleId = @Model.RoleId;
+                    if(RoleId != null)
+                    {
+                        $('#ddRole').val(RoleId).trigger('change');
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddRole").html("");
+                    $("#ddRole").append($('<option></option>').val(0).html("---Select Role---"));
+                });
+            }
+
+            function getBranchDD() {
+                common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabForm", function (branches) {
+                    $("#ddBranch").html("");
+                    $("#ddBranch").append($('<option></option>').val(0).html("---Select Branch---"));
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    var BranchId = @Model.BranchId;
+                    if(BranchId != null)
+                    {
+                        $('#ddBranch').val(BranchId).trigger('change');
+                    }
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                    $("#ddBranch").append($('<option></option>').val(0).html("---Select Branch---"));
+                });
+            }
+
+            $('#btnBack').on('click', function (e) {
+                $(location).attr('href', '@Url.Action("Index", "Employee")');
+            });
+
+            $('#btnSubmit').on('click', function (e) {
+                debugger;
+                var key1 = $('#txtEmployeeCode').val();
+                var key2 = $('#txtLoginId').val();
+                var key3 = $('#txtFirstName').val();
+                var key4 = $('#txtLastName').val();
+                var regex = new RegExp("^[a-zA-Z0-9 ]+$");
+                if(key1 != "")
+                {
+                    debugger;
+                    if (!regex.test(key1)) {
+                        event.preventDefault();
+                        common.notify('error','Special Characters not allowed in Employee Code')
+                        return false;
+                    }
+                }
+                if(key2 != "")
+                {
+
+
+                    if (!regex.test(key2) ) {
+                        event.preventDefault();
+                        common.notify('error','Special Characters not allowed in Login Id ')
+                        return false;
+                    }
+                }
+
+                //if(key3 != "")
+                //{
+                //    debugger;
+                //    if (!regex.test(key3)) {
+                //        event.preventDefault();
+                //        common.notify('error','Special Characters not allowed in First Name')
+                //        return false;
+                //    }
+                //}
+                //if(key4 != "")
+                //{
+
+
+                //    if (!regex.test(key4) ) {
+                //        event.preventDefault();
+                //        common.notify('error','Special Characters not allowed in Last Name ')
+                //        return false;
+                //    }
+                //}
+                return true;
+
+
+            });
+
+
+            init();
+            getRolesDD();
+            getBranchDD();
+
+            var oldPass = '@Model.OldPassword';
+            if(oldPass != null)
+            {
+                $('#txtPassword').val(oldPass);
+                $('#txtReTypePassword').val(oldPass);
+            }
+
+            @if (IsPost)
+            {
+                @Html.Raw("common.notify('error','" + Model.SubmitMessage + "');")
+            }
+
+
+        });
+
+
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabForm" data-toggle="tab">
+                        @if (Model.isUpdate)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update Employee Data")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new employee")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("AddUpdate", "Employee", FormMethod.Post, new { @id = "formEmployee" }))
+                    {
+                        @Html.HiddenFor(m => m.EmployeeId)
+                        @Html.HiddenFor(m=>m.OldPassword)
+                        @Html.HiddenFor(m=>m.isPasswordChange)
+                        @Html.HiddenFor(m => m.isUpdate)
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtEmployeeCode">Employee Code<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.EmployeeCode)</span>
+                                        @Html.TextBoxFor(m => m.EmployeeCode, new { @class = "form-control input-sm", @id = "txtEmployeeCode", @placeholder = "Enter Employee Code" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtLoginId">Login ID/Employee ID<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LoginId)</span>
+                                        @Html.TextBoxFor(m => m.LoginId, new { @class = "form-control input-sm", @id = "txtLoginId", @placeholder = "Enter Login ID" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtPassword">Password<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Password)</span>
+                                        @Html.PasswordFor(m => m.Password, new { @class = "form-control input-sm", @id = "txtPassword", @placeholder = "Enter Password" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtReTypePassword">Re-Type Password<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.ReTypePassword)</span>
+                                        @Html.PasswordFor(m => m.ReTypePassword, new { @class = "form-control input-sm", @id = "txtReTypePassword", @placeholder = "Re-Type Password" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddBranch">Branch<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.BranchId)</span>
+                                        @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Branch---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddRole">Role<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.RoleId)</span>
+                                        @Html.DropDownListFor(m => m.RoleId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Role---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddRole", @style = "width:100%" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtFirstName">First Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.FirstName)</span>
+                                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control input-sm", @id = "txtFirstName", @placeholder = "Enter Employee's First Name" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtLastName">Last Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LastName)</span>
+                                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control input-sm", @id = "txtLastName", @placeholder = "Enter Employee's Last Name" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtMobNo">Mobile Number<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.MobileNumber)</span>
+                                        @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control input-sm", @id = "txtMobNo", @placeholder = "Enter Mobile Number" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtAltMobNo">Alternate Number</label><span class="text-danger">@Html.ValidationMessageFor(m => m.AltMobileNumber)</span>
+                                        @Html.TextBoxFor(m => m.AltMobileNumber, new { @class = "form-control input-sm", @id = "txtAltMobNo", @placeholder = "Enter Alternate Mobile No." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtEmailId">Email ID</label><span class="text-danger">@Html.ValidationMessageFor(m => m.EmailId)</span>
+                                        @Html.TextBoxFor(m => m.EmailId, new { @class = "form-control input-sm", @id = "txtEmailId", @placeholder = "Enter Email ID" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtIMEI1">IMEI 1</label>@*<span class="text-danger">@Html.ValidationMessageFor(m => m.IMEI1)</span>*@
+                                        @Html.TextBoxFor(m => m.IMEI1, new { @class = "form-control input-sm", @id = "txtIMEI1", @placeholder = "Enter IMEI 1" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtIMEI2">IMEI 2</label>@*<span class="text-danger">@Html.ValidationMessageFor(m => m.IMEI2)</span>*@
+                                        @Html.TextBoxFor(m => m.IMEI2, new { @class = "form-control input-sm", @id = "txtIMEI2", @placeholder = "Enter IMEI 2" })
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="radioStatus">Status<span class="text-danger">*</span></label><br />
+                                        @Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA" }) Active
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                        @Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI" }) InActive
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                        <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

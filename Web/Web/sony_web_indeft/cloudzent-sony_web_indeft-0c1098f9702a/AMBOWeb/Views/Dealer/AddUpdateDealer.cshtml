@@ -1,0 +1,942 @@
+﻿@model AMBOModels.MasterMaintenance.DealerMaster
+@{
+    ViewBag.Title = "AddUpdateDealer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+
+@section PageCSS{
+<link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model.ID != 0)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update Dealer")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new Dealer")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("AddUpdateDealer", "Dealer", FormMethod.Post, new { id = "formDealer" }))
+                    {
+                        @Html.HiddenFor(m => m.ID, new { Id = "txtDealerId", @value = Model.ID })
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Dealer Code</label>
+                                    @Html.TextBoxFor(m => m.DealerCode, new { @Class = "form-control input-sm", @id = "txtdealercode", @readonly = ""})
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >SAP Code<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SAPCode)</span>
+                                    <div>
+                                        @Html.TextBoxFor(m => m.SAPCode, new { Id = "txtMasterCode", @Class = "typeahead", @onfocusout = "SetPSIMasterCode()"})
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >PSI Master Code1</label>
+                                    @Html.TextBoxFor(m => m.MasterCode1, new { @Id = "txtPSIMasterCode1", @Class = "form-control input-sm"})
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >PSI Master Cod2</label>
+                                    @Html.TextBoxFor(m => m.MasterCode2, new { Id = "txtPSIMasterCode2", @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Payer Code<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.PayerCode)</span>
+                                    @Html.TextBoxFor(m => m.PayerCode, new { @Class = "form-control input-sm", @readonly = "readonly", @Id = "txtPayerCode" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Payer Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.PayerName)</span>
+                                    @Html.TextBoxFor(m => m.PayerName, new {@Id="txtPayerName", @Class = "form-control input-sm ", @readonly = "readonly", @onkeypress = "return validateName(event)"})
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Store Code</label>
+                                    @Html.TextBoxFor(m => m.StoreCode, new { @Id = "txtStoreCode", @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Dealer Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.DealerName)</span>
+                                    @Html.TextBoxFor(m => m.DealerName, new { @Id = "txtDealerName", @Class = "form-control input-sm", @onkeypress = "return validateName(event)"})
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Channel<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.ChannelId)</span>
+                                    @Html.DropDownListFor(m => m.ChannelId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlChannel", @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Customer ID</label>
+                                    @Html.TextBoxFor(m => m.CustomerId, new { @Id = "txtCustomerId", @Class = "form-control input-sm"})
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Branch<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.BranchId)</span>
+                                    @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm" , @value=Model.BranchId})
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Region<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.RegionId)</span>
+                                    @Html.DropDownListFor(m => m.RegionId, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "ddlRegion", @Class = "form-control input-sm", @onChange = "FillState()" })
+                                </div>
+                            </div>
+                        </div>
+                            
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >State<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.StateId)</span>
+                                        @Html.DropDownListFor(m => m.StateId, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "ddlState", @Class = "form-control input-sm", @onChange = "FillCity()"})
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >City<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.CityId)</span>
+                                        @Html.DropDownListFor(m => m.CityId, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "ddlCity", @Class = "form-control input-sm", @onChange = "FillLocation()" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Location<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LocationId)</span>
+                                        @Html.DropDownListFor(m => m.LocationId, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "ddlLocation", @Class = "form-control input-sm" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Address</label>
+                                        @Html.TextBoxFor(m => m.Address, new { Id = "txtAddress", @Class = "form-control input-sm" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Longitude</label>
+                                        @Html.TextBoxFor(m => m.Longitude, new { id = "txtLongitude", @Class = "form-control input-sm" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Latitude</label>
+                                        @Html.TextBoxFor(m => m.Latitude, new { id = "txtLatitude", @Class = "form-control input-sm"})
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Mobile No<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.MobileNumber)</span>
+                                        @Html.TextBoxFor(m => m.MobileNumber, new
+                           {
+                               @Id = "txtMobile",
+                               @Class = "form-control input-sm",
+                               @onkeypress = "return isNumberKey(event)",
+                               @tabindex = "19"
+                           })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Contact Person</label>
+                                        @Html.TextBoxFor(m => m.ContactPerson, new { @Id = "txtContactPerson", @Class = "form-control input-sm", @tabindex = "20" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Email ID<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.EmailID)</span>
+                                        @Html.TextBoxFor(m => m.EmailID, new { @Id = "txtEmail", @Class = "form-control input-sm", @tabindex = "21" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Outlet Type<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.OutletType)</span>
+                                        @Html.DropDownListFor(m => m.OutletType, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlOutletType", @Class = "form-control input-sm", @tabindex = "24" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >PSI Outlet1</label>
+                                        @Html.RadioButtonFor(m => m.PSIOutlet1, true, new { @Id = "radioPSIOutlet1Y", name = "psi1", @tabindex = "22", @class = "radioGroup1" })  Yes
+                                        @Html.RadioButtonFor(m => m.PSIOutlet1, false, new { @Id = "radioPSIOutlet1N", name = "psi1" })  No
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >PSI Outlet2</label>
+                                        @Html.RadioButtonFor(m => m.PSIOutlet2, true, new { @Id = "radioPSIOutlet2Y", name = "psi2", @tabindex = "23", @class = "radioGroup2" })  Yes
+                                        @Html.RadioButtonFor(m => m.PSIOutlet2, false, new { @Id = "radioPSIOutlet2N", name = "psi2"})  No
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Opening Date<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.OpeningDate)</span>
+                                        @Html.TextBoxFor(m => m.OpeningDate, new { id = "txtOpeningDate", @Class = "form-control input-sm", @onkeydown = "return false;", autocomplete = "off" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Closing Date</label>
+                                        @Html.TextBoxFor(m => m.ClosingDate, new { id = "txtClosingDate", @Class = "form-control input-sm", @onkeydown = "return false;", autocomplete = "off" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Status</label>
+                                        @Html.RadioButtonFor(m => m.Status, true, new { Id = "radioStatusA"})  Active
+                                        @Html.RadioButtonFor(m => m.Status, false, new { Id = "radioStatusI" })  InActive
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button type="button" id="btnSubmit" class="btn btn-primary">Submit</button>
+                                        @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default", onclick = "response" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button type="button" id="btnClear" Class="btn btn-default hidden" onclick="ClearLatLong();">Clear LatLong</button>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+
+    @section PageJS{
+<script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/Content/plugins/typeahead.js-master/dist/typeahead.bundle.js"></script>
+<script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            debugger;
+
+            var data;
+
+            if ('@UserSession.RoleName' == 'RDI' && '@Model.ID' != '0') {
+                @Html.Raw("$('#txtdealercode').prop('readonly',true);");
+                @Html.Raw("$('#txtMasterCode').attr('disabled', 'disabled');");
+                @Html.Raw("$('#txtMasterCode').addClass('input-disabled');");
+                @Html.Raw("$('#txtPSIMasterCode1').prop('readonly',true);");
+                @Html.Raw("$('#txtPSIMasterCode2').prop('readonly',true);");
+                @Html.Raw("$('#txtPayerCode').prop('readonly',true);");
+                @Html.Raw("$('#txtPayerName').prop('readonly',true);");
+                @Html.Raw("$('#txtStoreCode').prop('readonly',true);");
+                @Html.Raw("$('#txtDealerName').prop('readonly',true);");
+                @Html.Raw("$('#txtCustomerId').prop('readonly',true);");
+                @Html.Raw("$('#ddlChannel').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlBranch').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlRegion').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlState').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlCity').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlLocation').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddlOutletType').attr('readonly', 'readonly');");
+                @Html.Raw("$('#txtContactPerson').prop('readonly',true);");
+                @Html.Raw("$('#txtEmail').prop('readonly',true);");
+                @Html.Raw("$('#txtAddress').prop('readonly',true);");
+                @Html.Raw("$('#txtMobile').prop('readonly',true);");
+                @Html.Raw("$('#txtOpeningDate').prop('readonly',true);");
+                @Html.Raw("$('#txtClosingDate').prop('readonly',true);");
+                @Html.Raw("$('#radioPSIOutlet1Y').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioPSIOutlet1N').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioPSIOutlet2Y').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioPSIOutlet2N').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioStatusA').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioStatusI').attr('disabled', 'disabled');");
+            }
+
+            function init()
+            {
+                try
+                {
+                    $('#ddlChannel').select2();
+                    $('#ddlBranch').select2();
+                    $('#ddlRegion').select2();
+                    $('#ddlState').select2();
+                    $('#ddlCity').select2();
+                    $('#ddlLocation').select2();
+                    $('#ddlOutletType').select2();
+                    $('#ddlShiftName').select2();
+                    $('#txtOpeningDate').datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy"
+                    });
+                    $("#txtClosingDate").datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy"
+                    });
+                }
+                catch(ex)
+                {
+                    common.notify('error','Could not initialize form. Please try after some time.');
+                    console.log(ex);
+                }
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetDealerCodeList", "Dealer")',
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    debugger;
+                    if (result != null) {
+                        data = result;
+
+                        var substringMatcher = function (strs) {
+                            return function findMatches(q, cb) {
+                                var matches, substringRegex;
+                                matches = [];
+                                substrRegex = new RegExp(q, 'i');
+                                $.each(strs, function (i, str) {
+                                    if (substrRegex.test(str)) {
+                                        matches.push(str);
+                                    }
+                                });
+
+                                cb(matches);
+                            };
+                        };
+
+
+                        $('.typeahead').typeahead({
+                            hint: true,
+                            highlight: true,
+                            minLength: 1
+                        },
+                        {
+                            //name: 'data',
+                            //displayKey: 'value',
+                            source: substringMatcher(data)
+                        });
+                        $('.tt-input').css("width:100%");
+                        $('.tt-hint').css("width:100%");
+                        //$('#txtMaterialCode').removeClass('typeahead');
+                        //$('.tt-input').css("position", "absolute");
+                        $('.tt-input').css("vertical-align", "");
+                        $('.tt-input').addClass('form-control');
+                        $('.tt-hint').css("vertical-align", "");
+                        $('.twitter-typeahead').css("display", "inherit");
+                        $('.tt-hint').addClass('form-control');
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Error while loading dealer details.')
+                }
+            });
+
+            $('.radioGroup1').on('ifClicked', function() {
+                debugger;
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("CheckPSIOutlet", "Dealer")",
+                    data: { PSIOutlet1: $("#radioPSIOutlet1Y").val(), PSIOutlet2: 'False', DealerId: $("#txtdealercode").val(), Code: $("#txtMasterCode").val() },
+                    success: function (result) {
+                        debugger;
+                        //var res = window.confirm(result.Message);
+                        if(result.Data)
+                        {
+                            common.notify('success', result.Message);
+                        }
+                        else
+                        {
+                            common.notify('error', result.Message);
+                        }
+
+                        //click submit button
+                    },
+                    error: function (result){
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error occured while checking PSIOutlet status.")
+                    }
+                });
+            });
+
+            $('.radioGroup2').on('ifClicked', function() {
+                debugger;
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("CheckPSIOutlet", "Dealer")",
+                    data: { PSIOutlet1: 'False', PSIOutlet2: $("#radioPSIOutlet2Y").val(), DealerId: $("#txtdealercode").val(), Code: $("#txtMasterCode").val() },
+                    success: function (result) {
+                        debugger;
+                        //var res = window.confirm(result.Message);
+                        if (result.Data) {
+                            common.notify('success', result.Message);
+                        }
+                        else {
+                            common.notify('error', result.Message);
+                        }
+
+                        //click submit button
+                    },
+                    error: function (result){
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error occured while checking PSIOutlet status.")
+                    }
+                });
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetRegion", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#ddlRegion").append($("<option></option>").val("").html("Select region"));
+                    $(result).each(function () {
+                        $("#ddlRegion").append($("<option></option>").val(this.ID).html(this.RegionName));
+                    });
+                    var Region=@Model.RegionId;
+                    if(Region != 0)
+                    {
+                        $('#ddlRegion').val(Region).change();
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlRegion").html("");
+                    $("#ddlRegion").append($('<option></option>').val(0).html("Select region"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetChannels", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#ddlChannel").append($("<option></option>").val("").html("Select channel"));
+                    $(result).each(function () {
+                        $("#ddlChannel").append($("<option></option>").val(this.Id).html(this.ChannelName));
+                    });
+                    var Channel=@Model.ChannelId;
+                    if(Channel != 0)
+                    {
+                        $('#ddlChannel').val(Channel).change();
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlChannel").html("");
+                    $("#ddlChannel").append($('<option></option>').val(0).html("Select channel"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#ddlBranch").append($("<option></option>").val("").html("Select branch"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+                    var Branch=@Model.BranchId;
+                    if(Branch != 0)
+                    {
+                        $('#ddlBranch').val(Branch).change();
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlBranch").html("");
+                    $("#ddlBranch").append($('<option></option>').val(0).html("Select branch"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetOutletType", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#ddlOutletType").append($("<option></option>").val("").html("Select outlet type"));
+                    $(result).each(function () {
+                        $("#ddlOutletType").append($("<option></option>").val(this.Name).html(this.Name));
+                    });
+                    var OutletType= '@Model.OutletType';
+                    if(OutletType != '')
+                    {
+                        $('#ddlOutletType').val(OutletType).change();
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlOutletType").html("");
+                    $("#ddlOutletType").append($('<option></option>').val(0).html("Select outlet type"));
+                }
+            });
+
+            init();
+
+            $("#txtMasterCode").blur(function () {
+                var SAPCode = $('#txtMasterCode').val();
+                if (SAPCode != null && SAPCode != '' && SAPCode != undefined) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("GetPayerDetails", "Dealer")',
+                        data: { sapcode: SAPCode },
+                        success: function (output) {
+                            $('#txtPayerCode').val(output.Data.PayerCode);
+                            $('#txtPayerName').val(output.Data.PayerName);
+                        },
+                        error: function (output) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                            common.notify('error', output.Message)
+                        }
+                    });
+                }
+            });
+
+            $("#btnSubmit").click(function () {
+                //if (Save()) {
+                debugger;
+                var modeldata = new Object();
+                modeldata.ID = $("#txtDealerId").val();
+                modeldata.DealerCode = $("#txtdealercode").val();
+                modeldata.SAPCode = $("#txtMasterCode").val();
+                modeldata.MasterCode1 = $("#txtPSIMasterCode1").val();
+                modeldata.MasterCode2 = $("#txtPSIMasterCode2").val();
+                modeldata.PayerCode = $("#txtPayerCode").val();
+                modeldata.PayerName = $("#txtPayerName").val();
+                modeldata.StoreCode = $("#txtStoreCode").val();
+                modeldata.DealerName = $("#txtDealerName").val();
+                modeldata.ChannelId = $("#ddlChannel").val();
+                modeldata.CustomerId = $("#txtCustomerId").val();
+                modeldata.BranchId = $("#ddlBranch").val();
+                modeldata.RegionId = $("#ddlRegion").val();
+                modeldata.StateId = $("#ddlState").val();
+                modeldata.CityId = $("#ddlCity").val();
+                modeldata.LocationId = $("#ddlLocation").val();
+                modeldata.Address = $("#txtAddress").val();
+                modeldata.Longitude = $("#txtLongitude").val();
+                modeldata.Latitude = $("#txtLatitude").val();
+                modeldata.MobileNumber = $("#txtMobile").val();
+                modeldata.ContactPerson = $("#txtContactPerson").val();
+                modeldata.EmailID = $("#txtEmail").val();
+                modeldata.OutletType = $("#ddlOutletType").val();
+                modeldata.PSIOutlet1 = $("#radioPSIOutlet1Y").val();
+                modeldata.PSIOutlet2 = $("#radioPSIOutlet2Y").val();
+                modeldata.OpeningDate = $("#txtOpeningDate").val();
+                modeldata.ClosingDate = $("#txtClosingDate").val();
+                modeldata.Status = $("input[name='Status']:checked").val();
+                modeldata.ShiftNameId = $("#ddlShiftName").val();
+
+                //console.log(JSON.stringify(model));
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("AddUpdateDealer", "Dealer")',
+                    data: { InputParam: modeldata },
+                    success: function (output) {
+                        if (output.Data) {
+                            //common.notify('success', output.Message);
+                            debugger;
+                            if($("#txtDealerId").val() == 0 || $("#txtDealerId").val() == '' ){
+                                debugger;
+                                $(location).attr("href", "@Url.Action("Index", "DealerProductMapping")" + "?DealerCode=" + $("#txtdealercode").val());
+                            }
+                            else
+                                $(location).attr("href", "@Url.Action("Index", "Dealer")");
+                        }
+                        else {
+                            common.notify('error', output.Message);
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', output.Message)
+                    }
+                });
+                //}
+            });
+
+            if($('#txtLatitude').val() != "" || $('#txtLongitude').val() != "")
+            {
+                $("#btnClear").removeClass("hidden");
+            }
+
+
+
+            if (@Model.ID == 0 || @Model.ID == undefined || @Model.ID == null)
+            {
+                debugger;
+                $('#radioPSIOutlet1N').iCheck('check');
+                $('#radioPSIOutlet2N').iCheck('check');
+                $("#radioStatusA").iCheck('check');
+                $('#txtOpeningDate').val(''); //adding datepicker to textbox
+            }
+            else
+            {
+                debugger;
+                if(@Model.Status.ToString() == 'True')
+                    $("#radioStatusA").iCheck('check');
+                else
+                    $("#radioStatusI").iCheck('check');
+
+                if(@Model.PSIOutlet1.ToString() == 'True')
+                    $("#radioPSIOutlet1Y").iCheck('check');
+                else
+                    $("#radioPSIOutlet1N").iCheck('check');
+
+                if(@Model.PSIOutlet2.ToString() == 'True')
+                    $("#radioPSIOutlet2Y").iCheck('check');
+                else
+                    $("#radioPSIOutlet2N").iCheck('check');
+            }
+
+
+
+
+        });
+
+        function Save()
+        {
+            if ($("#txtMasterCode").val() == null || $("#txtMasterCode").val() == "") {
+                common.notify('error', "Enter SAP Code.");
+                return false;
+            }
+
+            if ($("#txtPayerCode").val() == null || $("#txtPayerCode").val() == "") {
+                common.notify('error', "Enter Payer Code.");
+                return false;
+            }
+
+            if ($("#txtPayerName").val() == null || $("#txtPayerame").val() == "") {
+                common.notify('error', "Enter Payer Name");
+                return false;
+            }
+
+            if ($("#ddlOutletType").val() == null || $("#ddlOutletType").val() == "") {
+                common.notify('error', "Select Outlet type.");
+                return false;
+            }
+
+            if ($("#ddlLocation").val() == null || $("#ddlLocation").val() == "") {
+                common.notify('error', "Select location.");
+                return false;
+            }
+
+            if ($("#ddlBranch").val() == null || $("#ddlBranch").val() == "") {
+                common.notify('error', "Select branch.");
+                return false;
+            }
+
+            if ($("#ddlRegion").val() == null || $("#ddlRegion").val() == "") {
+                common.notify('error', "Select region.");
+                return false;
+            }
+
+            if ($("#ddlState").val() == null || $("#ddlState").val() == "") {
+                common.notify('error', "Select state.");
+                return false;
+            }
+
+            if ($("#ddlCity").val() == null || $("#ddlCity").val() == "") {
+                common.notify('error', "Select city.");
+                return false;
+            }
+
+            if ($("#txtDealerName").val() == null || $("#txtDealerName").val() == "") {
+                common.notify('error', "Enter dealer name.");
+                return false;
+            }
+
+
+
+            if ($("#ddlChannel").val() == null || $("#ddlChannel").val() == "") {
+                common.notify('error', "Select Channel.");
+                return false;
+            }
+
+            if ($("#txtMobile").val() == null || $("#txtMobile").val() == "") {
+                common.notify('error', "Enter mobile number.");
+                return false;
+            }
+
+            if ($("#txtOpeningDate").val() == null || $("#txtOpeningDate").val() == "") {
+                common.notify('error', "Select opening date.");
+                return false;
+            }
+
+            if ($("#ddlOutletType").val() == null || $("#ddlOutletType").val() == "") {
+                common.notify('error', "Select outlet type.");
+                return false;
+            }
+            return true;
+        }
+
+        function ClearLatLong()
+        {
+            $('#txtLatitude').val('');
+            $('#txtLongitude').val('');
+        }
+
+        function  SetPSIMasterCode()
+        {
+            var val = $('#txtMasterCode').val();
+            $('#txtPSIMasterCode1').val(val);
+            $('#txtPSIMasterCode2').val(val);
+
+        }
+
+
+        function FillState() {
+            var RegionId = $('#ddlRegion').val();
+            if (RegionId != null && RegionId != '' && RegionId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetStateByRegion","Common")',
+                    data: { regionId: RegionId },
+                    success: function (states) {
+                        $("#ddlState").html(""); // clear before appending new list
+                        $("#ddlState").append($('<option></option>').val(0).html("Select State"));
+                        $.each(states, function (i, state) {
+                            $("#ddlState").append(
+                                $('<option></option>').val(state.ID).html(state.StateName));
+                        });
+                        var StateId=@Model.StateId;
+                        if(StateId != 0)
+                        {
+                            $('#ddlState').val(StateId).change();
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function FillCity() {
+            var stateId = $('#ddlState').val();
+            if (stateId != null && stateId != '' && stateId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetCityByState","Common")',
+                    data: { stateId: stateId },
+                    success: function (cities) {
+                        $("#ddlCity").html(""); // clear before appending new list
+                        $("#ddlCity").append($('<option></option>').val(0).html("Select City"));
+                        $.each(cities, function (i, city) {
+                            $("#ddlCity").append(
+                                $('<option></option>').val(city.ID).html(city.CityName));
+                        });
+
+                        var CityId=@Model.CityId;
+                        if(CityId != 0)
+                        {
+                            $('#ddlCity').val(CityId).change();
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function FillLocation() {
+            var cityId = $('#ddlCity').val();
+            if (cityId != null && cityId != '' && cityId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetLocationByCity","Common")',
+                    data: { cityId: cityId },
+                    success: function (locations) {
+                        $("#ddlLocation").html(""); // clear before appending new list
+                        $("#ddlLocation").append($('<option></option>').val(0).html("Select Location"));
+                        $.each(locations, function (i, location) {
+                            $("#ddlLocation").append(
+                                $('<option></option>').val(location.ID).html(location.LocationName));
+                        });
+                        var LocationId=@Model.LocationId;
+                        if(LocationId != 0)
+                        {
+                            $('#ddlLocation').val(LocationId).change();
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function validateName(evt) {
+            //var event = (evt.which) ? evt.which : evt.keyCode;
+            if (!((evt.keyCode >= 65) && (evt.keyCode <= 90) || (evt.keyCode >= 97) && (evt.keyCode <= 122) || (evt.keyCode == 32)))
+                return false;
+            return true;
+
+        }
+    </script>
+    }
+
+    

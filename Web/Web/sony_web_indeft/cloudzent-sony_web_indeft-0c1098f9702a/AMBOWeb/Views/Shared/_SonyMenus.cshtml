@@ -1,0 +1,129 @@
+﻿@model AMBOModels.UserManagement.MenusList
+
+<ul class="sidebar-menu" data-widget="tree">
+    @*<li class="header">MAIN NAVIGATION</li>*@
+    @*<ul class="page-sidebar-menu  page-header-fixed " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200" style="padding-top: 2px">*@
+    @*<li class="sidebar-toggler-wrapper hide">
+            <div class="sidebar-toggler"> </div>
+        </li>*@
+    <!-- DOC: To remove the search box from the sidebar you just need to completely remove the below "sidebar-search-wrapper" LI element -->
+    <li >
+        <a href="@Url.Action("Index","Dashboard")"><i class="fa fa-home"></i><span>Dashboard</span></a>
+    </li>
+    @*<li class="nav-item start mynav" style="text-align:center">
+            <a href="javascript:;" class="nav-link nav-toggle " data-toggle="dropdown" data-hover="dropdown" data-close-others="true" style="padding: 4px 15px !important;">
+                <img src="~/assets/pages/img/avatars/profile120x120.png" style="width:50px" class="title" />
+                <a href='@Url.Action("Index", "Dashboard")' style="padding: 0px 15px !important;" class="mynav">
+                    <span class="title username username-hide-on-mobile" style="font-size: 22px;"> @Session["EmployeeName"] </span>
+                </a>
+            </a>
+            @*<a data-toggle="modal" href="#ChangePassword" style="padding: 0px 0px 2px 0px !important;" class="mynav">
+                <small style="font-size:11px;" class="title">Change Password</small>
+            </a>
+        </li>*@
+    @if (Model != null)
+    {
+        foreach (var item in Model.ModuleList)
+        {
+            var SbMenuCount = 0;
+            foreach (var item1 in Model.SubModuleList.Where(i => i.ModuleId == item.ModuleId))
+            {
+                SbMenuCount += 1;
+            }
+            if (SbMenuCount == 0)
+            {
+                <li class="treeview-menu">
+                    @*@{string url = Request.Url.ToString().ToLower();
+                        foreach (var cont in Model.SubModuleList.Where(i => i.ModuleId == item.ModuleId))
+                        {
+                            if (url.Contains(cont.SubModuleName.ToLower()))
+                            {
+                                        <text> open active </text>
+                            }
+                        } }">*@
+
+                    <a class="treeview" href="@Url.Action(item.ActionName, item.ControllerName)">
+                        <i class="@item.MenuIcon"></i>
+                        <span class="title">@item.ModuleName</span>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="treeview">
+                    @*@{string url = Request.Url.ToString().ToLower();
+                        foreach (var cont in Model.SubModuleList.Where(i => i.ModuleId == item.ModuleId))
+                        {
+                            if (url.Contains(cont.ActionName.ToLower()))
+                            {
+                                <text> open active </text>
+                            }
+                        } } ">*@
+                    <a href="javascript:;">
+                        <i class="@item.MenuIcon"></i>
+                        <span>@item.ModuleName</span>
+                        @*<span class="arrow"></span>*@
+                    </a>
+                    <ul class="treeview-menu">
+                        @foreach (var item2 in Model.SubModuleList.Where(p => p.ModuleId == item.ModuleId))
+                        {
+
+
+                            <li @*class="@{
+                                        var fullUrl = Request.Url.ToString();
+                                        var questionMarkIndex = fullUrl.IndexOf('?');
+                                        string queryString = null;
+                                        string url1 = fullUrl;
+                                        if (questionMarkIndex != -1)
+                                        {
+                                            url1 = fullUrl.Substring(0, questionMarkIndex);
+                                            queryString = fullUrl.Substring(questionMarkIndex + 1);
+                                        }
+                                        var request = new HttpRequest(null, url1, queryString);
+                                        var response = new HttpResponse(new StringWriter());
+                                        var httpContext = new HttpContext(request, response);
+                                        var routeData = RouteTable.Routes.GetRouteData(new HttpContextWrapper(httpContext));
+                                        var values = routeData.Values;
+                                        var actionName = values["action"];
+                                        if (actionName.ToString().ToLower() == item2.ActionName.ToLower())
+                                        {
+                                            <text> open active</text>
+                                            }
+                                        }"*@>
+                                @if (item2.ActionName == "#")
+                                {
+                                    <a class="" href="#">
+                                        <i class="@item2.SubMenuIcon"></i>
+                                        <span class="mg-right-5"></span>
+                                        <span class="title">@item2.SubModuleName</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class="" href="@Url.Action(item2.ActionName, item2.ControllerName)">
+
+                                        <i class="@item2.SubMenuIcon"></i>
+                                        <span class="mg-right-5"></span>
+                                        <span class="title">@item2.SubModuleName</span>
+                                    </a>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        }
+    }
+
+</ul>
+<style>
+    .page-sidebar .page-sidebar-menu .sub-menu, .page-sidebar-closed.page-sidebar-fixed .page-sidebar:hover .page-sidebar-menu .sub-menu {
+        list-style: none;
+        display: none;
+        padding: 0;
+        margin: 8px 0;
+        width: 101%;
+        overflow-wrap: break-word;
+    }
+</style>
+

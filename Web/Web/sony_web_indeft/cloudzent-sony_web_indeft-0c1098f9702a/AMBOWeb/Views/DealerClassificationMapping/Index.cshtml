@@ -1,0 +1,323 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Mappings.DealerClassificationMapping
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        function getClassDD() {
+            common.ajax_get("@Url.Action("GetDealerClassificationTypes", "Common")", null, "#AddEditLoad", function (classes) {
+                $("#ddClass").html("");
+                $.each(classes, function (i, _class) {
+                    $("#ddClass").append($('<option></option>').val(_class.ID).html(_class.ClassificationName));
+                });
+                $('#ddClass').val(null).change();
+            }, function (result) {
+                if(result.status == 401 || result.statusCode == 401){
+                    var response = $.parseJSON(result.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddClass").html("");
+            });
+        }
+
+        function init()
+        {
+            try
+            {
+                $('#ddClass').select2({ placeholder: 'Select Classification' });
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function clearAllFields()
+        {
+            $('#txtBranchId').val(null).change();
+            $('#txtBranchName').val(null).change();
+            $('#ddClass').val(null).change();
+            $('#txtProductCategoryId').val(null).change();
+            $('#txtProdCatName').val(null).change();
+            $('#txtDealerId').val(null).change();
+            $('#txtDealerName').val(null).change();
+            $('#txtMappingID').val(0);
+        }
+
+        function initializeUpdateModal(data) {
+            try {
+                $("#txtBranchId").val(data.BranchId);
+                $("#txtBranchName").val(data.BranchName);
+                $("#txtProductCategoryId").val(data.ProductCategoryId);
+                $("#txtProdCatName").val(data.ProductCategoryName);
+                $("#txtDealerId").val(data.DealerId);
+                $("#txtDealerName").val(data.DealerName);
+                $('#ddClass').val(data.ClassificationId).change();
+
+            }
+            catch (ex) {
+                console.log(ex);
+                common.notify('error', 'Unable to edit this mapping. Please try after some time.')
+            }
+        }
+
+        $(document).ready(function () {
+            var dt = $('#dtDealerClassificationMapping').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: "@Url.Action("DealerClassificationMappingGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "ProductCategoryName" },
+                    { data: "BranchName" },
+                    { data: "DealerName" },
+                    { data: "ClassificationName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" data-toggle="tooltip" data-placement="right" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            init();
+            getClassDD();
+
+            $('#modalEdit').on('shown.bs.modal', function () { $('#ddClass').focus(); });
+            $('#modalEdit').on('hidden.bs.modal', function () {
+                clearAllFields();
+            });
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtMappingID').val(0);
+            });
+
+            $('body').on('click', '#btnManage', function () {
+                $(location).attr('href', '@Url.Action("Manage", "DealerClassificationMapping")');
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalEditTitle').html('<i class="fa fa-pencil"></i> Update an existing mapping');
+                $('#txtMappingID').val(data.ID);
+                initializeUpdateModal(data);
+                $('#modalEdit').modal('toggle');
+            });
+
+            $('body').on('click', '#btnSubmit', function () {
+                var data = new Object();
+                var url = '';
+                url = '@Url.Action("Update", "DealerClassificationMapping")';
+                data.ID = $("#txtMappingID").val();
+                data.ClassificationId = $("#ddClass").val();
+                data.DealerId = $("#txtDealerId").val();
+                data.ProductCategoryId = $("#txtProductCategoryId").val();
+                data.BranchId = $("#txtBranchId").val();
+                common.ajax_post(url, data, '#EditLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalEdit').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if(output.status == 401 || output.statusCode == 401){
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtMappingID').val(data.ID);
+                $('#displayMappingName').html('Dealer: ' + data.DealerName + ' --- Classification: ' + data.ClassificationName);
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete", "DealerClassificationMapping")";
+                var data = new Object();
+                data.ID = $("#txtMappingID").val();
+
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if(output.status == 401 || output.statusCode == 401){
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+            $("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelDealerClassification", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.DealerClassification), SearchVal : $("#dtDealerClassificationMapping_filter > input").val() },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if(returnValue.status == 401 || returnValue.statusCode == 401){
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalEdit">
+    <div class="modal-dialog">
+        <div class="modal-content" id="EditLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalEditTitle"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.BranchId, new { @id = "txtBranchId" })
+                    <label for="txtBranchName">Branch Name</label>
+                    @Html.TextBox("txtBranchName", "", new { @class = "form-control", @id = "txtBranchName", @disabled = true })
+                </div>
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.DealerId, new { @id = "txtDealerId" })
+                    <label for="txtDealerName">Dealer Name</label>
+                    @Html.TextBox("txtDealerName", "", new { @class = "form-control", @id = "txtDealerName", @disabled = true })
+                </div>
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.ProductCategoryId, new { @id = "txtProductCategoryId" })
+                    <label for="ddProdCat">Product Category</label>
+                    @Html.TextBox("txtProdCatName", "", new { @class = "form-control", @id = "txtProdCatName", @disabled = true })
+                </div>
+                <div class="form-group">
+                    <label for="ddClass">Classification</label>
+                    @Html.DropDownListFor(m => m.ClassificationId, new List<SelectListItem>(), new { @class = "form-control", @id = "ddClass", @style = "width:100%" })
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing mapping</h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                <strong><span id="displayMappingName"></span></strong> mapping will be deleted from the system. Are you sure to proceed?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-shopping-bag"></i> Dealer Classification Mapping</a></li>
+                <li class="pull-right"><button id="btnManage" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-pencil"></i> Manage</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtDealerClassificationMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Product Category</th>
+                                <th>Branch Name</th>
+                                <th>Dealer Name</th>
+                                <th>Classification</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

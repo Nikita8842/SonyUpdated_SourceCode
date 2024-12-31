@@ -1,0 +1,444 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.UpdateProductSubCategoryForm
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+<script type="text/javascript">
+    function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+</script>
+    <script>
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtProductSubCategory')) {
+                $('#dtProductSubCategory').DataTable().destroy();
+                $('#dtProductSubCategory tbody').empty();
+                //dt.destroy();
+            }           
+            
+
+            //Grid initialization
+            dtProductSubCategoryGrid = $('#dtProductSubCategory').DataTable({
+                searching: false,
+                processing: true,
+                ajax: {
+                    url: "@Url.Action("GetSubProductCategoryGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.SubProCatIds = $('#ddlSubPro').val();
+                        d.ProductCatIds = $('#ddlProCat').val();
+                        d.Status = $('#ddlStatus').val();
+
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "SubCategoryName" },
+                    { data: "Description" },
+                    { data: "CategoryName" },
+                    { data: "Division" },
+                    { data: "ActiveStatus" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["ActiveStatus"] == "Active")
+                        $('td', row).eq(4).html('<span class="badge bg-green">' + data["ActiveStatus"] + '</span>');
+                    else
+                        $('td', row).eq(4).html('<span class="badge bg-red">' + data["ActiveStatus"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetProductCategories", "Common")",
+                type: "GET",
+                
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlProCat").append($("<option></option>").val("").html("---All Products---"));
+                    $(result).each(function () {
+                        $("#ddlProCat").append($("<option></option>").val(this.ID).html(this.CategoryName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlProCat").html("");
+                    $("#ddlProCat").append($('<option></option>').val(0).html("---All Products---"));
+
+                }
+            });
+
+            debugger;
+
+            $.ajax({
+                url: "@Url.Action("GetProductSubCategoryByCategoryId", "Common")",
+                type: "POST",
+                data: {CategoryId : 0 },
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSubPro").append($("<option></option>").val(0).html("---All Sub Categories---"));
+                    $(result).each(function () {
+                        $("#ddlSubPro").append($("<option></option>").val(this.ID).html(this.SubCategoryName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSubPro").html("");
+                    $("#ddlSubPro").append($('<option></option>').val(0).html("---All Sub Categories---"));
+
+                }
+            });
+
+
+            $('#ddlProCat').select2({ placeholder: "---All Products---" });
+            $('#ddlSubPro').select2({ placeholder: "---All Sub Categories---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function getProductCatDD()
+        {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, '#AddLoad, #UpdateLoad',
+            function (data) {
+                $('.ddProdCategory').html('');
+                $.each(data, function (i) {
+                    $('.ddProdCategory').append($('<option>', { value: data[i].ID }).text(data[i].CategoryName));
+                });
+                $('.ddProdCategory').val(null).change();
+            },
+            function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                common.notify('error','Could not initialize product category dropdown. Please contact your administrator.'); });
+        }
+
+        function init() {
+            $('.ddProdCategory').select2({ placeholder: 'Select Product Category' });
+        }
+
+        function resetAddForm() {
+            $('#txtAddProductSubCategoryName').val('');
+            $('#txtAddDescription').val('');
+            $('#ddAddProdCategory').val(null).change();
+            $('#AddradioA, #AddradioI').iCheck('uncheck');
+            $("#AddProdSubCategoryForm").validate().resetForm();
+            $("#AddProdSubCategoryForm").find('.has-error').removeClass('has-error');
+            $("#AddProdSubCategoryForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetUpdateForm() {
+            $('#txtUpdateProdSubCatId').val('');
+            $('#txtUpdateProductSubCategoryName').val('');
+            $('#txtUpdateDescription').val('');
+            $('#ddUpdateProdCategory').val(null).change();
+            $('#UpdateradioA, #UpdateradioI').iCheck('uncheck');
+            $("#UpdateProdSubCategoryForm").validate().resetForm();
+            $("#UpdateProdSubCategoryForm").find('.has-error').removeClass('has-error');
+            $("#UpdateProdSubCategoryForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetDeleteForm() {
+            $('#txtDeleteProdSubCatId').val('');
+            $('#displayProdSubCatName').html('');
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            //Modal popup hide/show events
+            $('#modalAdd').on('shown.bs.modal', function () {
+                resetAddForm();
+                $('#txtAddProductSubCategoryName').focus();
+                $('#AddradioA').iCheck('check');
+            });
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+            $('#modalUpdate').on('shown.bs.modal', function () { $('#txtUpdateProductSubCategoryName').focus(); });
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+            $('#modalDelete').on('hidden.bs.modal', function () { resetDeleteForm(); });
+            //Modal popup hide/show events till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+                $('.text-blue').hide();
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtProductSubCategoryGrid.row($(this).parent().parent()).data();
+                $('#txtUpdateProdSubCatId').val(data.ID);
+                $('#txtUpdateProductSubCategoryName').val(data.SubCategoryName);
+                $('#txtUpdateDescription').val(data.Description);
+                $("#ddUpdateProdCategory").val(data.ProductCategoryId).change();
+                if (data.ActiveStatus == 'Active')
+                    $('#UpdateradioA').iCheck('check');
+                else
+                    $('#UpdateradioI').iCheck('check');
+                $('#modalUpdate').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtProductSubCategoryGrid.row($(this).parent().parent()).data();
+                $('#txtDeleteProdSubCatId').val(data.ID);
+                $('#displayProdSubCatName').html(data.SubCategoryName);
+                $('#modalDelete').modal('toggle');
+            });
+
+            getProductCatDD();
+            init();
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.SubProCatIds = $('#ddlSubPro').val();
+                modeldata.ProductCatIds = $('#ddlProCat').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelSubProduct", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.SubProduct),InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+        });
+        });
+    </script>
+    <script src="~/Content/js/validations/productsubcategory.js"></script>
+}
+
+@section PageModals
+{
+
+
+    <!-- #region Add form -->
+<div class="modal fade" id="modalAdd">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddLoad">
+            @using (Html.BeginForm("Create", "ProductSubCategory", FormMethod.Post, new { @id = "AddProdSubCategoryForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-plus", "Add a new product sub category")
+                <div class="modal-body">
+                    @*@Html.CustomTextBox("txtAddProductSubCategoryName", "SubCategoryName", "Product Sub Category Name", "Enter Product Sub Category Name", InputTypes.AlphaNumericWithSpace)*@
+                    @*@Html.CustomTextBox("txtAddDescription", "Description", "Description", "Enter description of sub category here...", InputTypes.AlphaNumericWithSpace)*@
+                    @*@Html.Custom2RadioButtonGroup("Status", "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")*@
+                    @Html.AmboTextboxFor(Model => Model.SubCategoryName, "txtAddProductSubCategoryName", "Product Sub Category Name", "Enter Product Sub Category Name", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.AmboTextboxFor(Model => Model.Description, "txtAddDescription", "Description", "Enter description of sub category here...", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.CustomDropDown("ddAddProdCategory", "ProductCategoryId", "Product Category", "ddProdCategory")
+                    @Html.Ambo2RadioButtonGroupFor(Model => Model.Status, "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Add Product Sub Category</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Add form -->
+
+    <!-- #region Update form -->
+<div class="modal fade" id="modalUpdate">
+    <div class="modal-dialog">
+        <div class="modal-content" id="UpdateLoad">
+            @using (Html.BeginForm("Update", "ProductSubCategory", FormMethod.Post, new { @id = "UpdateProdSubCategoryForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-pencil", "Update an existing product sub category")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtUpdateProdSubCatId", "ID")
+                    @*@Html.CustomTextBox("txtUpdateProductSubCategoryName", "SubCategoryName", "Product Sub Category Name", "Enter Product Sub Category Name", InputTypes.AlphaNumericWithSpace)
+                    @Html.CustomTextBox("txtUpdateDescription", "Description", "Description", "Enter description of sub category here...", InputTypes.AlphaNumericWithSpace)*@
+                    @*@Html.Custom2RadioButtonGroup("Status", "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")*@
+                    @Html.AmboTextboxFor(Model => Model.SubCategoryName, "txtUpdateProductSubCategoryName", "Product Sub Category Name", "Enter Product Sub Category Name", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.AmboTextboxFor(Model => Model.Description, "txtUpdateDescription", "Description", "Enter description of sub category here...", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.CustomDropDown("ddUpdateProdCategory", "ProductCategoryId", "Product Category", "ddProdCategory")
+                    @Html.Ambo2RadioButtonGroupFor(Model => Model.Status, "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-pencil"></i> Update Product Sub Category</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Update form -->
+
+    <!-- #region Delete form -->
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            @using (Html.BeginForm("Delete", "ProductSubCategory", FormMethod.Post, new { @id = "DeleteProdSubCategoryForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-trash", "Delete an existing product sub category")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtDeleteProdSubCatId", "ID")
+                    <strong><span id="displayProdSubCatName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Product Category:</label>
+                        @Html.DropDownList("ddlProCat", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlProCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Sub Category:</label>
+                        @Html.DropDownList("ddlSubPro", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlSubPro", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                 
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                            new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-desktop"></i> Product Sub Category Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtProductSubCategory" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Product Sub Category Name</th>
+                                <th>Description</th>
+                                <th>Category Name</th>
+                                <th>Division</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

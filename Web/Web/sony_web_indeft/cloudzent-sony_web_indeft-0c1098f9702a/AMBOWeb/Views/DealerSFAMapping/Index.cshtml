@@ -1,0 +1,919 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Mappings.DealerSFAMapping
+
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtDealerSFAMapping')) {
+                $('#dtDealerSFAMapping').DataTable().destroy();
+                $('#dtDealerSFAMapping tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtDealerSFAMapping').DataTable({
+                searching: false,
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: "@Url.Action("DealerSFAMappingGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.DealerIds = $('#ddlDealer').val();
+                        d.SFAIds = $('#ddlSFA').val();
+                        d.StateIds = $('#ddlState').val();
+                        d.CityIds = $('#ddlCity').val();
+                        var Branch = @Model.BranchId;
+                        if(Branch !=null && Branch !=0)
+                        {
+                            d.BranchIds = Branch;
+                        }
+                        else
+                            d.BranchIds = $('#ddlBranch').val();
+                        d.LocationIds = $('#ddlLocation').val();
+                    }
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "SFAName" },
+                    { data: "BranchName" },
+                    { data: "StateName" },
+                    { data: "CityName" },
+                    { data: "LocationName" },
+                    { data: "DealerName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" data-toggle="tooltip" data-placement="right" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetAllActiveDealersNonSFA", "Common")", // Change By Vinod
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+
+                    //$("#ddlDealer").append($("<option></option>").val("").html("---All Dealers---"));
+                    $(result.Data).each(function () {
+                        $("#ddlDealer").append($("<option></option>").val(this.DealerId).html(this.DealerName));
+                    });
+
+                },
+                error: function (output) {
+                    debugger;
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlDealer").html("");
+                    //$("#ddlDealer").append($('<option></option>').val(0).html("---All Dealers---"));
+                }
+            });
+
+            @*$.ajax({
+                url: "@Url.Action("GetAllActiveSFA", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSFA").append($("<option></option>").val("").html("----All SFAs-----"));
+                    $(result).each(function () {
+                        $("#ddlSFA").append($("<option></option>").val(this.SFAUserId).html(this.SFAName));
+                    });
+
+                },
+                error: function (result) {
+                    $("#ddlSFA").html("");
+                    $("#ddlSFA").append($('<option></option>').val(0).html("----All SFAs-----"));
+                }
+            });*@
+
+            $.ajax({
+                url: "@Url.Action("GetAllCities", "City")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlCity").append($("<option></option>").val("").html("----All Cities-----"));
+                    $(result).each(function () {
+                        $("#ddlCity").append($("<option></option>").val(this.ID).html(this.CityName));
+                    });
+
+                },
+                error: function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCity").html("");
+                    //$("#ddlCity").append($('<option></option>').val(0).html("----All Cities-----"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetStates", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlState").append($("<option></option>").val("").html("----All States-----"));
+                    $(result).each(function () {
+                        $("#ddlState").append($("<option></option>").val(this.ID).html(this.StateName));
+                    });
+
+                },
+                error: function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlState").html("");
+                    //$("#ddlState").append($('<option></option>').val(0).html("----All States-----"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddlBranch').val(Branch).change();
+                        //$('#ddlBranch').attr('readonly', 'readonly');
+                    }
+
+                },
+                error: function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlBranch").html("");
+                    //$("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetLocationByCity", "Common")",
+                type: "POST",
+                data: {cityId : 0 },
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlLocation").append($("<option></option>").val(0).html("---All Locations---"));
+                    $(result).each(function () {
+                        $("#ddlLocation").append($("<option></option>").val(this.ID).html(this.LocationName));
+                    });
+
+                },
+                error: function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlLocation").html("");
+                    //$("#ddlLocation").append($('<option></option>').val(0).html("---All Locations---"));
+
+                }
+            });
+
+
+            $('#ddlDealer').select2({ placeholder: "---All Dealers---" });
+            //$('#ddlSFA').select2({ placeholder: "---All SFAs---" });
+            $('#ddlCity').select2({ placeholder: "---All Cities---" });
+            $('#ddlState').select2({ placeholder: "---All States---" });
+            $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddlLocation').select2({ placeholder: "---All Locations---" });
+
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            if ('@UserSession.RoleName' == 'RDI')
+            {
+                @Html.Raw("$('#ddlBranch').attr('readonly', 'readonly');");
+                 @Html.Raw("$('#ddBranch').attr('readonly', 'readonly');");
+
+            }
+            Search();
+
+            function init()
+            {
+                try
+                {
+                    $('#ddBranch').select2({placeholder: 'Select Branch'});
+                    $('#ddSFA').select2({placeholder: 'Select SFA'});
+                    $('#ddState').select2({placeholder: 'Select State'});
+                    $('#ddCity').select2({placeholder: 'Select City'});
+                    $('#ddLocation').select2({placeholder: 'Select Location'});
+                    $('#ddDealer').select2({placeholder: 'Select Dealer'});
+                    $("#txtState").val(null);
+                    $("#txtCity").val(null);
+                    $("#txtLocation").val(null);
+                    $("#txtDealer").val(null);
+                    $('#txtMappingID').val(0);
+                }
+                catch(ex)
+                {
+                    common.notify('error','Could not initialize form. Please try after some time.');
+                    console.log(ex);
+                }
+            }
+
+            function clearAllDD()
+            {
+                $('#ddBranch').val(null).change();
+                $('#ddSFA').val(null).change();
+                $('#ddState').val(null).change();
+                $('#ddCity').val(null).change();
+                $('#ddLocation').val(null).change();
+                $('#ddDealer').val(null).change();
+                $("#txtState").val(null);
+                $("#txtCity").val(null);
+                $("#txtLocation").val(null);
+                $("#txtDealer").val(null);
+                $('#txtMappingID').val(0);
+            }
+
+            function getBranchDD() {
+                common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#AddEditLoad", function (branches) {
+                    $("#ddBranch").html("");
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    var BranchId = @Model.BranchId;
+                    if(BranchId != null)
+                    {
+                        $('#ddBranch').val(BranchId).change();
+
+                    }
+                }, function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                });
+            }
+
+            function getStateDD() {
+                common.ajax_get("@Url.Action("GetStates", "Common")", null, "#AddEditLoad", function (states) {
+                    $("#ddState").html("");
+                    $.each(states, function (i, state) {
+                        $("#ddState").append($('<option></option>').val(state.ID).html(state.StateName));
+                    });
+                    var StateId = @Model.StateId;
+                    if(StateId != null)
+                    {
+                        $('#ddState').val(StateId).change();
+                    }
+                }, function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddState").html("");
+                });
+            }
+
+
+
+            function initializeUpdateModal(data)
+            {
+                try
+                {
+                    $("#ddBranch").parent().parent().parent().addClass('hidden');
+                    $("#txtBranchName").parent().parent().parent().removeClass('hidden');
+                    $("#txtBranchName").val(data.BranchName);
+                    $("#txtSFAName").val(data.SFAName);
+                    $("#txtState").val(data.StateId);
+                    $("#txtCity").val(data.CityId);
+                    $("#txtLocation").val(data.LocationId);
+                    $("#txtDealer").val(data.DealerId);
+                    $("#ddState").val(data.StateId).change();
+                    $("#txtSFANameval").val(data.EmployeeId);
+                }
+                catch(ex)
+                {
+                    console.log(ex);
+                    common.notify('error','Unable to edit this mapping. Please try after some time.')
+                }
+            }
+
+
+
+            getBranchDD();
+            getStateDD();
+            init();
+
+
+
+            $('#ddBranch').on('change', function (e) {
+                var url = '@Url.Action("GetUnmappedSFAByBranch", "Common")';
+                var data = new Object();
+                debugger;
+                data.branchId = this.value;
+                common.ajax_post(url, data, "#AddEditLoad", function (employees) {
+                    $("#ddSFA").html("");
+                    $.each(employees, function (i, sfa) {
+                        $("#ddSFA").append(
+                            $('<option></option>').val(sfa.EmployeeId).html(sfa.SFAFullName));
+                    });
+                    $('#ddSFA').val(null).change();
+                }, function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddSFA").html("");
+                });
+            });
+
+            $('#ddState').on('change', function (e) {
+                var url = '@Url.Action("GetCityByState", "Common")';
+                var data = new Object();
+                data.stateId = this.value;
+                common.ajax_post(url, data, "#AddEditLoad", function (cities) {
+                    $("#ddCity").html("");
+                    $.each(cities, function (i, city) {
+                        $("#ddCity").append(
+                            $('<option></option>').val(city.ID).html(city.CityName));
+                    });
+                    $('#ddCity').val($("#txtCity").val()).change();
+                }, function (output) {
+                    debugger;
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddCity").html("");
+                });
+            });
+
+            $('#ddCity').on('change', function (e) {
+                var url = '@Url.Action("GetLocationByCity", "Common")';
+                var data = new Object();
+                data.cityId = this.value;
+                common.ajax_post(url, data, "#AddEditLoad", function (locations) {
+                    $("#ddLocation").html("");
+                    $.each(locations, function (i, location) {
+                        $("#ddLocation").append(
+                            $('<option></option>').val(location.ID).html(location.LocationName));
+                    });
+                    $('#ddLocation').val($("#txtLocation").val()).change();
+                }, function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddLocation").html("");
+                });
+            });
+
+            $('#ddLocation').on('change', function (e) {
+                var url = '@Url.Action("GetDealersByLocationNonSFA", "Common")'; // Change By Vinod
+                debugger;
+                var data = new Object();
+                data.locationId = this.value;
+                common.ajax_post(url, data, null, function (dealers) {
+                    debugger;
+                    $("#ddDealer").html("");
+                    $.each(dealers, function (i, dealer) {
+                        $("#ddDealer").append(
+                            $('<option></option>').val(dealer.ID).html(dealer.DealerName));
+                    });
+                    $('#ddDealer').val($("#txtDealer").val()).change();
+                }, function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddDealer").html("");
+                });
+            });
+
+            $('#modalAddEdit').on('shown.bs.modal', function () {
+                    $('#ddBranch').focus();
+            });
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtMappingID').val(0);
+            });
+
+            $('#modalAddEdit').on('hidden.bs.modal', function () {
+                if($("#ddBranch").parent().parent().parent().hasClass('hidden'))
+                    $("#ddBranch").parent().parent().parent().removeClass('hidden')
+                if(!$("#txtBranchName").parent().parent().parent().hasClass('hidden'))
+                    $("#txtBranchName").parent().parent().parent().addClass('hidden');
+                clearAllDD();
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new mapping');
+                $('#txtMappingID').val(0).change();
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                debugger;
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalAddEditTitle').html('<i class="fa fa-pencil"></i> Update an existing mapping');
+                $('#txtMappingID').val(data.ID);
+                initializeUpdateModal(data);
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtMappingID').val(data.ID);
+                $('#displayMappingName').html('SFA: ' + data.SFAName + ' --- Dealer: ' + data.DealerName);
+            });
+
+            $('body').on('click', '#btnSubmit', function () {
+                var data = new Object();
+                var url = '';
+                if($("#txtMappingID").val() == 0)//add
+                {
+                    debugger;
+                    url = '@Url.Action("Create","DealerSFAMapping")';
+                    data.EmployeeId = parseInt($("#ddSFA").val());
+                    data.DealerId = parseInt($("#ddDealer").val());
+                    if(isNaN(data.EmployeeId) || data.EmployeeId == 0)
+                    {
+                        common.notify("error","Please select an SFA.");
+                        return;
+                    }
+                    if(isNaN(data.DealerId) || data.DealerId == 0)
+                    {
+                        common.notify("error","Please select a dealer.");
+                        return;
+                    }
+                }
+                else//update
+                {
+                    debugger;
+                    url = '@Url.Action("Update", "DealerSFAMapping")';
+                    data.ID = $("#txtMappingID").val();
+                    data.EmployeeId = parseInt($("#txtSFANameval").val());
+                    data.DealerId = parseInt($("#ddDealer").val());
+                    if(isNaN(data.EmployeeId) || data.EmployeeId == 0)
+                    {
+                        common.notify("error","Please select an SFA.");
+                        return;
+                    }
+                    if(isNaN(data.DealerId) || data.DealerId == 0)
+                    {
+                        common.notify("error","Please select a dealer.");
+                        return;
+                    }
+                }
+                common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalAddEdit').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete", "DealerSFAMapping")";
+                var data = new Object();
+                data.ID = $("#txtMappingID").val();
+
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if(output.statusCode == 401 || output.status == 401)
+                    {
+                        var response = $.parseJSON(output.responseText);
+                        debugger;
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+            @*debugger;
+            var x = '@Model.IsNavigated';
+            if(x == "True")
+            {
+                debugger;
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new mapping');
+                $('#txtMappingID').val(0).change();
+                $('#ddSFA').val('@Model.EmployeeId').change();
+                $('#ddCity').val(@Model.CityId).change();*@
+                @*if(@Model.EmployeeId!=0)
+                {
+                    var data = new Object();
+                    data.branchId = @Model.BranchId;
+                    common.ajax_post("@Url.Action("GetUnmappedSFAByBranch", "Common")", data, "#AddEditLoad", function (employees) {
+                        $("#ddSFA").html("");
+                        $.each(employees, function (i, sfa) {
+                            $("#ddSFA").append($('<option></option>').val(sfa.EmployeeId).html(sfa.SFAFullName));
+                        });
+                        var EmployeeId = @Model.EmployeeId;
+                        if(EmployeeId != null)
+                        {
+                            $('#ddSFA').val(EmployeeId).change();
+                        }
+                    }, function () {
+                        $("#ddSFA").html("");
+                    });
+                }
+
+                if(@Model.CityId!=0)
+                {
+                    var data = new Object();
+                    data.stateId = @Model.StateId;
+                    common.ajax_post("@Url.Action("GetCityByState", "Common")", data, "#AddEditLoad", function (locations) {
+                        $("#ddCity").html("");
+                        $.each(locations, function (i, location) {
+                            $("#ddCity").append($('<option></option>').val(location.ID).html(location.LocationName));
+                        });
+                        var CityId = @Model.CityId;
+                        if(CityId != null)
+                        {
+                            alert(CityId);
+                            $('#ddCity').val(CityId).change();
+
+                        }
+                    }, function () {
+                        $("#ddCity").html("");
+                    });
+                }*@
+                @*$('#ddBranch').val(@Model.BranchId);
+                $('#ddSFA').val(@Model.EmployeeId);
+                $('#ddState').val(@Model.StateId);
+                $('#ddCity').val(@Model.CityId);*@
+            //    $('#ddBranch').attr('readonly', 'readonly');
+            //    $('#ddSFA').attr('readonly', 'readonly');
+            //    $('#ddState').attr('readonly', 'readonly');
+            //    $('#ddCity').attr('readonly', 'readonly');
+
+            //$('#modalAddEdit').modal('show');
+            //}
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.DealerIds = $('#ddlDealer').val();
+                modeldata.SFAIds = $('#ddlSFA').val();
+                modeldata.StateIds = $('#ddlState').val();
+                modeldata.CityIds = $('#ddlCity').val();
+                modeldata.BranchIds = $('#ddlBranch').val();
+                modeldata.LocationIds = $('#ddlLocation').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelDealerSFA", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.DealerSFA), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if(returnValue.statusCode == 401 || returnValue.status == 401)
+                        {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+        });
+
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddEdit">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddEditTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    @Html.HiddenFor(m => m.StateId, new { @id = "txtState" })
+                    @Html.HiddenFor(m => m.CityId, new { @id = "txtCity" })
+                    @Html.HiddenFor(m => m.LocationId, new { @id = "txtLocation" })
+                    @Html.HiddenFor(m => m.DealerId, new { @id = "txtDealer" })
+                    @Html.HiddenFor(m => m.EmployeeId, new { @id = "txtSFANameval", @value = Model.EmployeeId })
+                    
+                    <div class="row hidden">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="txtBranchName">Branch Name</label>
+                                @Html.TextBox("txtBranchName", "",new { @class = "form-control input-sm", @id = "txtBranchName", @disabled = true})
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="txtSFAName">SFA Name</label>
+                                @Html.TextBox("txtSFAName", "", new { @class = "form-control input-sm", @id = "txtSFAName", @disabled = true })
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddBranch">Branch Name</label>
+                                @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddSFA">SFA Name</label>
+                                @Html.DropDownListFor(m => m.EmployeeId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddSFA", @style = "width:100%" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddState">State Name</label>
+                                @Html.DropDownListFor(m => m.StateId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddState", @style = "width:100%" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddCity">City Name</label>
+                                @Html.DropDownListFor(m => m.CityId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddCity", @style = "width:100%" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddLocation">Location Name</label>
+                                @Html.DropDownListFor(m => m.LocationId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddLocation", @style = "width:100%" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddDealer">Dealer Name</label>
+                                @Html.DropDownListFor(m => m.DealerId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddDealer", @style = "width:100%" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing dealer</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    <strong><span id="displayMappingName"></span></strong> mapping will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Dealer Name:</label>
+                        @Html.DropDownList("ddlDealer", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlDealer", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA Name:</label>
+                        @Html.TextBox("ddlSFA", null, new { @Id = "ddlSFA", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownList("ddlBranch", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>State:</label>
+                        @Html.DropDownList("ddlState", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlState", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>City:</label>
+                        @Html.DropDownList("ddlCity", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCity", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <label>Location:</label>
+                        @Html.DropDownList("ddlLocation", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlLocation", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-id-card"></i> Dealer SFA Mapping</a></li>
+                <li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtDealerSFAMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>SFA Name</th>
+                                <th>SFA Branch Name</th>
+                                <th>State Name</th>
+                                <th>City Name</th>
+                                <th>Location Name</th>
+                                <th>Dealer Name</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

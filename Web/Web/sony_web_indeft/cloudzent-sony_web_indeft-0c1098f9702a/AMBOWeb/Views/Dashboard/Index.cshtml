@@ -1,0 +1,40 @@
+﻿@model AMBOWeb.Models.ModelDashboard
+
+@section PageCSS
+{
+@*Bug Id: 0001752*@
+@*Following code added by Nikhil Thakral, for setting image to background rather than a div element*@
+    <style>
+        body {
+        background-image: url('Content/img/sony5.jpg') !important;
+        background-size: 100% 100% !important;
+    }
+
+        .content-wrapper {
+        background-image: url('Content/img/sony5.jpg') !important;
+        background-size: 100% 100% !important;
+    }
+    </style>
+    
+}
+
+@section PageJS
+{
+    @*Bug Id: 0001752*@
+    @*Following code commented by Nikhil Thakral*@
+    @*<script>
+        $(document).ready(function () {
+            $('body').css('background-image', "url('../Content/img/phone.jpg') !important");
+            $('body').css('background-size', '100% 100% !important');
+        });
+        
+
+        //$('body').on('click', '#btnSidebarToggle', function () {
+        //    alert(1);
+        //    var viewportWidth = $(window).width();
+        //    var viewportHeight = $(window).height();
+        //    $('#sonyImage').attr('height', viewportHeight - 80);
+        //    $('#sonyImage').attr('width', viewportWidth - 260);
+        //});
+    </script>*@
+}

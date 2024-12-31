@@ -1,0 +1,440 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Mappings.EmployeeStructureMapping
+
+@section PageCSS{
+    <style>
+        #clearRDI:hover, #clearBranch:hover,
+        #clearDivision:hover, #clearSFAType:hover
+        {
+            cursor: pointer;
+        }
+    </style>
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#AddEditLoad", function (branches) {
+                $("#ddFilterBranch").html("");
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddFilterBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                $('#ddFilterBranch').val(null).change();
+                $('#ddBranch').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFilterBranch").html("");
+                $("#ddBranch").html("");
+            });
+        }
+
+        function getRDIDD() {
+            common.ajax_get("@Url.Action("GetAllActiveRDI", "Common")", null, "#AddEditLoad", function (employees) {
+                $("#ddRDI").html("");
+                $.each(employees, function (i, employee) {
+                    $("#ddRDI").append($('<option></option>').val(employee.EmployeeId).html(employee.RDIFullName));
+                });
+                $('#ddRDI').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddRDI").html("");
+            });
+        }
+
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#AddEditLoad", function (divisions) {
+                $("#ddDivision").html("");
+                $.each(divisions, function (i, division) {
+                    $("#ddDivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                    $('#ddDivision').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDivision").html("");
+            });
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#AddEditLoad", function (sfatypes) {
+                $("#ddSFAType").html("");
+                $.each(sfatypes, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).text(sfatype.SFATypeName));
+                });
+                    $('#ddSFAType').val(null).trigger('change');
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+            });
+        }
+
+        function SearchSFA()
+        {
+            var data = new Object();
+            data.BranchId = $('#ddBranch').val() == null ? 0 : $('#ddBranch').val();
+            data.DivisionIds = $('#ddDivision').val() == null ? 0 : $('#ddDivision').val();
+            data.SFATypeId = $('#ddSFAType').val() == null ? 0 : $('#ddSFAType').val();
+
+            if (!(data.BranchId == 0 && data.DivisionId == 0 && data.SFATypeId == 0))
+            {
+                common.ajax_post('@Url.Action("GetSFAForStructureMapping", "EmployeeStructureMapping")', data, "#AddEditLoad", function (employees) {
+                    $("#ddSFA").html("");
+                    $.each(employees, function (i, employee) {
+                        $("#ddSFA").append($('<option></option>').val(employee.EmployeeId).html(employee.SFAFullName));
+                    });
+                    $('#ddSFA').val(null).change();
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddSFA").html("");
+                });
+            }
+        }
+
+        function init()
+        {
+            try
+            {
+                $('#ddRDI').select2({ placeholder: 'Select RDI' });
+                $('#ddBranch,#ddFilterBranch').select2({ placeholder: 'Select Branch' });
+                $('#ddDivision').select2({ placeholder: 'Select Division' });
+                $('#ddSFAType').select2({ placeholder: 'Select SFA Type' });
+                $('#ddSFA').select2({ placeholder: 'Select SFA List', multiple: true });
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function clearAllDD()
+        {
+            $('#ddRDI').val(null).change();
+            $('#ddBranch').val(null).change();
+            $('#ddDivision').val(null).change();
+            $('#ddSFAType').val(null).change();
+            $('#ddSFA').val(null).change();
+            $('#txtMappingID').val('');
+        }
+
+
+        $(document).ready(function () {
+            dtEmployeeStructureMapping = $('#dtEmployeeStructureMapping').DataTable({
+                serverSide: true,
+                processing: true,
+                searching: false,
+                ajax: {
+                    url: "@Url.Action("EmployeeStructureMappingGrid", "Grid")",
+                    type: 'POST',
+                    data: function (d) {
+                        d.BranchIds = $('#ddFilterBranch').val();
+                        d.RDIName = $('#txtRDIName').val();
+                    }
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "RDIBranchName" },
+                    { data: "RDIName" },
+                    { data: "SFAName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnDelete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            init();
+            getBranchDD();
+            getRDIDD();
+            getDivisionsDD();
+            getSFATypeDD();
+
+            $('body').on('click', '#btnSearch', function () {
+                $('#filterBoxHeader').trigger('click');
+                dtEmployeeStructureMapping.ajax.reload();
+            });
+
+            $('.clearDD').on('click', function () {
+                $(this).next().val(null).change();
+            });
+
+            $('#ddBranch').on('change', function (e) {
+                SearchSFA();
+            });
+            $('#ddDivision').on('change', function (e) {
+                SearchSFA();
+            });
+            $('#ddSFAType').on('change', function (e) {
+                SearchSFA();
+            });
+
+            $('#modalAddEdit').on('shown.bs.modal', function () {
+                $('#ddRDI').focus();
+            });
+            $('#modalAddEdit').on('hidden.bs.modal', function () {
+                clearAllDD();
+            });
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtMappingID').val('');
+            });
+            
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new mapping');
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '#btnSubmit', function () {
+                var data = new Object();
+                var url = '';
+                url = '@Url.Action("Create", "EmployeeStructureMapping")';
+                data.RDIId = parseInt($('#ddRDI').val());
+                data.SFAIds = $('#ddSFA').val();
+
+                if(isNaN(data.RDIId) || data.RDIId == 0)
+                {
+                    common.notify("error","Please select an RDI.");
+                    return;
+                }
+
+                if(data.SFAIds == null || data.SFAIds == undefined || data.SFAIds == '')
+                {
+                    common.notify("error","Please select at least one SFA for mapping.");
+                    return;
+                }
+
+                common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalAddEdit').modal('toggle');
+                        common.notify('success', output.Message);
+                        dtEmployeeStructureMapping.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtEmployeeStructureMapping.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtMappingID').val(data.ID);
+                $('#displayMappingName').html('RDI: ' + data.RDIName + ' --- SFA: ' + data.SFAName);
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete", "EmployeeStructureMapping")";
+                var data = new Object();
+                data.ID = $("#txtMappingID").val();
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success', output.Message);
+                        dtEmployeeStructureMapping.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.BranchIds = $('#ddFilterBranch').val();
+                modeldata.RDIName = $('#txtRDIName').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelEmployeeStructure", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.EmployeeStructure), InputParam : modeldata },
+
+                success: function (returnValue) {
+                    if(returnValue)
+                    {
+                        window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                        common.notify('success', "File downloaded successfully");
+                    }
+                    else
+                    {
+                        common.notify('error',"Empty file returned");
+                    }
+                },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                common.notify('error', "Error while downloading file.")
+            }
+        });
+
+        });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddEdit">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddEditTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    <div class="form-group">
+                        <label for="ddRDI">RDI Name</label><span class="text-blue small clearDD" id="clearRDI"> (<i class="fa fa-close"></i>Clear)</span>
+                        @Html.DropDownListFor(m => m.RDIId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddRDI", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddBranch">Branch Name</label><span class="text-blue small clearDD" id="clearBranch"> (<i class="fa fa-close"></i>Clear)</span>
+                        @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                    </div>
+                    @Html.AmboDropdownMultipleFor(m => m.DivisionId, "ddDivision","Division(s)", "ddDivision")
+                    @Html.AmboDropdownMultipleFor(m => m.SFATypeId, "ddSFAType", "SFA Type(s)", "ddSFAType")
+                    @*<div class="form-group">
+                        <label for="ddDivision">Division Name</label>
+                        @*<span class="text-blue small clearDD" id="clearDivision"> (<i class="fa fa-close"></i>Clear)</span>
+                        @Html.DropDownListFor(m => m.DivisionId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddDivision", @style = "width:100%", @multiple="multiple" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddSFAType">SFA Type</label>
+                        @Html.DropDownListFor(m => m.SFATypeId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddSFAType", @style = "width:100%", @multiple = "multiple" })
+                    </div>*@
+                    <div class="form-group">
+                        @Html.AmboDropdownMultipleFor(m => m.SFAIds, "ddSFA","SFA Names", "ddSFA")
+                        @*<label for="ddSFA">SFA Names</label>
+                        @Html.DropDownListFor(m => m.SFAIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddSFA", @style = "width:100%" })*@
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing mapping</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    <strong><span id="displayMappingName"></span></strong> mapping will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@{Html.RenderAction("GetEmployeeStructureMapGridFilters", "EmployeeStructureMapping");}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-solid box-primary">
+            <div class="box-body">
+                <table id="dtEmployeeStructureMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>RDI Branch Name</th>
+                            <th>RDI Name</th>
+                            <th>SFA Name</th>
+                            <th>Quick Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

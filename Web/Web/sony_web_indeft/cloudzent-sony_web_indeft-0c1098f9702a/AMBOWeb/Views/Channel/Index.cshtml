@@ -1,0 +1,421 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.ChannelMaster
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/jquery-validation-1.17.0/jquery.validate.min.js"></script>
+    <script src="~/Content/plugins/jquery-validation-unobtrusive-master/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtChannel')) {
+                $('#dtChannel').DataTable().destroy();
+                $('#dtChannel tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtChannel').DataTable({
+                searching: false,
+                processing: true,
+                scrollY: true,
+                ajax: {
+                    url: "@Url.Action("ChannelMasterGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.ChannelCodeIds = $('#ddlCode').val();
+                        d.ChannelNameIds = $('#ddlName').val();
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "ChannelCode" },
+                    { data: "ChannelName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+        }
+
+        function validate()
+        {
+            if($("#txtChannelCode").val() == null || $("#txtChannelCode").val() == '' || $("#txtChannelCode").val() == undefined)
+            {
+                common.notify('error','Please enter Channel Code.')
+                return false;
+            }
+            if($("#txtChannelCode").val().length > 50)
+            {
+                common.notify('error','Channel code cannot be more than 50 characters.')
+                return false;
+            }
+            if($("#txtChannelName").val() == null || $("#txtChannelName").val() == '' || $("#txtChannelName").val() == undefined)
+            {
+                common.notify('error','Please enter Channel Name.')
+                return false;
+            }
+            if($("#txtChannelName").val().length > 100)
+            {
+                common.notify('error','Channel name cannot be more than 100 characters.')
+                return false;
+            }
+            return true;
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetChannels", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+
+                    $(result).each(function () {
+                        $("#ddlCode").append($("<option></option>").val(this.Id).html(this.ChannelCode));
+                    });
+
+
+                    $(result).each(function () {
+                        $("#ddlName").append($("<option></option>").val(this.Id).html(this.ChannelName));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCode").html("");
+                    //$("#ddlCode").append($('<option></option>').val(0).html("---All Channel Codes---"));
+
+                    $("#ddlName").html("");
+                    //$("#ddlName").append($('<option></option>').val(0).html("---All Channels---"));
+                }
+            });
+
+            $('#ddlCode').select2({ placeholder: "---All Channel Codes---" });
+            $('#ddlName').select2({ placeholder: "---All Channels---" });
+
+        }
+
+        $(document).ready(function () {
+
+
+            populateFilters();
+            Search();
+
+            $('#modalAddEdit').on('shown.bs.modal', function () {
+                $('#txtChannelCode').focus();
+            });
+            $('#modalAddEdit').on('hidden.bs.modal', function () {
+                $('#txtChannelID').val('');
+                $('#txtChannelCode').val('');
+                $('#txtChannelName').val('');
+            });
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtChannelID').val('');
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new channel');
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalAddEditTitle').html('<i class="fa fa-pencil"></i> Update an existing channel');
+                $('#txtChannelID').val(data.Id);
+                $('#txtChannelCode').val(data.ChannelCode);
+                $('#txtChannelName').val(data.ChannelName);
+                $('#modalAddEdit').modal('toggle');
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#txtChannelID').val(data.Id);
+                $('#displayChannelName').html(data.ChannelCode + "-" + data.ChannelName);
+                $('#modalDelete').modal('toggle');
+            });
+
+            @*$('body').on('click', '#btnSubmit', function () {
+                var data = new Object();
+                var url = '';
+                if ($("#txtChannelID").val() == '')//add
+                {
+                    url = '@Url.Action("Create","Channel")';
+                    data.ChannelCode = $("#txtChannelCode").val();
+                    data.ChannelName = $("#txtChannelName").val();
+                }
+                else//update
+                {
+                    url = '@Url.Action("Update", "Channel")';
+                    data.Id = $("#txtChannelID").val();
+                    data.ChannelCode = $("#txtChannelCode").val();
+                    data.ChannelName = $("#txtChannelName").val();
+                }
+
+                common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalAddEdit').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                    common.notify('error', output.Message);
+                });
+
+            });*@
+
+            $('body').on('click', '#btnSubmit', function () {
+                if(validate())
+                {
+                    var url = "@Url.Action("Create","Channel")";
+                    var data = new Object();
+                    data.Id = $("#txtChannelID").val();
+                    data.ChannelCode = $("#txtChannelCode").val();
+                    data.ChannelName = $("#txtChannelName").val();
+
+                    common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                        if (output.Data) {
+                            $('#modalAddEdit').modal('toggle');
+                            common.notify('success', output.Message);
+                            dt.ajax.reload();
+                        }
+                        else {
+                            common.notify('error', output.Message);
+                        }
+                    },
+                    function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', output.Message);
+                    });
+                }
+            });
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete","Channel")";
+                var data = new Object();
+                data.Id = $("#txtChannelID").val();
+
+                common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.ChannelCodeIds = $('#ddlCode').val();
+                modeldata.ChannelNameIds = $('#ddlName').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelChannel", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Channel), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+            $.validator.unobtrusive.parse("#formCreateChannel");
+
+        });
+    </script>
+}
+
+@section PageModals
+{
+<div class="modal fade" id="modalAddEdit">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddEditLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalAddEditTitle"></h4>
+            </div>
+    <div class="modal-body">
+        @Html.HiddenFor(m => m.Id, new { @id = "txtChannelID" })
+        <div class="form-group">
+            <label for="txtChannelCode">Channel Code:<span class="text-danger"> *</span></label><span class="text-danger"> @Html.ValidationMessageFor(m => m.ChannelCode)</span>
+            @Html.TextBoxFor(m => m.ChannelCode, new { @class = "form-control", @id = "txtChannelCode", @placeholder = "Enter Channel Code" })
+        </div>
+        <div class="form-group">
+            <label for="txtChannelName">Channel Name:<span class="text-danger"> *</span></label><span class="text-danger"> @Html.ValidationMessageFor(m => m.ChannelName)</span>
+            @Html.TextBoxFor(m => m.ChannelName, new { @class = "form-control", @id = "txtChannelName", @placeholder = "Enter Channel Name" })
+        </div>
+
+    </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing channel</h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.Id, new { @id = "txtChannelID" })
+                <strong><span id="displayChannelName"></span></strong> will be deleted from the system. Are you sure to proceed?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Channel Code:</label>
+                        @Html.DropDownList("ddlCode", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCode", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Channel Name:</label>
+                        @Html.DropDownList("ddlName", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlName", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-3 col-lg-offset-1">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Channel Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtChannel" class="table table-bordered table-striped datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Channel Code</th>
+                                <th>Channel Name</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

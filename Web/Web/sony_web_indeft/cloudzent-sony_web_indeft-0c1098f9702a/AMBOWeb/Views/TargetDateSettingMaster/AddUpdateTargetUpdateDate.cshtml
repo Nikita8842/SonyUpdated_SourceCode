@@ -1,0 +1,127 @@
+﻿@model AMBOModels.MasterMaintenance.TargetDateSettingMaster
+
+
+@section PageCSS{
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @Html.Raw("<i class=\"fa fa-pencil\"></i> Set Target Date")
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("AddUpdateTargetUpdateDate", "TargetDateSettingMaster", FormMethod.Post, new { id = "formTargetDateSetting"}))
+                    {
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label">Branch(s) <span class="text-danger">*</span></label><a id="btnSelectall">Select All</a> / <a id="btnDselectAll">Remove All</a><span class="text-danger">@Html.ValidationMessageFor(m => m.BranchIds)</span>
+                                    @Html.ListBoxFor(m => m.BranchIds, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtBranch", @class = "form-control input-sm", multiple = "multiple" })
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label ">Target Update Date <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.TargetDate)</span>
+                                    @Html.TextBoxFor(m => m.TargetDate, new { Id = "txttargetdate", @class = "form-control input-sm", autocomplete = "off" })
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary" id="btnSubmit">Save</button>
+                                    @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default", onclick = "response" })
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            
+
+            debugger;
+            $('#txttargetdate').datepicker({
+                autoclose:true,
+                format: "dd/mm/yyyy",
+                startDate: new Date()
+            });
+            //var date = new Date();
+            //$('#txttargetdate').datepicker({
+                
+            //    changeMonth: true,
+            //    changeYear: true,
+            //    minDate: date
+            //});
+
+
+            $("#btnSelectall").click(function () {
+
+                $("#txtBranch > option").prop("selected", "selected");
+                $("#txtBranch").trigger("change");
+
+            });
+
+            $("#btnDselectAll").click(function () {
+
+                $("#txtBranch").val(null).trigger("change");
+
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+
+                    $(result).each(function () {
+                        $("#txtBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+                    $("#txtBranch").select2({ placeholder: 'Select branch' });
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#txtBranch").html("");
+                    $("#txtBranch").append($('<option></option>').val(0).html("Select branch"));
+                }
+            });
+
+        });
+
+
+    </script>
+}

@@ -1,0 +1,173 @@
+﻿@model AMBOModels.MasterMaintenance.IncentiveCalculationDateSetting
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+      
+        function init() {
+            $('#txtMonth').datepicker({
+                autoclose: true,
+                format: "mm/yyyy",
+                startView: "months",
+                minViewMode: "months"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+
+            if($('#txtMonth').val() == null || $('#txtMonth').val() == undefined || $('#txtMonth').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select Month.";
+                return output;
+            }
+            return output;
+        }
+        function Search() {
+            debugger;
+
+            var result = ValidateFilters();
+            //if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                
+                if ($.fn.dataTable.isDataTable('#dtIncentiveCalculationDateSettingReport')) {
+                    $('#dtIncentiveCalculationDateSettingReport').DataTable().destroy();
+                    $('#dtIncentiveCalculationDateSettingReport tbody').empty();
+                    //dtIncentiveCalculationDateSettingReport.destroy();
+                }
+                var d = new Object();
+                //d.Month = $('#txtMonth').val().replace("/","");
+                d.CreatedBy = 0;
+
+            //Grid initialization
+                dtCityGrid = $('#dtIncentiveCalculationDateSettingReport').DataTable({
+                    searching: false,
+                    processing: true,
+                    ajax: {
+                        url: "@Url.Action("GetIncentiveCalculationDateSettingReport", "IncentiveCalculationDateSetting")",
+                    type: 'POST',
+                    data:function (d) {
+                        debugger;
+                        d.CreatedBy = 0;
+                    
+                    },
+                    dataSrc:""
+                },
+                    language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "Month" },
+                    { data: "CollectionDay" }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            $("#btnEdit").click(function () {
+                $(location).attr("href", "@Url.Action("UpdateIncentiveCalculationDate", "IncentiveCalculationDateSetting")");
+
+            });
+            //Grid initialization till here
+            //}
+            //else {
+            //    common.notify('error', result.message);
+            //}
+        }
+
+
+        $(document).ready(function () {
+
+            var dtIncentiveCalculationDateSettingReport;
+            init();
+            Search();
+           if ($.fn.dataTable.isDataTable('#dtIncentiveCalculationDateSettingReport')) {
+                //dtIncentiveCalculationDateSettingReport.destroy();
+            }
+            //$('#dtIncentiveCalculationDateSettingReport').DataTable({
+            //    scrollX: true
+            //});
+
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Incentive Calculation Date Setting</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*<div class="row hidden" id="divDataTable">*@
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Incentive Calculation Date Setting Master</a></li>
+                <li class="pull-right"><button id="btnEdit" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-edit"></i> Edit</button></li>
+                @*<li class="pull-right"><button style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtIncentiveCalculationDateSettingReport" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Collection Date</th>
+                                @*<th>Quick Actions</th>*@
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

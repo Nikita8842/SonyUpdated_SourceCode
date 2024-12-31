@@ -1,0 +1,755 @@
+@using AMBOWeb.Classes;
+@model AMBOModels.UserManagement.SFAMasterforHR
+
+
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script type="text/javascript">
+
+        function Search() {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtSFAMasterforHR')) {
+                $('#dtSFAMasterforHR').DataTable().destroy();
+                $('#dtSFAMasterforHR tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtSFAMasterforHR').DataTable({
+                searching: false,
+                serverSide: true,
+                processing: true,
+                scrollX: true,
+                scrollY: true,
+                ajax: {
+                    url: "@Url.Action("SFAMasterforHRGrid", "Grid")",
+                    type: 'POST',
+                    data: function (d) {
+                        d.LoginIds = $('#ddlLogin').val();
+                        d.EmployeeIds = $('#ddlSFA').val();
+                        d.StateIds = $('#ddlState').val();
+                        d.CityIds = $('#ddlCity').val();
+                        var Branch = @Html.Raw(Json.Encode(Model.BranchIds));
+                        if(Branch !=null && Branch !=0)
+                        {
+                            d.BranchIds = Branch;
+                        }
+                        else
+                            d.BranchIds = $('#ddlBranch').val();
+                        d.Status = $('#ddlStatus').val();
+                        d.SFATypeId = $('#ddSFAType').val();
+                    }
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "Id", "visible": false },
+                    { data: "SFAName" },
+                    { data: "SFACode" },
+                    { data: "Branch" },
+                    { data: "State" },
+                    { data: "City" },
+                    { data: "Gender" },
+                    { data: "SourceName" },
+                    { data: "Education" },
+                    { data: "Experience" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="edit" data-toggle="tooltip" data-placement="right" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="delete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters() {
+
+
+            $.ajax({
+                url: "@Url.Action("GetAllCities", "City")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    //$("#ddlCity").append($("<option></option>").val("").html("----All Cities-----"));
+                    $(result).each(function () {
+                        $("#ddlCity").append($("<option></option>").val(this.ID).html(this.CityName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCity").html("");
+                    $("#ddlCity").append($('<option></option>').val(0).html("----All Cities-----"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetStates", "Common")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    //$("#ddlState").append($("<option></option>").val("").html("----All States-----"));
+                    $(result).each(function () {
+                        $("#ddlState").append($("<option></option>").val(this.ID).html(this.StateName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlState").html("");
+                    $("#ddlState").append($('<option></option>').val(0).html("----All States-----"));
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+
+                    var BranchIds = @Html.Raw(Json.Encode(Model.BranchIds));
+                    if(BranchIds !=null && BranchIds !=0)
+                    {                        
+                        $.each(result, function (i, branchdata) {
+                            debugger;
+                              if (BranchIds.indexOf(branchdata.BranchId) !== -1) {
+                                    selected = ' selected="selected" ';
+                                } else {
+                                    selected = '';
+                                }
+                            var data = '<option value="' + branchdata.BranchId + '"' + selected + '>' + branchdata.BranchName + '</option>'
+                            $('#ddlBranch').append(data);
+                        });
+                        //$('#ddlBranch').val(Branch).change();   
+                        
+                        $('#ddlBranch').attr('readonly', 'readonly');
+                    }
+                    else
+                    {
+                        $(result).each(function () {
+                            $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                        });
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlBranch").html("");
+                    $("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                }
+            });
+
+            @*$.ajax({
+                url: "@Url.Action("GetAllDetailsSFAMasterforHR", "SFAMasterforHR")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+
+                    $("#ddlLogin").append($("<option></option>").val("").html("---All Logins---"));
+                    $(result.Data).each(function () {
+                        $("#ddlLogin").append($("<option></option>").val(this.Id).html(this.SFACode));
+                    });
+
+                    $("#ddlSFA").append($("<option></option>").val("").html("----All SFAs-----"));
+                    $(result).each(function () {
+                        $("#ddlSFA").append($("<option></option>").val(this.Id).html(this.SFAName));
+                    });
+
+                },
+                error: function (result) {
+                    $("#ddlLogin").html("");
+                    $("#ddlLogin").append($('<option></option>').val(0).html("---All Logins---"));
+
+                    $("#ddlSFA").html("");
+                    $("#ddlSFA").append($('<option></option>').val(0).html("----All SFAs-----"));
+                }
+            });*@
+
+            //$('#ddlLogin').select2({ placeholder: "---All Logins---" });
+            //$('#ddlSFA').select2({ placeholder: "---All SFAs---" });
+            $('#ddlCity').select2({ placeholder: "---All Cities---" });
+            $('#ddlState').select2({ placeholder: "---All States---" });
+            $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#filterBox", function (types) {
+                $("#ddSFAType").html("");
+                $.each(types, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).html(sfatype.SFATypeName));
+                });
+                $('#ddSFAType').val(null).change();
+                $('#ddSFAType').select2({ placeholder: "---Select SFA Type---" });
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+            });
+        }
+
+
+        function init() {
+            $('#ddlBranchUpload').select2({ placeholder: "---All Branches---" });
+
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+
+        }
+
+        function getBranches() {
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (output) {
+                    debugger;
+                    var list = '';
+                    var branchupload = $("#ddlBranch").val();
+                    var options = [];
+                    var BranchIds = @Html.Raw(Json.Encode(Model.BranchIds));
+                    if(BranchIds !=null && BranchIds !=0)
+                    {                        
+                        $.each(output, function (i, branchdata) {
+                            debugger;
+                            if (BranchIds.indexOf(branchdata.BranchId) !== -1) {
+                                selected = ' selected="selected" ';
+                            } else {
+                                selected = '';
+                            }
+                            list += '<option value="' + branchdata.BranchId + '"' + selected + '>' + branchdata.BranchName + '</option>'
+                            
+                        });
+                        $("#ddlBranchUpload").html(list);
+                        //$("#ddlBranchUpload > option").prop("selected", "selected");
+                        $("#ddlBranchUpload").trigger("change");
+                    }
+                    else{
+                        for (var i = 0; i < output.length; i++) {
+                            list += '<option value="' + output[i].BranchId + '">' + output[i].BranchName + '</option>';
+                        }
+                        $("#ddlBranchUpload").html(list);
+                        $("#ddlBranchUpload > option").prop("selected", "selected");
+                        $("#ddlBranchUpload").trigger("change");
+                    }
+
+                    if(BranchIds !=null && BranchIds !=0) {
+
+                        $('#ddlBranchUpload').attr('readonly', 'readonly');
+                    }
+
+                },
+             
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddlBranchUpload').html('');
+                    common.notify('error', 'No branch found.');
+
+                }
+            });
+        }
+
+        function getUploadPage() {
+            $.ajax({
+                url: "@Url.Action("SFAMasterforHRUpload", "SFAMasterforHR")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    $('#rowsearch').addClass('hidden');
+                    $('#rowtable').addClass('hidden');
+
+                    $('#rowUpload').html(result);
+                    $('#rowUpload').removeClass('hidden');
+
+                    getBranches();
+                    init();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+
+                }
+            });
+        }
+
+        function validatefile()
+        {
+            debugger;
+            var fileval = $('.fileUpload').val();
+            if (fileval == '' || fileval == null)
+            {
+                common.notify('error', "Please select an Excel file to upload data");
+                return false;
+            }
+            var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+            /*Checks whether the file is a valid excel file*/
+            if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                return false;
+            }
+            return true;
+        }
+
+        function UploadData()
+        {
+            debugger;
+            if (validatefile()) {
+
+                $.ajax({
+                    url: "@Url.Action("UploadData", "SFAMasterforHR")",
+                    type: "POST",
+                    data: function () {
+                        var data = new FormData();
+                        data.append("ExcelUploadFile", jQuery("#fileUpload").get(0).files[0]);
+                        return data;
+                    }(),
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function () {
+                        var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#gridrow").append(loader);
+                    },
+                    success: function (response) {
+                        debugger;
+                        $('#rowsearch').addClass('hidden');
+                        $('#rowtable').addClass('hidden');
+
+                        $('#rowUpload').html(response);
+                        $('#rowUpload').removeClass('hidden');
+
+                        getBranches();
+                        init();
+
+                        var ifexists = $("#gridrow");
+                        if (ifexists.length == 0)
+                            common.notify('error', 'Error in uploading data due to Invalid data.');
+                        else
+                            common.notify('success', 'Full/partial data uploaded successfully.');
+
+                    },
+                    error: function (jqXHR, textStatus, errorMessage) {
+                        console.log(errorMessage);
+                    },
+                    complete: function () {
+                        $("#gridrow").find('.overlay').remove();
+                    }
+                });
+            }
+
+        }
+
+        function DownloadData() {
+            debugger;
+
+            //if (validate()) {
+                var modeldata = new Object();
+                modeldata.BranchIds = $('#ddlBranchUpload').val();
+                modeldata.FromDate = $('#txtFromDate').val();
+                modeldata.ToDate = $('#txtToDate').val();
+                $.ajax({
+                    url: "@Url.Action("CreateFormat", "SFAMasterforHR")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    dataSrc: "",
+                    beforeSend: function () {
+                        var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#gridrow").append(loader);
+                    },
+                    success: function (returnValue) {
+                        debugger;
+                        if (returnValue) {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else {
+                            common.notify('error', "Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    },
+                    complete: function () {
+                        $("#gridrow").find('.overlay').remove();
+                    }
+                });
+            //}
+
+        }
+
+        function select() {
+            debugger;
+            $(".branchupload > option").prop("selected", "selected");
+            $(".branchupload").trigger("change");
+
+        }
+
+        function deselect() {
+            debugger;
+            $(".branchupload").val(null).trigger("change");
+
+        }
+
+        function validate()
+        {
+            var _FromDate = $('#txtFromDate').val();
+            var _ToDate = $('#txtToDate').val();
+
+            var datefromparse = _FromDate.split('/');
+            var parafromdate = datefromparse[1] + '/' + datefromparse[0] + '/' + datefromparse[2]
+
+            var datetoparse = _ToDate.split('/');
+            var paratodate = datetoparse[1] + '/' + datetoparse[0] + '/' + datetoparse[2]
+
+            var fd = Date.parse(parafromdate);
+            var td = Date.parse(paratodate);
+
+            if (_FromDate == null || _FromDate == "") {
+                common.notify('error', "Please select From Date");
+                return false;
+            }
+            if (_ToDate == null || _ToDate == "") {
+                common.notify('error', "Please select To Date");
+                return false;
+            }
+            if (fd > td) {
+                common.notify('error', "To Date Can't be less than From Date ");
+                return false;
+            }
+            return true;
+        }
+
+        function ChangeValue(_val)
+        {
+            if(_val=="4000")
+            {
+                $('#ddlStatus').val('');
+            }
+        }
+
+        $(document).ready(function () {
+
+
+            @*var branchupload = @Model.BranchId;
+            if(branchupload !=null && branchupload !=0) {
+                $('#ddlBranchUpload').val(branchupload).change();
+                $('#ddlBranchUpload').attr('readonly', 'readonly');
+            }*@
+
+
+            populateFilters();
+            getSFATypeDD();
+            Search();
+
+            $('body').on('click', ".edit", function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $(location).attr("href", "@Url.Action("UpdateSFAMasterforHR", "SFAMasterforHR")" + "?LoginId=" + data.Id);
+            });
+
+
+            $('body').on('click', '.delete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+               // alert(data.Id);
+                $('#modalDelete').modal('toggle');
+                $('#lblloginId').val(data.Id);
+
+                $('#displaySFAMasterforHRName').html(data.SFAName);
+            });
+
+
+            $('body').on('click', '#btnDelete', function () {
+
+                var data = new Object();
+                data.Id = $("#lblloginId").val();
+                $.ajax({
+                    url: "@Url.Action("DeleteSFAMasterforHR", "SFAMasterforHR")",
+                    data: JSON.stringify(data),
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (output) {
+                        if (output.Data) {
+                            $('#modalDelete').modal('toggle');
+                            dt.ajax.reload();
+                            common.notify('success', output.Message);
+                        }
+                        else {
+                            common.notify('error', output.Message);
+                        }
+
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error occured while deleting record.")
+                    }
+                });
+
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.LoginIds = $('#ddlLogin').val();
+                modeldata.EmployeeIds = $('#ddlSFA').val();
+                modeldata.StateIds = $('#ddlState').val();
+                modeldata.CityIds = $('#ddlCity').val();
+                modeldata.BranchIds = $('#ddlBranch').val();
+                modeldata.Status = $('#ddlStatus').val();
+                modeldata.SFATypeId = $('#ddSFAType').val();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelSFAMasterforHR", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.SFAMasterForHR), InputParam : modeldata },
+                    beforeSend: function () {
+                        var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#rowtable").append(loader);
+                    },
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download" })/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    },
+                    complete: function () {
+                        $("#rowtable").find('.overlay').remove();
+                    }
+                });
+
+            });
+        });
+    </script>
+}
+
+@section PageModals
+{
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing SFA for HR</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.LoginId, new { @id = "lblloginId" })
+                    <strong><span id="displaySFAMasterforHRName"></span></strong> will be deleted from the system. Do you want to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row" id="rowsearch">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Login Id:</label>
+                        @Html.TextBox("ddlLogin", null,new { @Id = "ddlLogin", @Class = "form-control input-sm"})
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Employee Name:</label>
+                        @Html.TextBox("ddlSFA", null, new { @Id = "ddlSFA", @Class = "form-control input-sm"})
+                    </div>
+                    <div class="col-lg-4">
+                        @*<label>Branch:</label>*@
+                        @Html.CustomDropDownMultiple("ddlBranch", "ddlBranch", "Branch:", "") 
+                        @*new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })*@
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">
+                        @*<label>SFA:</label>
+                        @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })*@
+                        @Html.AmboDropdownFor(m => m.SFATypeId, "ddSFAType", "SFA Type: ", "ddSFAType")
+                    </div>
+                    <div class="col-lg-3">
+                        @*<label>State:</label>
+                        @Html.DropDownList("ddlState", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlState", @Class = "form-control input-sm", @multiple = "multiple" })*@
+                        @Html.CustomDropDownMultiple("ddlState", "ddlState", "State:", "")
+                        
+                    </div>
+                    <div class="col-lg-3">
+                        @*<label>City:</label>
+                        @Html.DropDownList("ddlCity", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCity", @Class = "form-control input-sm", @multiple = "multiple" })*@
+                        @Html.CustomDropDownMultiple("ddlCity", "ddlCity", "City:", "")
+                        
+                    </div>      
+                    <div class="col-lg-3">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                          new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>             
+                    
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="rowtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> SFA Master for HR</a></li>
+                @*<li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat" id="btnAdd"><i class="fa fa-plus"></i> Add New</button></li>*@
+                <li class="pull-right"><button  id="btnDownload" type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+                <li class="pull-right"><button style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat" onclick="getUploadPage();"><i class="fa fa-upload"></i> Upload Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtSFAMasterforHR" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>SFA Name</th>
+                                <th>Login Id</th>
+                                <th>Branch</th>
+                                <th>State</th>
+                                <th>City</th>
+                                <th>Gender</th>
+                                <th>Source Name</th>
+                                <th>Education</th>
+                                <th>Experience</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+<div class="hidden" id="rowUpload"></div>

@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{15283015-1D73-4CDE-8DD6-DC762412040C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AmboDataServices</RootNamespace>
+    <AssemblyName>AmboDataServices</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Implimentation\CommonDataService.cs" />
+    <Compile Include="Implimentation\DeviationDataService.cs" />
+    <Compile Include="Implimentation\ErrorLogDataService.cs" />
+    <Compile Include="Implimentation\GridDataService.cs" />
+    <Compile Include="Implimentation\IncentiveCalculationDateSettingDataService.cs" />
+    <Compile Include="Implimentation\IncentiveDataService.cs" />
+    <Compile Include="Implimentation\MappingDataService.cs" />
+    <Compile Include="Implimentation\MasterMaintenanceDataService.cs" />
+    <Compile Include="Implimentation\ModuleManagementDataService.cs" />
+    <Compile Include="Implimentation\MPRIntegrationDataService.cs" />
+    <Compile Include="Implimentation\ProductCategoryGroupDataService.cs" />
+    <Compile Include="Implimentation\ReportDataService.cs" />
+    <Compile Include="Implimentation\SFAMobileManagementDataService.cs" />
+    <Compile Include="Implimentation\SFAMobileReportsDataService.cs" />
+    <Compile Include="Implimentation\UserManagementDataService.cs" />
+    <Compile Include="Implimentation\UserValidationDataService.cs" />
+    <Compile Include="Implimentation\ValidateDataService.cs" />
+    <Compile Include="Implimentation\WebReportsDataService.cs" />
+    <Compile Include="Interface\ICommonDataService.cs" />
+    <Compile Include="Interface\IDeviationDataService.cs" />
+    <Compile Include="Interface\IErrorLogDataService.cs" />
+    <Compile Include="Interface\IGridDataService.cs" />
+    <Compile Include="Interface\IIncentiveCalculationDateSettingDataService.cs" />
+    <Compile Include="Interface\IIncentiveDataService.cs" />
+    <Compile Include="Interface\IMappingDataService.cs" />
+    <Compile Include="Interface\IMasterMaintenanceDataService.cs" />
+    <Compile Include="Interface\IModuleManagementDataService.cs" />
+    <Compile Include="Interface\IMPRIntergrationDataService.cs" />
+    <Compile Include="Interface\IProductCategoryGroupDataService.cs" />
+    <Compile Include="Interface\IReportDataService.cs" />
+    <Compile Include="Interface\ISFAMobileManagementDataService.cs" />
+    <Compile Include="Interface\ISFAMobileReportsDataService.cs" />
+    <Compile Include="Interface\IUserManagementDataService.cs" />
+    <Compile Include="Interface\IUserValidationDataService.cs" />
+    <Compile Include="Interface\IValidateDataService.cs" />
+    <Compile Include="Interface\IWebReportsDataService.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\AmboLibrary\AmboLibrary.csproj">
+      <Project>{ac848149-844a-42cd-8e27-cec1ecf184ad}</Project>
+      <Name>AmboLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AmboProvider\AmboProvider.csproj">
+      <Project>{e8b843de-d20b-437d-90c2-143f3e10bc55}</Project>
+      <Name>AmboProvider</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AmboUtilities\AmboUtilities.csproj">
+      <Project>{f98783f6-f550-4a8d-a1b8-ddb9fdc92a53}</Project>
+      <Name>AmboUtilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

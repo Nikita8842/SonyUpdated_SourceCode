@@ -1,0 +1,157 @@
+﻿@model AMBOModels.IncentiveManagement.PerPieceIncentiveCreate
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @Html.Raw("<i class=\"fa fa-plus\"></i> Map Dealer with Product Category")
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Create", "DealerProductMapping", FormMethod.Post, new { @id = "formDealer" }))
+                    {
+                        @Html.HiddenFor(m => m.ProductCategoryId, new { Id = "txtProIdPerPiece", @value = Model.ProductCategoryId })
+                        @Html.HiddenFor(m => m.MaterialId, new { Id = "txtMaterialIdPerPiece", @value = Model.MaterialId })
+                        
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Product Category Name</label>
+                                    @Html.TextBoxFor(m => m.ProductCategoryName, new { @class = "form-control input-sm", @id = "txtProductCatName", @readonly = "readonly" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Material Code</label>
+                                    @Html.TextBoxFor(m => m.MaterialCode, new { @class = "form-control input-sm", @id = "txtMaterialcode", @readonly = "readonly" })
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label >Material Name</label>
+                                        @Html.TextBoxFor(m => m.MaterialName, new { @class = "form-control input-sm", @id = "txtMaterialName", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                   
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-3">
+                                    <div class="form-group pull-left">
+                                        <label></label>
+                                        <button id="btnAdd" type="button" class="btn btn-block btn-primary btn-flat" onclick="openModal();"><i class="fa fa-plus"></i> Add New Product</button>
+                                    </div>
+                                </div>
+                            </div>      
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table id="dtNewPerPieceClass" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Scheme Id</th>
+                                                <th>Per Piece Scheme Name</th>
+                                                <th>Min Qty</th>
+                                                <th>Max Qty</th>
+                                                <th>Incentive amount</th>
+                                                <th>Min % Ach</th>
+                                                <th>Max % Ach</th>
+                                                <th>Quick Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat" onclick="submitPerPiece();"><i class="fa fa-check"></i> Save Changes</button>
+                                        <button id="btnBack" type="button" class="btn btn-default btn-flat" onclick="back();"><i class="fa fa-close"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAddRow">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddEditLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalAddRowTitle"></h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rowIndex" />
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Per Piece Scheme</label>
+                            @Html.DropDownListFor(m => m.SchemeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlPerPieceSchemeId" })
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Min</label>
+                            @Html.TextBoxFor(m => m.Min, new { @class = "form-control input-sm", @id = "txtPerPieceMin", @onkeypress = "return isInt(event)" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Max</label>
+                            @Html.TextBoxFor(m => m.Max, new { @class = "form-control input-sm", @id = "txtPerPieceMax", @onkeypress = "return isInt(event)" })
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Incentive Amount</label>
+                            @Html.TextBoxFor(m => m.IncentiveAmount, new { @class = "form-control input-sm", @id = "txtPerPieceIncenAmt", @onkeypress = "return isNumberKey(event)" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Min % Ach</label>
+                            @Html.TextBoxFor(m => m.MinAch, new { @class = "form-control input-sm", @id = "txtPerPieceMinAch", @onkeypress = "return isNumberKey(event)" })
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label>Max % Ach</label>
+                            @Html.TextBoxFor(m => m.MaxAch, new { @class = "form-control input-sm", @id = "txtPerPieceMaxAch", @onkeypress = "return isNumberKey(event)" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnSubmitRow" type="button" class="btn btn-primary" onclick="SubmitRow();"><i class="fa fa-check"></i> Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

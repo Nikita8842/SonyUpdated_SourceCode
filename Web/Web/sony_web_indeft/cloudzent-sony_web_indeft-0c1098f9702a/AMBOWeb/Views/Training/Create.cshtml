@@ -1,0 +1,370 @@
+﻿
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        function getProdCatsDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+
+        function getChannelsDD() {
+            common.ajax_get("@Url.Action("GetChannels", "Common")", null, "#tabForm", function (channels) {
+                $("#ddChannel").html("");
+                $.each(channels, function (i, channel) {
+                    $("#ddChannel").append($('<option></option>').val(channel.Id).html(channel.ChannelName));
+                });
+                $('#ddChannel').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddChannel").html("");
+            });
+        }
+
+        function getFormsDD() {
+            common.ajax_get("@Url.Action("GetActiveFeedbackForms", "Common")", null, "#tabForm", function (forms) {
+                $("#ddFeedbackForm").html("");
+                $.each(forms.Data, function (i, form) {
+                    $("#ddFeedbackForm").append($('<option></option>').val(form.FormId).html(form.FormName));
+                });
+                $('#ddFeedbackForm').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFeedbackForm").html("");
+            });
+        }
+
+        function resetFields() {
+            $('#txtCourseName').val('');
+            $('#txtTrainerName').val('');
+            $('#txtFromDate').val('');
+            $('#txtToDate').val('');
+            getProdCatsDD();
+            getChannelsDD();
+            getFormsDD();
+        }
+
+        function validateTrainingData(data) {
+            var output = new Object();
+            output.status = true;
+
+            if (data.CourseName == null || data.CourseName == undefined || data.CourseName.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter Course Name';
+                return output;
+            }
+
+            if (data.TrainerName == null || data.TrainerName == undefined || data.TrainerName.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter Trainer Name';
+                return output;
+            }
+
+            if (data.FromDate == null || data.FromDate == undefined || data.FromDate.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter From Date';
+                return output;
+            }
+
+            if (data.ToDate == null || data.ToDate == undefined || data.ToDate.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter To Date';
+                return output;
+            }
+
+            if (data.ProdCatId.length ==0) {
+                output.status = false;
+                output.message = 'Please select Product Category';
+                return output;
+            }
+
+            if (data.ChannelId.length == 0 ) {
+                output.status = false;
+                output.message = 'Please select Channel';
+                return output;
+            }
+
+            if (data.FormId == null || data.FormId == undefined || data.FormId.trim() == '' || data.FormId.trim() == 0) {
+                output.status = false;
+                output.message = 'Please select Applicable Feedback Form';
+                return output;
+            }
+
+            return output;
+        }
+
+        function PopulateBranch() {
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+
+                    //$("#ddlBranchCode").append($("<option></option>").val(0).html("---All Codes---"));
+
+                },
+                error: function (result) {
+if (result.statusCode == 401 || result.status == 401) {
+                    var response = $.parseJSON(result.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+}
+                    $("#ddlBranch").html("");
+                    //$("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                    $("#ddlBranchCode").html("");
+                    //$("#ddlBranchCode").append($('<option></option>').val(0).html("---All Codes---"));
+
+                }
+            });
+            $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+        }
+
+
+        function createTraining() {
+            var data = new Object();
+            data.CourseName = $('#txtCourseName').val();
+            data.TrainerName = $('#txtTrainerName').val();
+            data.FromDate = $('#txtFromDate').val();
+            data.ToDate = $('#txtToDate').val();
+            data.ProdCatId = $('#ddProdCat').val();
+            data.ChannelId = $('#ddChannel').val();
+            data.FormId = $('#ddFeedbackForm').val();
+            data.BranchIds = $('#ddlBranch').val();
+
+            var _FromDate = $('#txtFromDate').val();
+            var _ToDate = $('#txtToDate').val();
+
+            var datefromparse = _FromDate.split('/');
+            var parafromdate = datefromparse[1] + '/' + datefromparse[0] + '/' + datefromparse[2]
+
+            var datetoparse = _ToDate.split('/');
+            var paratodate = datetoparse[1] + '/' + datetoparse[0] + '/' + datetoparse[2]
+
+            var fd = Date.parse(parafromdate);
+            var td = Date.parse(paratodate);
+
+            if (_FromDate == null || _FromDate == "") {
+                common.notify('error', "Please select From Date");
+                return false;
+            }
+            if (_ToDate == null || _ToDate == "") {
+                common.notify('error', "Please select To Date");
+                return false;
+            }
+            if (fd > td) {
+                common.notify('error', "To Date Can't be less than From Date ");
+                return false;
+            }
+
+            var validate = validateTrainingData(data);
+            if (validate.status) {
+                common.ajax_post('@Url.Action("Create","Training")', data, '#tabForm',
+                    //success function
+                    function (output) {
+                        if (output.MessageCode == MessageCodes.Acceptable.Created) {
+                            //common.notify('success', output.Message);
+                            //resetFields();
+                            $(location).attr("href", "@Url.Action("Index", "Training")");
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    },
+                    //error function
+                    function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Error occured while creating training. Please contact your administrator.');
+                    });
+            }
+            else
+                common.notify('error', validate.message);
+        }
+
+        $(document).ready(function () {
+
+            function init() {
+                try {
+                    $("#ddChannel").select2({ placeholder: "Select Channel" });
+                    $("#ddFeedbackForm").select2({ placeholder: "Select Feedback Form" });
+                    $("#ddProdCat").select2({ placeholder: "Select Product Category" });
+
+                    $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+                    $('#txtFromDate').prop('data-mask', '');
+                    $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                    $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+                    $('#txtToDate').prop('data-mask', '');
+                    $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                    $('#txtFromDate').datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy",
+                    });
+                    $('#txtToDate').datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy"
+                    });
+                }
+                catch (ex) {
+                    common.notify('error', 'Could not initialize form. Please try after some time.');
+                }
+            }
+
+            $('#btnBack').on('click', function (e) {
+                $(location).attr('href', '@Url.Action("Index", "Training")');
+            });
+
+            $('#btnSubmit').on('click', function (e) {
+                createTraining();
+            });
+
+            init();
+            getProdCatsDD();
+            getChannelsDD();
+            getFormsDD();
+            PopulateBranch();
+        });
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-pencil"></i> Create New Training
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="txtCourseName">Course Name<span class="text-danger">*</span></label>
+                                    <input type="text" class = "form-control input-sm" id = "txtCourseName" placeholder = "Enter Course Name Here..." />
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="txtTrainerName">Trainer Name<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control input-sm" id="txtTrainerName" placeholder="Enter Trainer Name Here..." />
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtFromDate">From Date & Time<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control input-sm" id="txtFromDate" autocomplete = "off" placeholder="Enter From Date Here..." />
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtToDate">To Date & Time<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control input-sm" id="txtToDate" autocomplete = "off" placeholder="Enter To Date Here..." />
+                                    </div>
+                                </div>
+                            </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <div class="form-group">
+                                @*<label for="ddProdCat">Product Category<span class="text-danger">*</span></label>
+                                <select class="form-control input-sm" id="ddProdCat" style="width:100%"></select>*@
+                                <label for="ddProdCat">Product Category<span class="text-danger">*</span></label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                 @Html.DropDownList("ProductCatIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddProdCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <div class="form-group">
+                                <label for="ddChannel">Channel<span class="text-danger">*</span></label>
+                                @*<select class="form-control input-sm" id="ddChannel" style="width:100%"></select>*@
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                 @Html.DropDownList("ChannelId", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddChannel", @Class = "form-control input-sm", @multiple = "multiple" })
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <div class="form-group">
+                                <label for="ddFeedbackForm">Feedback Form Applicable<span class="text-danger">*</span></label>
+                                <select class="form-control input-sm" id="ddFeedbackForm" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <div class="form-group">
+                                <label>Branch:</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("ddlBranch", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <br />
+                            <div class="form-group">
+                                <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

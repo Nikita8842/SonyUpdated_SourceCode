@@ -1,0 +1,675 @@
+﻿@model AMBOModels.MasterMaintenance.CompetitorModelList
+@{
+    ViewBag.Title = "Add/Update Competitor's Model";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+@section PageCSS{
+}
+
+<div class="row" id="divmaterialmaster">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model.ID != 0)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update Competitor Model")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new Competitor Model")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("CreateCompetitorModel", "Competitor", FormMethod.Post, new { id = "formCompetitor" }))
+                    {
+                        @Html.HiddenFor(m => m.ID, new { Id = "txtCompModelId", @value = Model.ID })
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Competitor Code<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.CompetitorId)</span>
+                                    @Html.DropDownListFor(m => m.CompetitorId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control  input-sm", id = "ddlCompetitorList", @onchange = "GetCompetitorProductCategory();" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Competition Product Category<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.CompetitorProductCatID)</span>
+                                    @Html.DropDownListFor(m => m.CompetitorProductCatID, new SelectList(Enumerable.Empty<SelectListItem>()),  new { @class = "form-control input-sm", id = "ddlCProductCat", @onchange = "GetSonyProductCategory();" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Sony Product Category<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SonyProductCategoryId)</span>
+                                    @Html.DropDownListFor(m => m.SonyProductCategoryId, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtSProductCategory", @Class = "form-control input-sm", @readonly = "readonly" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Sony Product Sub Category<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SonyProductSubCategory)</span>
+                                    @Html.DropDownListFor(m => m.SonyProductSubCategory, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "ddlSProductSubCat" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Model<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.ModelName)</span>
+                                    @Html.TextBoxFor(m => m.ModelName, new { @Class = "form-control input-sm", id = "txtModelName", placeholder="Enter Model" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Sony Model<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SonyMaterialId)</span>
+                                    @Html.DropDownListFor(m => m.SonyMaterialId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "txtSonyMaterial" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Attribute 1</label>
+                                    @Html.DropDownListFor(x => x.SizeValueId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "ddlSizeList" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Attribute 3</label>
+                                    @Html.DropDownListFor(x => x.ResolutioValueId, new SelectList(Enumerable.Empty<SelectListItem>()),  new { @class = "form-control input-sm", id = "ddlResolutionList" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Attribute 5</label>
+                                    @Html.DropDownListFor(x => x.Id3DValue, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "ddl3DList" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Attribute 2</label>
+                                    @Html.DropDownListFor(x => x.SegmentValueId, new SelectList(Enumerable.Empty<SelectListItem>()),  new { @class = "form-control input-sm", id = "ddlSegmentList" })
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Attribute 4</label>
+                                        @Html.DropDownListFor(x => x.InternetValueId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "ddlInternetList" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Attribute 6</label>
+                                        @Html.DropDownListFor(x => x.TvTypeValueId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", id = "ddlTVTypeList" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="radioStatus">Status<span class="text-danger">*</span></label><br /><span class="text-danger">@Html.ValidationMessageFor(m => m.Status)</span>
+                                        @Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA" }) Active
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                        @Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI" }) InActive
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save</button>
+                                        @Html.ActionLink("Cancel", "CompetitorModelMaster", "Competitor", new { }, new { @class = "btn btn-default btn-flat" })
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageJS{
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function ()
+        {
+            debugger;
+            init();
+
+            if ($('#txtCompModelId').val() == 0 || $('#txtCompModelId').val() == undefined || $('#txtCompModelId').val() == null)
+            {
+                $('#radioStatusA').iCheck('check');
+            }
+            @*else
+            {
+                debugger;
+                if(@Model.Status == True)
+                    $('#radioStatusA').iCheck('check');
+                else
+                    $('#radioStatusI').iCheck('check');
+            }*@
+
+            $.ajax({
+                url: "@Url.Action("GetCompetitors", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result)
+                {
+                    $("#ddlCompetitorList").append($("<option></option>").val("").html("Select product category"));
+                    $(result).each(function () {
+                        $("#ddlCompetitorList").append($("<option></option>").val(this.ID).html(this.Name));
+                    });
+                    var CompetitorId=@Model.CompetitorId;
+                    if(CompetitorId != 0)
+                    {
+                        $('#ddlCompetitorList').val(CompetitorId).change();
+                    }
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCompetitorList").html("");
+                    //$("#ddlCompetitorList").append($('<option></option>').val(0).html("Select competitor"));
+                }
+            });
+
+            @*$.ajax({
+                url: "@Url.Action("GetMaterialDataforDD", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result)
+                {
+                    $("#txtSonyMaterial").append($("<option></option>").val("").html("Select sony model"));
+                    $(result).each(function () {
+                        $("#txtSonyMaterial").append($("<option></option>").val(this.ID).html(this.Name));
+                    });
+                    var SonyMaterialId=@Model.SonyMaterialId;
+                    if(SonyMaterialId != 0)
+                    {
+                        $('#txtSonyMaterial').val(SonyMaterialId).change();
+                    }
+                },
+                error: function (result) {
+                    var response = $.parseJSON(result.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                    $("#txtSonyMaterial").html("");
+                    $("#txtSonyMaterial").append($('<option></option>').val(0).html("Select sony model"));
+                }
+            });*@
+
+            $('#ddlSProductSubCat').on('change', function() {
+                var data = new Object();
+                data.ProSubCatId = $("#ddlSProductSubCat").val();
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetMaterialDataforDDByProSub", "Common")',
+                    data: { Input: data  },
+                    success: function (output) {
+                        $("#txtSonyMaterial").html(""); // clear before appending new list
+                        $("#txtSonyMaterial").append($('<option></option>').val('').html("Select sony model"));
+                        $.each(output, function (i, product) {
+                            $("#txtSonyMaterial").append($('<option></option>').val(product.ID).html(product.Name));
+                        });
+
+                        var SonyMaterialId=@Model.SonyMaterialId;
+                        if(SonyMaterialId != 0)
+                        {
+                            $('#txtSonyMaterial').val(SonyMaterialId).change();
+                        }
+
+
+                    },
+                    error: function (output){
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            });
+
+
+            $("#btnSubmit").click(function () {
+                if(Save())
+                {
+                    debugger;
+                    var modeldata = new Object();
+                    modeldata.ID = $("#txtCompModelId").val();
+                    modeldata.CompetitorId = $("#ddlCompetitorList").val();
+                    modeldata.CompetitorProductCatID = $("#ddlCProductCat").val();
+                    modeldata.SonyProductCategoryId = $("#txtSProductCategory").val();
+                    modeldata.SonyProductSubCategory = $("#ddlSProductSubCat").val();
+                    modeldata.ModelName = $("#txtModelName").val();
+                    modeldata.SonyMaterialId = $("#txtSonyMaterial").val();
+                    modeldata.Status = $("#radioStatusA").val();
+                    modeldata.SizeValueId = $("#ddlSizeList").val();
+                    modeldata.SegmentValueId = $("#ddlSegmentList").val();
+                    modeldata.InternetValueId = $("#ddlInternetList").val();
+                    modeldata.TvTypeValueId = $("#ddlTVTypeList").val();
+                    modeldata.Id3DValue = $("#ddl3DList").val();
+                    modeldata.ResolutioValueId = $("#ddlResolutionList").val();
+
+                    //console.log(JSON.stringify(model));
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("CreateCompetitorModel", "Competitor")',
+                        data: { InputParam : modeldata },
+                        success: function (output) {
+                            if(output.Data)
+                            {
+                                //common.notify('success', output.Message);
+                                window.location.href = "@Url.Action("CompetitorModelMaster", "Competitor")";
+                            }
+                            else
+                            {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                        error: function (output){
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message)
+                        }
+                    });
+                }
+            });
+        });
+
+        function init()
+        {
+            try
+            {
+                $('#ddlCompetitorList').select2({placeholder: 'Select competitor'});
+                $('#ddlCProductCat').select2({placeholder: 'Select competitor product categories'});
+                $('#ddlSProductSubCat').select2({placeholder: 'Select sony sub product categories'});
+                $('#txtSonyMaterial').select2({placeholder: 'Select sony model'});
+
+                $('#ddlSizeList').select2({placeholder: 'Select Attribute 1'});
+                $('#ddlSegmentList').select2({placeholder: 'Select Attribute 2'});
+                $('#ddlResolutionList').select2({placeholder: 'Select Attribute 3'});
+                $('#ddlTVTypeList').select2({placeholder: 'Select Attribute 4'});
+                $('#ddlInternetList').select2({placeholder: 'Select Attribute 5'});
+                $('#ddl3DList').select2({placeholder: 'Select Attribute 6'});
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function Save()
+        {
+            if ($("#ddlCompetitorList").val() == null || $("#ddlCompetitorList").val() == "")
+            {
+                common.notify('error', "Select competitor code.");
+                return false;
+            }
+
+            if ($("#ddlCProductCat").val() == null || $("#ddlCProductCat").val() == "")
+            {
+                common.notify('error', "Select competitor product.");
+                return false;
+            }
+
+            if ($("#ddlSProductSubCat").val() == null || $("#ddlSProductSubCat").val() == "")
+            {
+                common.notify('error', "Select sony sub product.");
+                return false;
+            }
+
+            if ($("#txtSProductCategory").val() == null || $("#txtSProductCategory").val() == "")
+            {
+                common.notify('error', "No sony product selected.");
+                return false;
+            }
+
+            if ($("#txtModelName").val() == null || $("#txtModelName").val() == "")
+            {
+                common.notify('error', "Enter model name.");
+                return false;
+            }
+
+            if ($("#txtSonyMaterial").val() == null || $("#txtSonyMaterial").val() == "")
+            {
+                common.notify('error', "Select sony model.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function GetCompetitorProductCategory()
+        {
+            debugger;
+            if ($("#ddlCompetitorList").val() != '' && $("#ddlCompetitorList").val() != 0)
+            {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetCompetitorProductData", "Competitor")',
+                    data: { Id: $("#ddlCompetitorList").val() },
+                    success: function (output) {
+                        $("#ddlCProductCat").html(""); // clear before appending new list
+                        $("#ddlCProductCat").append($('<option></option>').val('').html("Select Competitor Product Category"));
+                        $.each(output, function (i, product) {
+                            $("#ddlCProductCat").append($('<option></option>').val(product.ID).html(product.Name));
+                        });
+
+                        var CompetitorProductCatID=@Model.CompetitorProductCatID;
+                        if(CompetitorProductCatID != 0)
+                        {
+                            $('#ddlCProductCat').val(CompetitorProductCatID).change();
+                        }
+
+
+                    },
+                    error: function (output){
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+            else
+            {
+                common.notify('error', 'Select competitor code.')
+            }
+        }
+
+        function GetSonyProductCategory()
+        {
+            if ($("#ddlCProductCat").val() != '' && $("#ddlCProductCat").val() != null) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSonyProductData", "Competitor")',
+                    data: { CompetitorCatId: $("#ddlCProductCat").val() },
+                    success: function (output) {
+                        if(output!=null)
+                        {
+                            debugger;
+                            $("#txtSProductCategory").html(""); // clear before appending new list
+                            $("#txtSProductCategory").append($('<option></option>').val(output.SProductCatId).html(output.SProductCatName));
+
+                            var SonyProductCategoryId=@Model.SonyProductCategoryId;
+                            if(SonyProductCategoryId != 0)
+                            {
+                                $('#txtSProductCategory').val(SonyProductCategoryId).change();
+                            }
+
+                            $("#ddlSProductSubCat").html(""); // clear before appending new list
+                            $("#ddlSProductSubCat").append($('<option></option>').val('').html("Select Sony Product Sub Category"));
+                            $(output.SProductSubCatList).each(function () {
+                                $("#ddlSProductSubCat").append($('<option></option>').val(this.ID).html(this.Name));
+                            });
+                            var SonyProductSubCategory=@Model.SonyProductSubCategory;
+                            if(SonyProductSubCategory != 0)
+                            {
+                                $('#ddlSProductSubCat').val(SonyProductSubCategory).change();
+                            }
+                            FillDetails();
+
+                        }
+
+
+                    },
+                    error: function (output){
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+
+        function FillDetails()
+        {
+            debugger;
+            var modeldata=new Object();
+            modeldata.ProductCategoryId=$('#txtSProductCategory').val();
+
+            if ($('#txtSProductCategory').val() != null && $('#txtSProductCategory').val() != '' && $('#txtSProductCategory').val() != undefined) {
+
+                debugger;
+                $.ajax({
+                    url: "@Url.Action("GetSizes", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        debugger;
+                        $("#ddlSizeList").append($("<option></option>").val("").html("Select Attribute 1"));
+                        $(result).each(function () {
+                            $("#ddlSizeList").append($("<option></option>").val(this.SizeId).html(this.SizeName));
+                        });
+                        var SizeId=@Model.SizeValueId;
+                        if(SizeId != 0)
+                        {
+                            $('#ddlSizeList').val(SizeId).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddlSizeList").html("");
+                        $("#ddlSizeList").append($('<option></option>').val(0).html("Select Attribute 1"));
+                    }
+                });
+
+                $.ajax({
+                    url: "@Url.Action("GetSegment", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        $("#ddlSegmentList").append($("<option></option>").val("").html("Select Attribute 2"));
+                        $(result).each(function () {
+                            $("#ddlSegmentList").append($("<option></option>").val(this.SegmentId).html(this.SegmentName));
+                        });
+                        var SegmentId=@Model.SegmentValueId;
+                        if(SegmentId != 0)
+                        {
+                            $('#ddlSegmentList').val(SegmentId).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddlSegmentList").html("");
+                        $("#ddlSegmentList").append($('<option></option>').val(0).html("Select Attribute 2"));
+                    }
+                });
+
+                $.ajax({
+                    url: "@Url.Action("GetResolution", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        $("#ddlResolutionList").append($("<option></option>").val("").html("Select Attribute 3"));
+                        $(result).each(function () {
+                            $("#ddlResolutionList").append($("<option></option>").val(this.ResolutionId).html(this.ResolutionName));
+                        });
+                        var ResolutionId=@Model.ResolutioValueId;
+                        if(ResolutionId != 0)
+                        {
+                            $('#ddlResolutionList').val(ResolutionId).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddlResolutionList").html("");
+                        $("#ddlResolutionList").append($('<option></option>').val(0).html("Select Attribute 3"));
+                    }
+                });
+
+                $.ajax({
+                    url: "@Url.Action("GetTVType", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        $("#ddlTVTypeList").append($("<option></option>").val("").html("Select Attribute 4"));
+                        $(result).each(function () {
+                            $("#ddlTVTypeList").append($("<option></option>").val(this.TVTypeId).html(this.TVTypeName));
+                        });
+                        var TvTypeId=@Model.TvTypeValueId;
+                        if(TvTypeId != 0)
+                        {
+                            $('#ddlTVTypeList').val(TvTypeId).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddlTVTypeList").html("");
+                        $("#ddlTVTypeList").append($('<option></option>').val(0).html("Select Attribute 4"));
+                    }
+                });
+
+                $.ajax({
+                    url: "@Url.Action("GetInternet", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        $("#ddlInternetList").append($("<option></option>").val("").html("Select Attribute 5"));
+                        $(result).each(function () {
+                            $("#ddlInternetList").append($("<option></option>").val(this.InternetId).html(this.InternetName));
+                        });
+                        var InternetId=@Model.InternetValueId;
+                        if(InternetId != 0)
+                        {
+                            $('#ddlInternetList').val(InternetId).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddlInternetList").html("");
+                        $("#ddlInternetList").append($('<option></option>').val(0).html("Select Attribute 5"));
+                    }
+                });
+
+                $.ajax({
+                    url: "@Url.Action("Get3D", "Common")",
+                    type: "POST",
+                    data: { InputParam: modeldata },
+                    success: function (result)
+                    {
+                        $("#ddl3DList").append($("<option></option>").val("").html("Select Attribute 6"));
+                        $(result).each(function () {
+                            $("#ddl3DList").append($("<option></option>").val(this.D3Id).html(this.D3Name));
+                        });
+                        var Id3D=@Model.Id3DValue;
+                        if(Id3D != 0)
+                        {
+                            $('#ddl3DList').val(Id3D).change();
+                        }
+                    },
+                    error: function (result) {
+                        if (result.statusCode == 401 || result.status == 401) {
+                            var response = $.parseJSON(result.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddl3DList").html("");
+                        $("#ddl3DList").append($('<option></option>').val(0).html("Select Attribute 6"));
+                    }
+                });
+        }
+        }
+    </script>
+}

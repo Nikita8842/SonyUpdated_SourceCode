@@ -1,0 +1,303 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.ProductCategoryGroupMaster
+
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+@*<script type="text/javascript">
+    function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+</script>*@
+    <script>
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtProductCategoryGroup')) {
+                $('#dtProductCategoryGroup').DataTable().destroy();
+                $('#dtProductCategoryGroup tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtProductCategoryGroup').DataTable({
+                searching: false,
+                "processing": true,
+                "scrollY": true,
+                "ajax": {
+                    url: "@Url.Action("GetProductCategoryGroup", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.GroupIds = $('#ddlGroup').val();
+                        //d.Status = $('#ddlStatus').val();                    
+                    },
+                    "dataSrc": ""
+                },
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                "columns": [
+                    { "data": "GroupId", "visible": false },
+                    { "data": "GroupName" },
+                    { "data": "DisplayOrder" },
+                     {
+                         "data": function (data, type, row) {
+                             return '<a class="edit" data-placement="left" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                             '<a data-toggle="modal" data-target="#divDelete" data-placement="left" title="Delete" class="btnDelete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                         },
+                         "orderable": false
+                     }
+                ],
+                "fnDrawCallback": function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetProductCategoryGroupDropDown", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlGroup").append($("<option></option>").val(0).html("---All Groups---"));
+                    $(result).each(function () {
+                        $("#ddlGroup").append($("<option></option>").val(this.GroupId).html(this.GroupName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlGroup").html("");
+                    //$("#ddlGroup").append($('<option></option>').val(0).html("---All Groups---"));
+
+                }
+            });
+
+            $('#ddlGroup').select2({ placeholder: "---All Groups---" });
+            //$('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $("#txtProductCategoryGroupID").val('');
+               
+            });
+
+           //*****BEGIN EDIT******//
+            $('body').on('click', ".edit", function () {
+                var data = dt.row($(this).parent().parent()).data();
+                var groupId = data.GroupId;
+                $(location).attr("href", "@Url.Action("AddUpdateProductCategoryGroup", "ProductCategoryGroup")" + "?GroupId=" + groupId + "&Operation=Update");
+
+            });
+            //*****END EDIT******//
+
+
+            //*****BEGIN DELETE******//
+            $('body').on('click', '.btnDelete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtProductCategoryGroupID').val(data.GroupId);
+                $('#displayCategoryGroupName').html(data.GroupName);
+            });
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("DeleteProductCategoryGroup", "ProductCategoryGroup")";
+                var data = new Object();
+                data.GroupId = $("#txtProductCategoryGroupID").val();
+                var ajaxCall = common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        //alert(output.Message);
+                        common.notify('success', output.Message);
+                        dt.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+            //*****END DELETE******//
+
+
+            @if(TempData.ContainsKey("Message"))
+              {
+                @Html.Raw("common.notify('success','" + TempData["Message"].ToString() + "');")
+              }
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.GroupIds = $('#ddlGroup').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelProductCategory", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.ProductCategory),InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+        });
+        $("#btnAdd").click(function () {
+            $(location).attr("href", "@Url.Action("AddUpdateProductCategoryGroup", "ProductCategoryGroup")");
+
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing product category group</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.GroupId, new { @id = "txtProductCategoryGroupID" })
+                    <strong><span id="displayCategoryGroupName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-5">
+                        <label>Group:</label>
+                        @Html.DropDownList("ddlGroup", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlGroup", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    @*<div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                          new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>*@
+                    <div class="col-lg-3 col-lg-offset-1">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Product Category Group</a></li>
+                @*<li class="pull-right"><a href="@Url.Action("AddUpdateDealer", "Dealer")" style="margin-top:2px" id="btnAddDealer" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</a></li>*@
+                <li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtProductCategoryGroup" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Product Category Group</th>
+                                <th>DisplayOrder</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

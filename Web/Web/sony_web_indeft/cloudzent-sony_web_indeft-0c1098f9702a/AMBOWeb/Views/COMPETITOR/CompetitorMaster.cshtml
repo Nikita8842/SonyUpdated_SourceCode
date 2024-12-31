@@ -1,0 +1,449 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.CompetitorMaster
+
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+<script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script>
+        function ChangeValue(_val)
+        {
+            if(_val=="4000")
+            {
+                $('#ddlStatus').val('');
+            }
+        }
+
+        var dt;
+        function search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtCompetitor')) {
+                $('#dtCompetitor').DataTable().destroy();
+                $('#dtCompetitor tbody').empty();
+                //dt.destroy();
+            }
+            //var modeldata = new Object();
+            //modeldata.CompetitorCodeIds = $('#ddlCompetitorCode').val();
+            //modeldata.CompetitorNames = $('#ddlCompetitorName').val();
+            //modeldata.Status = $('#ddlStatus').val();
+
+            dt = $('#dtCompetitor').DataTable({
+                searching: false,
+                processing: true,
+                scrollY:true,
+                scrollX: true,
+                "ajax": {
+                    url: "@Url.Action("CompetitorMaster", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.CompetitorCodeIds = $('#ddlCompetitorCode').val();
+                        d.CompetitorNames = $('#ddlCompetitorName').val();
+                        d.Status = $('#ddlStatus').val();
+                    
+                    },
+                    dataSrc:""
+                },
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                "columns": [
+                    { "data": "CompetitorCode" },
+                    { "data": "CompetitorName" },
+                    { "data": "CompetitorStatus" },
+                    {
+                        "data": function (data, type, row) {
+                            return '<a data-placement="left" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                           '<a data-toggle="modal" data-target="#divDelete" data-placement="left" title="Delete" class="delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        "orderable": false
+                    }
+                ],
+                "createdRow": function (row, data, index) {
+                    if (data["CompetitorStatus"] == "Active")
+                        $('td', row).eq(2).html('<span class="badge bg-green">' + data["CompetitorStatus"] + '</span>');
+                    else
+                        $('td', row).eq(2).html('<span class="badge bg-red">' + data["CompetitorStatus"] + '</span>');
+                },
+                "fnDrawCallback": function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetCompetitors", "Competitor")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlCompetitorCode").append($("<option></option>").val("").html("all competitor code"));
+                    $(result).each(function () {
+                        $("#ddlCompetitorCode").append($("<option></option>").val(this.ID).html(this.CompetitorCode));
+                    });
+
+                    //$("#ddlCompetitorName").append($("<option></option>").val("").html("all competitor name"));
+                    $(result).each(function () {
+                        $("#ddlCompetitorName").append($("<option></option>").val(this.ID).html(this.CompetitorName));
+                    });
+                    
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCompetitorCode").html("");
+                    //$("#ddlCompetitorCode").append($('<option></option>').val(0).html("all competitor code"));
+
+                    $("#ddlCompetitorName").html("");
+                    //$("#ddlCompetitorName").append($('<option></option>').val(0).html("all competitor name"));
+                }
+            });
+
+            $('#ddlCompetitorCode').select2({ placeholder: "---All competitor code---" });
+            $('#ddlCompetitorName').select2({ placeholder: "---All competitor name---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        $(document).ready(function () {
+            populateFilters();
+            
+            if ('@ViewBag.ErrorCode' == '202' || '@ViewBag.ErrorCode' == '201') {
+
+                common.notify('success','@ViewBag.ErrorMessage');
+            }
+            else if ('@ViewBag.ErrorCode' == '304' || '@ViewBag.ErrorCode' == '406')
+            {
+
+                common.notify('error', '@ViewBag.ErrorMessage');
+            }
+
+            $('#modalAddNew').on('shown.bs.modal', function () {
+                $("#txtCompetitorCode").focus();
+                //$("#radioStatusA").iCheck('check');
+            });
+            $('#modalAddNew,#divDelete').on('hidden.bs.modal', function () {
+                $("#modal-title").html("<i class='fa fa-plus'></i> Add New Competitor");
+                $("#hdnID").val('');
+                $("#txtCompetitorName").val('');
+                $("#txtCompetitorCode").val('');
+            });
+
+            search();  
+            
+            //Add button click
+            $('body').on('click', '#AddNew', function () {
+                $('#modalAddNew').modal('toggle');
+                $("#radioStatusA").iCheck('check');
+            });
+            
+            $('#dtCompetitor').on('click', ".delete", function () {
+                $("#hdnID").val(dt.row($(this).parents('tr')).data().ID);
+            });
+            $('#dtCompetitor').on('click', ".edit", function () {
+                debugger;
+                //$("#modalAddNew").modal("toggle");
+                var datarow = dt.row($(this).parents('tr')).data();
+                $("#hdnID").val(datarow.ID);
+                $("#txtCompetitorName").val(datarow.CompetitorName);
+                $("#txtCompetitorCode").val(datarow.CompetitorCode);
+                if (datarow.CompetitorStatus == 'Active')
+                    $("#radioStatusA").iCheck('check')
+                else
+                    $("#radioStatusI").iCheck('check')
+                $("#modal-title").html("<i class='fa fa-pencil'></i> Update Competitor");
+                $('#modalAddNew').modal('toggle');
+            });
+
+            $("#btnSave").click(function () {
+
+                if(savedata())
+                {
+                    debugger;
+                    var modeldata =new Object();
+                    modeldata.ID = $("#hdnID").val();
+                    modeldata.CompetitorCode = $('#txtCompetitorCode').val();
+                    modeldata.CompetitorName = $('#txtCompetitorName').val();
+                    if ($("#radioStatusA").is(":checked") == false)
+                        modeldata.Status = $('#radioStatusI').val();
+                    else
+                        modeldata.Status = $('#radioStatusA').val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("CompetitorMaster", "Competitor")',
+                        data: {Data: modeldata, Operation:null},
+                        success: function (returnValue) {
+                            if(returnValue.Data)
+                            {
+                                $("#modalAddNew").modal("toggle");
+                                window.location.href = 'CompetitorMaster';
+                            }
+                            else
+                            {
+                                common.notify('error', returnValue.Message);
+                            }
+                        },
+                        error: function (returnValue) {
+                            if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                                var response = $.parseJSON(returnValue.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', "Error occured while creating/updating competitor master.")
+                        }
+                    });
+                }
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.CompetitorCodeIds = $('#ddlCompetitorCode').val();
+                modeldata.CompetitorNames = $('#ddlCompetitorName').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelCompetitor", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Competitor),InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+        });
+        function Delete() {
+            debugger;
+            var Obj = new Object();
+            Obj.ID = parseInt($("#hdnID").val());
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("CompetitorMaster", "Competitor")',
+                data: { Data: Obj, Operation:"Delete"  },
+                success: function (data) {
+                    debugger;
+                    if(data.Data)
+                    {                        
+                        $("#divDelete").modal("toggle");
+                        window.location.href = 'CompetitorMaster';
+                        //common.notify('success','Competitor deleted successfully.');
+                    }
+                    else
+                    {
+                        common.notify('error', data.Message);
+                    }
+                },
+                error: function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    //alert("OOPS! Something happened. Please try again.");
+                }
+            });
+        }
+
+        function savedata()
+        {// note that it's better to use form Id to select form
+            if ($("#txtCompetitorCode").val() == null || $("#txtCompetitorCode").val() == "") {
+                common.notify('error',"Please enter Competitor Code.");
+                return false;
+            }
+            else if ($("#txtCompetitorName").val() == null || $("#txtCompetitorName").val() == "") {
+                common.notify('error', "Please enter Competitor Name.");
+                return false;
+            }
+            else if ($("#radioStatusA").is(":checked") == false && $("#radioStatusI").is(":checked") == false) {
+                common.notify('error', "Please select Status.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+}
+
+@section PageModals
+{
+    @using (Html.BeginForm("CompetitorMaster", "Competitor", FormMethod.Post, new { @id = "frmAdd", enctype = "multipart/form-data" }))
+    {
+        <div class="modal fade" id="modalAddNew">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    @Html.HiddenFor(x => x.ID, new { id = "hdnID" })
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="modal-title"><i class="fa fa-plus"></i> Add New Competitor Master</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtText">Competitor Code <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(x => x.CompetitorCode, "", new { id = "txtCompetitorCode", @class = "form-control", maxlength = "50", placeholder = "Enter Competitor Code" })
+
+                        </div>
+                        <div class="form-group">
+                            <label for="txtText">Competitor Name <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(x => x.CompetitorName, "", new { id = "txtCompetitorName", @class = "form-control", maxlength = "50", placeholder = "Enter Competitor Name" })
+
+                        </div>
+                        <div class="form-group">
+                            <label for="radioStatus">Status <span class="text-danger">*</span></label><br />
+                            @Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA"}) Active
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            @Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI"}) InActive
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" id="btnSave"><i class="fa fa-check"></i> Save Changes</button>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+        </div>
+    }
+    <div class="modal fade" id="divDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmDelete">
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class='fa fa-trash'></i> Delete Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtMessage">Do you really want to delete this Competitor?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Delete();"><i class="fa fa-check"></i>Yes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Competitor Code:</label>
+                        @Html.DropDownList("ddlCompetitorCode", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCompetitorCode", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Competitor Name:</label>
+                        @Html.DropDownList("ddlCompetitorName", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCompetitorName", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                       new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br/>
+                        <button class="btn btn-flat btn-primary" type="button" onclick="search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Competitor Master</a></li>
+                <li class="pull-right"><button id="AddNew" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtCompetitor" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Competitor Code</th>
+                                <th>Competitor Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

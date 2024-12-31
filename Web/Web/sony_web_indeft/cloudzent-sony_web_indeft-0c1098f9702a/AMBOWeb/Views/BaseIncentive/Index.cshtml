@@ -1,0 +1,154 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            //Grid initialization
+            dtBaseIncentiveGrid = $('#dtBaseIncentive').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [[1,'asc']],
+                ajax: {
+                    url: "@Url.Action("BaseIncentiveGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "TargetCategory" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Active")
+                        $('td', row).eq(1).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(1).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr('href', '@Url.Action("Create","BaseIncentive")');
+            });
+
+            //Add button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtBaseIncentiveGrid.row($(this).parent().parent()).data();
+                $(location).attr('href', '@Url.Action("Update","BaseIncentive")' + '?TargetCategoryId=' + data.TargetCategoryId);
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtBaseIncentiveGrid.row($(this).parent().parent()).data();
+                $('#txtTargetCategoryId').val(data.TargetCategoryId);
+                $('#displayTargetCategoryName').html(data.TargetCategory);
+                $('#modalDelete').modal('toggle');
+            });
+
+            $("#btnDownload").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelBase", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Base) },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+        });
+    </script>
+<script src="~/Content/js/validations/baseincentive.js"></script>
+}
+
+@section PageModals
+{
+    <!-- #region Delete form -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                @using (Html.BeginForm("Delete", "BaseIncentive", FormMethod.Post, new { @id = "DeleteBaseIncentiveForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.CustomModalHeader("fa-trash", "Delete an existing Base Incentive Definition")
+                    <div class="modal-body">
+                        @Html.CustomHiddenBox("txtTargetCategoryId", "TargetCategoryId")
+                        Base Incentive Definition for <strong>Target Category: <span id="displayTargetCategoryName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-pencil"></i> Base Incentive Target-Ach Slab Definition</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtBaseIncentive" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Target Category</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

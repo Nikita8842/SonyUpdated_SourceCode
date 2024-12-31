@@ -1,0 +1,317 @@
+﻿ #filterBoxHeader:hover {
+    cursor: pointer;
+}
+
+ .box{
+     margin-bottom: 5px;
+ }
+
+ section.content{
+     padding-top: 5px;
+ }
+
+.custom-header
+{
+    background-color:#3c8dbc;
+    color:#fff;
+}
+
+table.datatable > thead,
+table.reportstable > thead
+{
+    background-color: #3c8dbc;
+    color: #fff;
+}
+
+div.input-group-btn,
+div.input-group-btn > button.btn,
+div.input-group > input.form-control
+{
+    height: 30px !important;
+    font-size: 12px !important;
+    line-height: 1.0 !important;
+}
+
+table.datatable > thead > tr > th
+{
+    border-right: 1px solid #3c8dbc !important;
+    text-align: center;
+}
+
+table.reportstable > thead > tr > th
+{
+    border-right: 1px solid #3c8dbc !important;
+}
+
+.textarea:focus
+{
+    border: 0.5px solid #3c8dbc;
+    outline: 0;
+}
+
+table.datatable > tbody > tr > td
+{
+    text-align: center;
+}
+
+table.datatable
+{
+    border: 1px solid #3c8dbc !important;
+    /*table-layout: fixed;*/
+    word-wrap:break-word;
+    margin: 0 auto;
+    width: 100%;
+    clear: both;
+    border-collapse: collapse; 
+}
+
+table.reportstable
+{
+    /*border: 1px solid #3c8dbc !important;*/
+    width: 100%;
+    font-size: 13px
+}
+
+.form-group.has-error label {
+    color: #000000;
+}
+
+.form-group input[type="text"].input-validation-error,
+.form-group input[type="password"].input-validation-error,
+select.input-validation-error + span.select2 > span.selection > span.select2-selection
+{
+    border: 0.5px solid #dd4b39;
+}
+
+.form-group.has-error .select2-selection.select2-selection--single,
+{
+    border: 0.5px solid #dd4b39;
+    border-radius: 0;
+    height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+        outline: 0;
+    }
+
+.form-group.has-success .select2-selection.select2-selection--single{
+    border: 0.5px solid #00a65a;
+    border-radius: 0;
+    height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+        outline: 0;
+    }
+
+.form-group.has-error .select2-selection.select2-selection--multiple{
+    border: 0.5px solid #dd4b39;
+    border-radius: 0;
+    /*height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;*/
+        outline: 0;
+    }
+
+.form-group.has-success .select2-selection.select2-selection--multiple{
+    border: 0.5px solid #00a65a;
+    border-radius: 0;
+    /*height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;*/
+        outline: 0;
+    }
+
+.form-group.has-success label {
+    color: #000000;
+}
+
+.text-blue.small.clearDD:hover,
+span.selectAllDD:hover,
+span.removeAllDD:hover,
+li.select2-selection__choice
+{
+    cursor: pointer !important;
+}
+
+.modal-content > .overlay,
+.tab-pane > .overlay,
+.formLoader > .overlay,
+.row > .overlay,
+.modal-content > .loading-img,
+.tab-pane > .loading-img,
+.row > .loading-img,
+.formLoader > .loading-img{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.modal-content .overlay,
+.tab-pane .overlay,
+.row > .overlay,
+.formLoader .overlay{
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 3px;
+}
+.modal-content .overlay > .fa,
+.tab-pane .overlay > .fa,
+.row .overlay > .fa,
+.formLoader .overlay > .fa{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -15px;
+  margin-top: -15px;
+  color: #000;
+  font-size: 30px;
+}
+.modal-content .overlay.dark,
+.tab-pane .overlay.dark,
+.row .overlay.dark,
+.formLoader .overlay.dark{
+  background: rgba(0, 0, 0, 0.5);
+}
+
+input[type="radio"][readonly],
+input[type="radio"].readonly,
+fieldset[readonly] input[type="radio"],
+select[readonly]{
+  cursor: not-allowed;
+}
+
+.btnEdit, .btnDelete, .btnUpload
+{
+    cursor:pointer;
+}
+
+.readonly
+{
+    cursor: not-allowed;
+}
+
+input[type="radio"][disabled],
+input[type="radio"].disabled,
+fieldset[disabled] input[type="radio"],
+select[disabled]{
+  cursor: not-allowed;
+}
+
+.disabled
+{
+    cursor: not-allowed;
+}
+
+select[readonly].select2-hidden-accessible + .select2-container {
+  pointer-events: none;
+  touch-action: none;
+}
+
+select[readonly].select2-hidden-accessible + .select2-container .select2-selection {
+  background: #eee;
+  box-shadow: none;
+}
+
+select[readonly].select2-hidden-accessible + .select2-container .select2-selection__arrow,
+select[readonly].select2-hidden-accessible + .select2-container .select2-selection__clear {
+  display: none;
+}
+
+
+/*.select2-container *:focus {
+    border: 0.5px solid #3c8dbc;
+        outline: 0;
+    }
+
+.form-group.has-success .select2-container *:focus {
+    border: 0.5px solid #00a65a;
+        outline: 0;
+    }
+
+.form-group.has-error .select2-container *:focus {
+    border: 0.5px solid #dd4b39;
+        outline: 0;
+    }*/
+
+.radio-control > .icheckbox_flat-blue, .radio-control > .iradio_flat-blue{
+
+    margin-top: 4px !important;
+}
+.radio-control > .inline.radio-text{
+
+    margin-top: 4px !important;
+}
+.inline.radio-text{
+    position:absolute;
+}
+
+.tt-query {
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.tt-hint {
+  color: #999
+}
+
+.tt-menu {    /* used to be tt-dropdown-menu in older versions */
+  width: 275px;
+  margin-top: 4px;
+  padding: 4px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+          box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+
+.tt-suggestion {
+  padding: 3px 20px;
+  line-height: 24px;
+}
+
+.tt-suggestion.tt-cursor,.tt-suggestion:hover {
+  color: #fff;
+  background-color: #0097cf;
+
+}
+
+.tt-suggestion p {
+  margin: 0;
+}
+
+.modal-body{
+    word-break: break-word;
+}
+
+/*For tab borders*/
+
+/*.nav-tabs-custom > .nav-tabs {
+    border-bottom-color: #3c8dbc;
+}
+
+.nav-tabs-custom > .nav-tabs > li:first-of-type.active > a {
+    border-left-color: #3c8dbc;
+}
+
+.nav-tabs-custom > .nav-tabs > li.active > a {
+    border-top-color: #3c8dbc;
+    border-right-color: #3c8dbc;
+}
+
+.nav-tabs-custom > .tab-content {
+    border-bottom: 1px solid #3c8dbc;
+    border-left: 1px solid #3c8dbc;
+    border-right: 1px solid #3c8dbc;
+}*/
+
+/*For tab borders till here*/

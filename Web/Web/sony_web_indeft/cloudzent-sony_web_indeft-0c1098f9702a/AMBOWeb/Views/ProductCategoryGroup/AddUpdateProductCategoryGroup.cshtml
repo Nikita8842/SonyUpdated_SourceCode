@@ -1,0 +1,249 @@
+﻿@model AMBOModels.MasterMaintenance.ProductCategoryGroupMaster
+@{
+    ViewBag.Title = "AddUpdateProductCategoryGroup";
+    
+}
+
+
+@section PageCSS{
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model != null && Model.GroupId != 0)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update Product Category Group")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add Product Category Group")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("AddUpdateProductCategoryGroup", "ProductCategoryGroup", FormMethod.Post, new { id = "formProductCategoryGroup" }))
+                    {
+                        @Html.HiddenFor(m => m.GroupId, new { Id = "txtProductCategoryGroupId", @value = Model.GroupId })
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">                                    
+                                    <label>Product Category Group <span class="text-danger">*</span></label> <span class="text-danger">@Html.ValidationMessageFor(m => m.GroupName)</span>
+                                    @Html.TextBoxFor(m => m.GroupName, new { @Class = "form-control input-sm", @onkeypress = "return validateName(event)" })                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Display Order <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.DisplayOrder)</span>
+                                    @Html.DropDownListFor(m => m.DisplayOrder, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtDisplayOrder", @Class = "form-control input-sm" })                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Product Category <span class="text-danger">*</span></label> <a id="btnSelectall">Select All</a> / <a id="btnDselectAll">Remove All</a><span class="text-danger">@Html.ValidationMessageFor(m => m.ProductIds)</span>
+                                    @Html.DropDownListFor(m => m.ProductIds, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "ddlProductCategory", @Class = "form-control input-sm", multiple = "multiple", @style = "width:100%" })
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary" onclick="return Save();">Save</button>
+                                    @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default", onclick = "response" })
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section PageJS{
+
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    @*<script src="~/Content/js/jquery.form-validator.min.js"></script>*@
+    <script>
+        $(document).ready(function () {
+            $("#ddlProductCategory").select2({
+                placeholder: "Select Product Categories",
+                closeOnSelect: false
+
+            });
+
+            $("#txtDisplayOrder").select2({
+                placeholder: "Select Display order",
+                closeOnSelect: true
+
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetDisplayOrder", "Common")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    $("#txtDisplayOrder").html("");
+                    $(result).each(function () {
+                        $("#txtDisplayOrder").append($("<option></option>").val(this.DisplayOrderId).html(this.DisplayOrderName));
+                    });
+                    $("#txtDisplayOrder").val(null).trigger('change');
+                    debugger;
+                    var Displayorder = '@Model.DisplayOrder';
+                    if (Displayorder != '')
+                    {
+                        $("#txtDisplayOrder").val(Displayorder).change();
+                    }
+                    
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#txtDisplayOrder").html("");
+                    $("#txtDisplayOrder").val(null).trigger('change');
+                }
+            });
+
+            debugger;
+            //bug no 2414 - earlier the data was getting binded through View bag so modified it with ajax post call so that all the values mapped will be seen auto selected
+            //done by bela on 21 Dec'18
+            var ProCatGrpId = $("#txtProductCategoryGroupId").val();
+            if (ProCatGrpId != 0 && ProCatGrpId != undefined && ProCatGrpId != null) {
+                debugger;
+                var data = new Object();
+                data.Id = $("#txtProductCategoryGroupId").val();
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetProductCategoryForGroupMapping", "Common")',
+                    data: { InputParam: data },
+                    success: function (procats) {
+                        debugger;                        
+                        $('#ddlProductCategory').html('');
+                        $.each(procats, function (i, procat) {
+                            if (procat.ID === procat.ProductId) {
+                                selected = ' selected="selected" ';
+                            } else {
+                                selected = '';
+                            }
+                            var data = '<option value="' + procat.ID + '"' + selected + '>' + procat.CategoryName + '</option>'
+                            //$('#ddSubModuleId').append($('<option>', { value: response[i].Id }).text(response[i].SubModule));
+                            $('#ddlProductCategory').append(data);
+                        });                        
+                    },
+                    error: function (procat) {
+                        $("#ddlProductCategory").html("");
+                        common.notify('error', 'No Product Category(s) found for selected Group.');
+                    }
+                });
+            }
+            else
+            {
+                var data = new Object();
+                data.Id = 0;
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetProductCategoryForGroupMapping", "Common")',
+                    data: { InputParam: data },
+                    success: function (procats) {
+                        debugger;
+                        $("#ddlProductCategory").html(""); // clear before appending new list
+
+                        $.each(procats, function (i, procat) {
+                            $("#ddlProductCategory").append($('<option></option>').val(procat.ID).html(procat.CategoryName));
+                        });
+                    },
+                    error: function (sfas) {
+                        $("#ddlProductCategory").html("");
+                        
+                    }
+                });
+            }
+            @*if ()
+            {
+                debugger;
+                var productArray = @Html.Raw(Json.Encode(@ViewBag.ProductCategoryList)), i = 0, size = productArray.length,
+
+                    $options = $('#ddlProductCategory option');
+
+                for (i; i < size; i++) { //setting the selected values for update productcategory
+                    $options.filter('[value="' + productArray[i].Value + '"]').prop('Selected', true);
+                }
+
+            }*@
+
+
+            @if(ViewBag.Message!=null)
+            {
+                @Html.Raw("common.notify('error','" + ViewBag.Message + "');")
+            }
+
+
+
+        });
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function validateName(evt) {
+            //var event = (evt.which) ? evt.which : evt.keyCode;
+            if (!((evt.keyCode >= 65) && (evt.keyCode <= 90) || (evt.keyCode >= 97) && (evt.keyCode <= 122) ||  (evt.keyCode == 32)))
+                return false;
+            return true;
+
+        }
+        $("#btnSubmit").click(function(){
+            debugger;
+            if (!$("#ddlProductCategory option:selected").length) {
+                common.notify('error','Please chose at least one product category');
+                return false;
+            }
+        });
+
+        $("#btnSelectall").click(function () {
+
+
+            $("#ddlProductCategory > option").prop("selected", "selected");
+            $("#ddlProductCategory").trigger("change");
+
+        });
+
+        $("#btnDselectAll").click(function () {
+
+            $("#ddlProductCategory").val(null).trigger("change");
+
+        });
+
+
+    </script>
+    
+}
+

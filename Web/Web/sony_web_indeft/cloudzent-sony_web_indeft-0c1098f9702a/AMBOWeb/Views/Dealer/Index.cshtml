@@ -1,0 +1,648 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.DealerMaster
+
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageModals
+{
+
+<div class="modal fade" id="modalAddNew">
+    <div class="modal-dialog" style="margin-top:90px !important;">
+        <div class="modal-content">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal"  aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"><i class="fa fa-search"> </i>  Search SAP Code (MasterCode)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    
+                    <div class="col-md-9">
+                        <div id="the-basics">
+                            <input type="text" class="typeahead form-control" id="txtSAPCode" placeholder="Enter SAP Code">
+                        </div>
+                    </div>
+
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary" id="btnSearch" onclick="return ValidateSAPCode()"><i class="fa fa-search"></i> Search </button>
+                            @*<button type="button" class="btn btn-default" id="btnReset" onclick="return ClearMaterialCode()"><i class="fa fa-refresh"></i> Reset </button>*@
+                        </div>
+
+                   
+
+            </div>
+                </div>
+            <div class="modal-footer">
+                @*<button type="button" class="btn btn-default pull-right" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>*@
+                @*<button type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>*@
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing dealer</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtDealerId" })
+                    <strong><span id="displayDealerName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section PageCSS{
+    
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/typeahead.js-master/dist/typeahead.bundle.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script>
+	function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtDealer')) {
+                $('#dtDealer').DataTable().destroy();
+                $('#dtDealer tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dt = $('#dtDealer').DataTable({
+                searching: false,
+                serverSide: true,
+                processing: true,
+                scrollX: true,
+                scrollY: true,
+                ajax: {
+                    url: "@Url.Action("DealerMasterGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        debugger;
+                        d.DealerName = $('#txtDealerName').val();
+                        d.DealerCode=$('#txtDealerCode').val();
+                        d.MasterCodeIds = $('#ddlCode').val();
+                        var Branch = @Model.BranchId;
+                        if(Branch !=null && Branch !=0)
+                        {
+                            d.BranchIds = Branch;
+                        }
+                        else
+                            d.BranchIds = $('#ddlBranch').val();
+                        d.LocationIds = $('#ddlLocation').val();
+                        d.Status = $('#ddlStatus').val();
+                    }
+
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "ID", "visible": false },
+                    { data: "DealerCode"},
+                    { data: "DealerName" },
+                    { data: "SAPCode" },
+                    { data: "PayerName" },
+                    { data: "OutletType" },
+                    { data: "BranchName" },
+                    { data: "LocationName" },
+                    { data: "ActiveStatus" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="edit" data-toggle="tooltip" data-placement="right" title="Edit"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="delete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["ActiveStatus"] == "Active")
+                        $('td', row).eq(7).html('<span class="badge bg-green">' + data["ActiveStatus"] + '</span>');
+                    else
+                        $('td', row).eq(7).html('<span class="badge bg-red">' + data["ActiveStatus"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            @*$.ajax({
+                url: "@Url.Action("GetAllActiveDealers", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+
+                    //$("#ddlDealer").append($("<option></option>").val("").html("---All Dealers---"));
+                    $(result.Data).each(function () {
+                        $("#ddlDealer").append($("<option></option>").val(this.DealerId).html(this.DealerName));
+                    });
+
+                },
+                error: function (result) {
+                    if(result.status == 401 || result.statusCode == 401)
+                    {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlDealer").html("");
+                    //$("#ddlDealer").append($('<option></option>').val(0).html("---All Dealers---"));
+                }
+            });*@
+
+            $.ajax({
+                url: "@Url.Action("GetDealerMasterCodeList", "DealerMasterCodeUpdate")",
+                type: "GET",
+
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlCode").append($("<option></option>").val("").html("---All SAP Codes---"));
+                    $(result).each(function () {
+                        $("#ddlCode").append($("<option></option>").val(this).html(this));
+                    });
+
+                },
+                error: function (result) {
+                    if(result.status == 401 || result.statusCode == 401)
+                    {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCode").html("");
+                    //$("#ddlCode").append($('<option></option>').val(0).html("---All SAP Codes---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddlBranch').val(Branch).change();
+                        $('#ddlBranch').attr('readonly', 'readonly');
+                    }
+                },
+                error: function (result) {
+                    if(result.status == 401 || result.statusCode == 401)
+                    {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlBranch").html("");
+                    //$("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetLocationByCity", "Common")",
+                type: "POST",
+                data: {cityId : 0 },
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlLocation").append($("<option></option>").val(0).html("---All Locations---"));
+                    $(result).each(function () {
+                        $("#ddlLocation").append($("<option></option>").val(this.ID).html(this.LocationName));
+                    });
+
+                },
+                error: function (result) {
+                    if(result.status == 401 || result.statusCode == 401)
+                    {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlLocation").html("");
+                    //$("#ddlLocation").append($('<option></option>').val(0).html("---All Locations---"));
+
+                }
+            });
+
+
+            //   $('#ddlDealer').select2({ placeholder: "---All Dealers---" });
+            $('#ddlCode').select2({ placeholder: "---All SAP Codes---" });
+            $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddlLocation').select2({ placeholder: "---All Locations---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            if ('@UserSession.RoleName' == 'RDI')
+            {
+                @Html.Raw("$('#btnAdd').css('display','none')");
+                @Html.Raw("$('.text-blue.small').css('display','none')");
+            }
+            Search();
+
+
+            $('#modalAddNew').on('shown.bs.modal', function () {
+                $('#txtSAPCode').val('');
+                var data;
+
+                $.ajax({
+                    url: '@Url.Action("GetDealerCodeList", "Dealer")',
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (result) {
+                        debugger;
+                        if (result != null)
+                        {
+                            data = result;
+
+                            $("#txtSAPCode").focus();
+
+                            var substringMatcher = function (strs) {
+                                return function findMatches(q, cb) {
+                                    var matches, substringRegex;
+                                    matches = [];
+                                    substrRegex = new RegExp(q, 'i');
+                                    $.each(strs, function (i, str) {
+                                        if (substrRegex.test(str)) {
+                                            matches.push(str);
+                                        }
+                                    });
+
+                                    cb(matches);
+                                };
+                            };
+
+
+                            $('.typeahead').typeahead({
+                                hint: true,
+                                highlight: true,
+                                minLength: 1
+                            },
+                            {
+                                //name: 'data',
+                                //displayKey: 'value',
+                                source: substringMatcher(data)
+                            });
+                            $('.tt-input').css("width:100%");
+                            $('.tt-hint').css("width:100%");
+                            //$('#txtMaterialCode').removeClass('typeahead');
+                            //$('.tt-input').css("position", "absolute");
+                            $('.tt-input').css("vertical-align", "");
+                            $('.tt-input').addClass('form-control');
+                            $('.tt-hint').css("vertical-align", "");
+                            $('.twitter-typeahead').css("display", "inherit");
+                            $('.tt-hint').addClass('form-control');
+                        }
+                    },
+                    error: function (data) {
+                        if(data.status == 401 || data.statusCode == 401)
+                        {
+                            var response = $.parseJSON(data.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Error while loading dealer details.')
+                    }
+                });
+
+
+
+            });
+
+            $('#modalAddNew').on('hidden.bs.modal', function () {
+                debugger;
+                $('#txtSAPCode').val('');
+                reloadpage();
+            });
+
+            $('body').on('click', ".edit", function () {
+                var data = dt.row($(this).parent().parent()).data();
+                var dealerId = data.ID;
+                @*var url = "@System.Configuration.ConfigurationManager.AppSettings["URLInitial"].ToString()/Dealer/AddUpdateDealer?DealerId=" + dealerId + "&Operation=Update";
+                window.location.href = url;*@
+
+
+                $(location).attr("href", "@Url.Action("AddUpdateDealer", "Dealer")" + "?DealerId=" + dealerId + "&Operation=Update");
+
+            });
+
+
+            $('body').on('click', '.delete', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtDealerId').val(data.ID);
+                $('#displayDealerName').html(data.DealerName);
+            });
+
+
+            $('body').on('click', '#btnDelete', function () {
+
+                var data = new Object();
+                data.ID = $("#txtDealerId").val();
+                $.ajax({
+                    url: "@Url.Action("DeleteDealer","Dealer")",
+                    data: JSON.stringify(data),
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (output) {
+                    if(output.Data)
+                    {
+                        $('#modalDelete').modal('toggle');
+                        dt.ajax.reload();
+                        common.notify('success',output.Message);
+                    }
+                    else
+                    {
+                        common.notify('error',output.Message);
+                    }
+
+                },
+                    error: function (output) {
+                        if(output.status == 401 || output.statusCode == 401)
+                        {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                    }
+            });
+
+            });
+
+            @if(TempData.ContainsKey("Message"))
+             {
+                @Html.Raw("common.notify('success','" + TempData["Message"].ToString() + "');")
+             }
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                //   modeldata.DealerIds = $('#ddlDealer').val();
+                modeldata.DealerName = $('#txtDealerName').val();
+                modeldata.DealerCode=$('#txtDealerCode').val();
+                modeldata.MasterCodeIds = $('#ddlCode').val();
+                modeldata.BranchIds = $('#ddlBranch').val();
+                modeldata.LocationIds = $('#ddlLocation').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelDealer", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Dealer), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if(returnValue.status == 401 || returnValue.statusCode == 401)
+                        {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function ValidateSAPCode() {
+            debugger;
+            if ($('#txtSAPCode').val() == '' || $('#txtSAPCode').val() == null || $('#txtSAPCode').val() == undefined) {
+                common.notify('error','Please Enter SAP Code');
+                $("#txtSAPCode").focus();
+                return false
+            }
+            //else if ($('#txtSAPCode').val().length < 8) {
+            //    alert('Please Enter 7 digit Code')
+            //    $("#txtSAPCode").focus();
+            //    return false
+            //}
+            else {
+                var SAPCode = $('#txtSAPCode').val();
+                debugger;
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ValidateSAPCode", "Common")',
+                    data: { sapCode: SAPCode },
+                    success: function (data) {
+                        if(data.Data)
+                        {
+                            $(location).attr("href", "@Url.Action("AddUpdateDealer", "Dealer")" + "?SAPCode=" + SAPCode + "&OutletStatus=" + data.ErrorCode)
+                        }
+                        else
+                        {
+                            common.notify('error', data.Message);
+                        }
+                    },
+                    error: function (data) {
+                        if(data.status == 401 || data.statusCode == 401)
+                        {
+                            var response = $.parseJSON(data.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', data.Message);
+                    }
+                });
+
+            }
+
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        @*  <label>Dealer Name:</label>*@
+                        @*   @Html.DropDownList("ddlDealer", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlDealer", @Class = "form-control input-sm", @multiple = "multiple" })*@
+                        @Html.AmboTextboxFor(Model => Model.DealerName, "txtDealerName", "Dealer Name:", "", "", "")
+
+
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SAP Code:</label>
+                        @Html.DropDownList("ddlCode", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCode", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownList("ddlBranch", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        @*  <label>Dealer Name:</label>*@
+                        @*   @Html.DropDownList("ddlDealer", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlDealer", @Class = "form-control input-sm", @multiple = "multiple" })*@
+                        @Html.AmboTextboxFor(Model => Model.DealerCode, "txtDealerCode", "Dealer Code:", "", "", "")
+
+
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Location:</label>
+                        @Html.DropDownList("ddlLocation", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlLocation", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                          new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Dealer Master</a></li>
+                @*<li class="pull-right"><a href="@Url.Action("AddUpdateDealer", "Dealer")" style="margin-top:2px" id="btnAddDealer" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</a></li>*@
+                <li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                 <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtDealer" class="table table-bordered table-striped nowrap table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Dealer Code</th>
+                                <th>Dealer Name</th>
+                                <th>SAP Code</th>
+                                <th>Payer Name</th>
+                                <th>Outlet Type</th>
+                                <th>Branch Name</th>
+                                <th>Location Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function reloadpage()
+    {
+        location.reload();
+    }
+    </script>

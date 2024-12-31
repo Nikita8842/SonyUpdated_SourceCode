@@ -1,0 +1,350 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Reports.TargetVsAchievementReportFilters
+
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageCSS
+{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS
+{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script type="text/javascript">
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabData", function (prodcats) {
+                $(".ddProdCat").html("");
+                $.each(prodcats, function (i, prodcat) {
+                    $(".ddProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                });
+                //$('.ddProdCat > option').prop('selected', true);
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddProdCat").html("");
+            });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#filterBox", function (branches) {
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                var Branch = @Model.BranchId;
+                if(Branch !=null && Branch !=0)
+                {
+                    $('#ddBranch').val(Branch).change();
+                    $('#ddBranch').attr('readonly', 'readonly');
+                }
+                else
+                    $('#ddBranch').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+            });
+        }
+
+
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#filterBox", function (divisions) {
+                $(".ddSFADivision").html("");
+                $.each(divisions, function (i, division) {
+                    $(".ddSFADivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                $('.ddSFADivision').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddSFADivision").html("");
+            });
+        }
+
+        function linkBranchWithSFA()
+        {
+            $("#ddBranch").on('change', function (e, data) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == ''))
+                {
+                    common.ajax_post("@Url.Action("GetSFAByBranch", "Common")", { branchId: $(this).val() }, '#filterBox',
+                    function (output) {
+                        $('#ddSFA').html('');
+                        $.each(output, function (i) {
+                            $('#ddSFA').append($('<option>', { value: output[i].EmployeeId }).text(output[i].SFAFullName));
+                        });
+                        $('#ddSFA').val(null).change();
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddSFA').html('');
+                    common.notify('error', 'No SFA found for selected branch.');
+                });
+
+                }
+            });
+        }
+
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddSFADivision').select2({ placeholder: "---All SFA Divisions---" });
+            $('#ddProdCat').select2({ placeholder: "---Select Product Categories---" });
+            //$('#txtMonth').prop('data-inputmask', "'alias': 'myyyy'");
+            //$('#txtMonth').prop('data-mask', '');
+            //$('#txtMonth').inputmask('myyyy', { 'placeholder': 'myyyy' })
+
+            $('#txtMonth').datepicker({
+                startView: "months",
+                minViewMode: "months",
+                format: "myyyy",
+                autoclose: true
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                 event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            if ($('#txtMonth').val() == null || $('#txtMonth').val() == undefined || $('#txtMonth').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select Applicable Month.";
+                return output;
+            }
+            //if ($('#ddProdCat').val() == null || $('#ddProdCat').val() == undefined || $('#ddProdCat').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one product category for generating report.";
+            //    return output;
+            //}
+            return output;
+        }
+
+        function ValidateDownloadFilter() {
+            var result = ValidateFilters();
+            if (!result.status) {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+
+        function Search()
+        {
+            var result = ValidateFilters();
+            if (result.status)
+            {
+                $('#filterBoxHeader').trigger('click');
+                $('#divDataTable').removeClass('hidden');
+                // Extract month name and year from the selected value by shivani 9 august 2024
+                var selectedMonth = $('#txtMonth').val();
+                var monthYear = moment(selectedMonth, "MYYYY").format("MMM YYYY");
+
+                if ($.fn.dataTable.isDataTable('#dtTargetVsAchievementReport')) {
+                    dtTargetVsAchievementReport.destroy();
+                }
+                dtTargetVsAchievementReport = $('#dtTargetVsAchievementReport').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    searching: false,
+                    ordering: false,
+                    scrollX: true,
+                    ajax: {
+                        url: "@Url.Action("TargetVsAchievementReport", "Reports")",
+                    type: 'POST',
+                    data: function (d) {
+                        d.Month = $('#txtMonth').val();
+                        d.Month = selectedMonth;
+                        d.MonthName = monthYear;
+                        d.BranchId = $('#ddBranch').val();
+                        d.SFAId = $('#ddSFA').val();
+                        d.DivisionId = $('#ddSFADivision').val();
+                        d.ProductCategoryIds = $('#ddProdCat').val();
+                    }
+                },
+                    language: {
+                    processing: "Please wait while we fetch data..."
+                    },
+                    columns: [
+                    {data: "MonthName",defaultContent: monthYear},
+                    { data: "BranchName" },
+                    { data: "SFAName" },
+                    { data: "SFACode" },
+                    { data: "SFALevel" },
+                    { data: "DealerName" },
+                    { data: "DealerCode" },
+                    { data: "SAPCode" },
+                    { data: "Channel" },
+                    { data: "City" },
+                    { data: "Location" },
+                    { data: "ProductCategory" },
+                    { data: "TargetCategory" },
+                    { data: "IncentiveCategory" },
+                    { data: "Division" },
+                    { data: "TargetQty" },
+                    { data: "AchQty" },
+                    { data: "TargetValue" },
+                    { data: "AchValue" }
+                ]
+            });
+            }
+            else
+            {
+                common.notify('error', result.message);
+            }
+        }
+
+        $(document).ready(function () {
+            getProdCatDD();
+            getBranchDD();
+            getDivisionsDD();
+            linkBranchWithSFA();
+            init();
+
+            if ('@UserSession.RoleName' == 'RDI')
+            {
+                @Html.Raw("$('.text-blue.small.clearDD').css('display','none')");
+            }
+            
+        });
+
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Target Vs Achievement Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+@using (Html.BeginForm("DownloadTargetVsAchievementReport", "Reports", FormMethod.Post, new { id = "formTargetVsAchievementReport" }))
+{
+                <div class="row">
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label>Month:</label>
+                            <input type="text" class="form-control input-sm" id="txtMonth" placeholder="Select Month" name="Month" autocomplete = "off"/>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        @Html.AmboDropdownFor(Model => Model.BranchId, "ddBranch", "Branch Name:", "ddBranch")
+                    </div>
+                    
+                    <div class="col-lg-3">
+                        @Html.AmboDropdownFor(Model => Model.DivisionId, "ddSFADivision", "SFA Division:", "ddSFADivision")
+                    </div>
+                    <div class="col-lg-3">
+                        @Html.AmboDropdownFor(Model => Model.SFAId, "ddSFA", "SFA Name:", "ddSFA")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        @Html.AmboDropdownMultipleFor(Model => Model.ProductCategoryIds, "ddProdCat", "Product Categories:", "ddProdCat")
+                    </div>
+                </div>
+                <div class="row" >
+                    <div class="col-lg-6 col-lg-offset-4">
+                        <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                        <button id="btnDownload" type="submit" class="btn btn-success btn-flat" onclick="return ValidateDownloadFilter();"><i class="fa fa-download"></i> Download to Excel</button>
+                    </div>
+                </div>
+}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="divDataTable">
+    <div class="col-lg-12">
+        <div class="box box-primary">
+            <div class="box-body">
+                
+                <table id="dtTargetVsAchievementReport" class="table table-bordered table-striped nowrap reportstable">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Branch Name</th>
+                            <th>SFA Name</th>
+                            <th>SFA Code</th>
+                            <th>SFA Level</th>
+                            <th>Dealer Name</th>
+                            <th>Dealer Code</th>
+                            <th>SAP Code</th>
+                            <th>Channel</th>
+                            <th>City</th>
+                            <th>Location</th>
+                            <th>Product Category</th>
+                            <th>Target Category</th>
+                            <th>Incentive Category</th>
+                            <th>Division</th>
+                            <th>Target Qty</th>
+                            <th>Ach Qty</th>
+                            <th>Target Value</th>
+                            <th>Ach Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                @*</div>*@
+                @*</div>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+</div>

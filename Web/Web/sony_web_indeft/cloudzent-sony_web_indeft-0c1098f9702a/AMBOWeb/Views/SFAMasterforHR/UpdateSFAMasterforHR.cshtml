@@ -1,0 +1,528 @@
+@model AMBOModels.UserManagement.SFAMasterforHR
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model.Id!=null)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update SFA Master for HR Data")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new SFA Master for HR")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("UpdateSFAMasterforHR", "SFAMasterforHR", FormMethod.Post, new { id = "formSFAMasterforHR" }))
+                    {
+                        if (Model.Id != null)
+                        {
+                            @Html.HiddenFor(m => m.Id, new { Id = "txtSFAMasteforHRId", @value = Model.Id })
+                        }
+                        @Html.HiddenFor(m => m.LoginId, new { Id = "txtSFAMasteforHRLoginId", @value = Model.LoginId })
+                        
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >SFA Code</label>
+                                    @Html.TextBoxFor(m => m.SFACode, new { @readonly = "readonly",  @Id = "lblSFACode", @Class = "form-control input-sm", @value = Model.SFACode })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >SFA Name</label>
+                                    @Html.TextBoxFor(m => m.SFAName, new { @readonly = "readonly", @Id = "lblPSIMasterCode1", @Class = "form-control input-sm", @value = Model.SFAName })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >SFA Level</label>
+                                    @Html.TextBoxFor(m => m.SFALevel, new { @readonly = "readonly",  @Id = "txtSFALevel", @Class = "form-control input-sm", @value = Model.SFALevel })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Region</label>
+                                    @Html.TextBoxFor(m => m.Region, new { @readonly = "readonly",  @Id = "txtRegion", @Class = "form-control input-sm", @value = Model.Region })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Branch</label>
+                                    @Html.TextBoxFor(m => m.Branch, new { @readonly = "readonly", @Id = "txtBranch", @Class = "form-control input-sm", @value = Model.Branch })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >City</label>
+                                    @Html.TextBoxFor(m => m.City, new { @readonly = "readonly",  @Id = "txtCity", @Class = "form-control input-sm", @value = Model.City })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Division</label>
+                                    @Html.TextBoxFor(m => m.Division, new { @readonly = "readonly",  @Id = "txtDivision", @Class = "form-control input-sm", @value = Model.Division })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Source <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Source)</span>
+                                    @Html.DropDownListFor(m => m.Source, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtSource", @Class = "form-control input-sm",  @value = Model.Source })    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Source Name </label>
+                                    @Html.TextBoxFor(m => m.SourceName, new { Id = "txtSourceName", @Class = "form-control input-sm",   @value = Model.SourceName })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Source Code </label>                                          
+                                    @Html.TextBoxFor(m => m.SourceCode, new { Id = "txtSourceCode", @Class = "form-control input-sm", @value = Model.SourceCode })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Date of Leaving</label>
+                                    @Html.TextBoxFor(m => m.DOL, new { @readonly = "readonly",  @Id = "lbldateofleaving", @Class = "form-control input-sm", @value = Model.DOL })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Date of Joining</label>
+                                    @Html.TextBoxFor(m => m.DOJ, new { @readonly = "readonly", @Id = "lbldateofjoining", @Class = "form-control input-sm", @value = Model.DOJ })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Asset Issued <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.AssetIssued)</span>
+                                    @Html.DropDownListFor(m => m.AssetIssued, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Yes", Value = "Yes" },
+                                        new SelectListItem{ Text="No", Value = "No" },
+                                       }, new { @Class = "form-control input-sm",  @Id = "ddlAsset", @value = Model.AssetIssued })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Date of Birth</label>
+                                    @Html.TextBoxFor(m => m.DOB, new { @readonly = "readonly", @Id = "txtdateofbirth", @Class = "form-control input-sm", @value = Model.DOB })
+                                </div>
+                            </div>
+                        </div>
+
+                        @*<div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Gender <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Gender)</span>
+                                    @Html.DropDownListFor(m => m.Gender, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Class = "form-control input-sm", @tabindex = "19", @Id = "ddlGender", @value = Model.Gender })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Father Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.FatherName)</span>
+                                    @Html.TextBoxFor(m => m.FatherName, new { Id = "txtFatherName", @Class = "form-control input-sm", @onkeypress = "return validateName(event)", @tabindex = "21", @value = Model.FatherName })
+                                </div>
+                            </div>
+                        </div>*@
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Level of Education<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LevelofEducation)</span>
+                                    @Html.DropDownListFor(m => m.LevelofEducation, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtlvlofeducation", @Class = "form-control input-sm",  @value = Model.LevelofEducation })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Education<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Education)</span>
+                                    @Html.TextBoxFor(m => m.Education, new { Id = "txtEducation", @Class = "form-control input-sm", @value = Model.Education })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Experience<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Experience)</span>
+                                    @Html.TextBoxFor(m => m.Experience, new { Id = "txtExperience", @Class = "form-control input-sm", @value = Model.Experience })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Bank Name</label>
+                                    @Html.TextBoxFor(m => m.BankName, new { Id = "txtBankName", @Class = "form-control input-sm", @value = Model.BankName })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Bank Accout No</label>
+                                    @Html.TextBoxFor(m => m.BankAccountNo, new { Id = "txtBankAccountNo", @Class = "form-control input-sm", @value = Model.BankAccountNo })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >ESI Accout No</label>
+                                    @Html.TextBoxFor(m => m.ESIAccountNo, new { Id = "txtESIAccountNo", @Class = "form-control input-sm",  @value = Model.ESIAccountNo })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >PF Accout No<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.PFAccountNo)</span>
+                                    @Html.TextBoxFor(m => m.PFAccountNo, new { Id = "txtPFAccountNo", @Class = "form-control input-sm", @onkeypress = "return isNumberKey(event)",  @value = Model.PFAccountNo })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Medical Insurance No</label>
+                                    @Html.TextBoxFor(m => m.MedicalInsuranceNo, new { Id = "txtMedicalInsuranceNo", @Class = "form-control input-sm",  @value = Model.MedicalInsuranceNo })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >MI Coverage From</label>
+                                    @Html.TextBoxFor(m => m.MICoverageFrom, new { Id = "txtMICoverageFrom", @Class = "form-control input-sm", @value = Model.MICoverageFrom })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >MI Coverage To</label>
+                                    @Html.TextBoxFor(m => m.MICoverageTo, new { Id = "txtMICoverageTo", @Class = "form-control input-sm",  @value = Model.MICoverageTo })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Personal Accident Insurance No</label>
+                                    @Html.TextBoxFor(m => m.PersonalInsuranceNo, new { Id = "txtPersonalInsuranceNo", @Class = "form-control input-sm",  @value = Model.PersonalInsuranceNo })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >PI Coverage From</label>
+                                    @Html.TextBoxFor(m => m.PICoverageFrom, new { Id = "txtPICoverageFrom", @Class = "form-control input-sm", @value = Model.PICoverageFrom })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >PI Coverage To</label>
+                                    @Html.TextBoxFor(m => m.PICoverageTo, new { Id = "txtPICoverageTo", @Class = "form-control input-sm",  @value = Model.PICoverageTo })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Address</label>
+                                    @Html.TextBoxFor(m => m.Address, new { @readonly = "readonly",@Id = "txtAddress", @Class = "form-control input-sm", @value = Model.Address })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Email Address</label>
+                                    @Html.TextBoxFor(m => m.EmailId, new { @readonly = "readonly",  @Id = "txtEmailId", @Class = "form-control input-sm", @value = Model.EmailId })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label  >Mobile Number</label>
+                                    @Html.TextBoxFor(m => m.MobileNumber, new { @readonly = "readonly",  @Id = "txtMobileNumber", @Class = "form-control input-sm", @value = Model.MobileNumber })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                    <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            $.ajax({
+                url: "@Url.Action("GetLevelOfEducation", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#txtlvlofeducation").append($("<option></option>").val("").html("select"));
+                    $(result).each(function () {
+                        $("#txtlvlofeducation").append($("<option></option>").val(this.Name).html(this.Name));
+                    });
+                    $('#txtlvlofeducation').select2({placeholder: 'Select level of education'});
+                    var LevelofEducation='@Model.LevelofEducation';
+                    if(LevelofEducation != 0)
+                    {
+                        $('#txtlvlofeducation').val(LevelofEducation).change();
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetSource", "Common")",
+                type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $("#txtSource").append($("<option></option>").val("").html("select source"));
+                $(result).each(function () {
+                    $("#txtSource").append($("<option></option>").val(this.Name).html(this.Name));
+                });
+                $('#txtSource').select2({placeholder: 'Select source'});
+                var Source='@Model.Source';
+                if(Source != 0)
+                {
+                    $('#txtSource').val(Source).change();
+                }
+            },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                }
+            });
+
+            
+
+            $('#txtMICoverageFrom').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtMICoverageTo').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtPICoverageFrom').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtPICoverageTo').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#ddlAsset').select2({ placeholder: 'Select asset issued' });
+
+            $("#btnSubmit").click( function () {
+                if (Save())
+                {
+                    debugger;
+                    var modeldata = new Object();
+                    modeldata.Id = $("#txtSFAMasteforHRId").val();
+                    modeldata.LoginId = $("#txtSFAMasteforHRLoginId").val();
+                    modeldata.Source = $("#txtSource").val();
+                    modeldata.SourceName = $("#txtSourceName").val();
+                    modeldata.SourceCode = $("#txtSourceCode").val();
+                    modeldata.AssetIssued = $("#ddlAsset").val();
+                    modeldata.LevelofEducation = $("#txtlvlofeducation").val();
+                    modeldata.Education = $("#txtEducation").val();
+                    modeldata.Experience = $("#txtExperience").val();
+                    modeldata.BankName = $("#txtBankName").val();
+                    modeldata.BankAccountNo = $("#txtBankAccountNo").val();
+                    modeldata.ESIAccountNo = $("#txtESIAccountNo").val();
+                    modeldata.PFAccountNo = $("#txtPFAccountNo").val();
+                    modeldata.MedicalInsuranceNo = $("#txtMedicalInsuranceNo").val();
+                    modeldata.MICoverageFrom = $("#txtMICoverageFrom").val();
+                    modeldata.MICoverageTo = $("#txtMICoverageTo").val();
+                    modeldata.PersonalInsuranceNo = $("#txtPersonalInsuranceNo").val();
+                    modeldata.PICoverageFrom = $("#txtPICoverageFrom").val();
+                    modeldata.PICoverageTo = $("#txtPICoverageTo").val();
+                    //console.log(JSON.stringify(model));
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UpdateSFAMasterforHR", "SFAMasterforHR")',
+                        data: { InputParam: modeldata },
+                        success: function (output) {
+                            if (output.Data)
+                            {
+                                //common.notify('success', output.Message);
+                                $(location).attr('href', '@Url.Action("Index", "SFAMasterforHR")');
+                            }
+                            else
+                            {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                        error: function (output) {
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message)
+                        }
+                    });
+                }
+            });
+
+            $('#btnBack').click(function () {
+                $(location).attr('href', '@Url.Action("Index", "SFAMasterforHR")');
+            });
+
+        });
+
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function Save() {
+
+            var _MIFromDate = $('#txtMICoverageFrom').val();
+            var _MIToDate = $('#txtMICoverageTo').val();
+            var _PIFromDate = $('#txtPICoverageFrom').val();
+            var _PIToDate = $('#txtPICoverageTo').val();
+
+            var midatefromparse = _MIFromDate.split('/');
+            var miparafromdate = midatefromparse[1] + '/' + midatefromparse[0] + '/' + midatefromparse[2]
+
+            var midatetoparse = _MIToDate.split('/');
+            var miparatodate = midatetoparse[1] + '/' + midatetoparse[0] + '/' + midatetoparse[2]
+
+            var mifd = Date.parse(miparafromdate);
+            var mitd = Date.parse(miparatodate);
+
+            
+            if (mifd > mitd && (mifd != null || mifd != "") && (mitd != null || mitd != "")) {
+                common.notify('error', "MI To Date Can't be less than From Date ");
+                return false;
+            }
+
+            var pidatefromparse = _PIFromDate.split('/');
+            var piparafromdate = pidatefromparse[1] + '/' + pidatefromparse[0] + '/' + pidatefromparse[2]
+
+            var pidatetoparse = _PIToDate.split('/');
+            var piparatodate = pidatetoparse[1] + '/' + pidatetoparse[0] + '/' + pidatetoparse[2]
+
+            var pifd = Date.parse(piparafromdate);
+            var pitd = Date.parse(piparatodate);
+
+
+            if (pifd > pitd && (pifd != null || pifd != "") && (pitd != null || pitd != "")) {
+                common.notify('error', "PI To Date Can't be less than From Date ");
+                return false;
+            }
+
+            if ($("#ddlAsset").val() == null || $("#ddlAsset").val() == "") {
+                common.notify('error', "Please select Asset Issued");
+                return false;
+            }
+            
+
+            if ($("#txtSource").val() == null || $("#txtSource").val() == "") {
+                common.notify('error', "Please select Source.");
+                return false;
+            }
+            if (!$("#txtSourceCode").val() == null || $("#txtSourceCode").val() == "") {
+                common.notify('error', "Please enter Source Code.");
+                return false;
+            }
+
+            
+            if (!$("#txtlvlofeducation").val() == null || $("#txtlvlofeducation").val() == "") {
+                common.notify('error', "Please specify Level of Education.");
+                return false;
+            }
+            if (!$("#txtEducation").val() == null || $("#txtEducation").val() == "") {
+                common.notify('error', "Please enter Education.");
+                return false;
+            }
+
+            if ($("#txtExperience").val() == null || $("#txtExperience").val() == "") {
+                common.notify('error', "Please enter Experience.");
+                return false;
+            }
+            if (!$("#txtPFAccountNo").val() == null || $("#txtPFAccountNo").val() == "") {
+                common.notify('error', "Please provide PF Account No.");
+                return false;
+            }
+            return true;
+        }
+
+        function validateName(evt) {
+            //var event = (evt.which) ? evt.which : evt.keyCode;
+            if (!((evt.keyCode >= 65) && (evt.keyCode <= 90) || (evt.keyCode >= 97) && (evt.keyCode <= 122) || (evt.keyCode == 32)))
+                return false;
+            return true;
+        }
+
+    </script>
+}

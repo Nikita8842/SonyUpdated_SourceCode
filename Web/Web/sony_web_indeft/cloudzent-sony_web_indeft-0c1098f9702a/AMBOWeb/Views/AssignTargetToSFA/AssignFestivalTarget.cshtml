@@ -1,0 +1,456 @@
+﻿@model AMBOModels.Mappings.AssignFestivalTargetGet
+
+@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section PageCSS{
+    <style>
+        .ui-datepicker-calendar {
+            display: none;
+        }
+    </style>
+}
+
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-solid">
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label>FestivalScheme : <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.FestivalSchemeId)</span>
+                            @Html.DropDownListFor(m => m.FestivalSchemeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlScheme" })
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button id="btnShowData" class="btn btn-flat btn-primary"><i class="fa fa-list"> Show Data</i></button>
+                            @*<a href="@Url.Action("Show", "AssignTargetToSFA")" id="btnShowData" class="btn btn-flat btn-primary"><i class="fa fa-download"> Show Data</i></a>*@
+                        </div>
+                    </div>
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button id="btnDownloadData" class="btn btn-flat btn-success"><i class="fa fa-download"> Download Format</i></button>
+                        </div>
+                    </div>
+                </div>
+                    <div class="row">
+                        <div class="col-lg-5 text-center">
+                            <br />
+                            <div class="form-group">
+                                @*<label>Select File For Upload</label>*@
+                                <input type="file" id="fileUpload" name="file" class="form-control input-sm" />
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 text-center">
+                            <br />
+                            <div class="form-group">
+                                <button type="submit" id="btnUpload" class="btn btn-flat btn-primary"><i class="fa fa-upload"> Upload</i></button>
+                            </div>
+                        </div>
+                    </div>
+                
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="row" id="gridrow">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Data</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtFestivalTargetToSFA" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Festival Scheme</th>
+                                <th>Branch</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>Dealer Code</th>
+                                <th>Master Code</th>
+                                <th>Dealer Name</th>
+                                <th>SFA Category</th>
+                                <th>Festival Incentive</th>
+                                <th>Target Category</th>
+                                <th>Product Category</th>
+                                <th>Qty Target</th>
+                                <th>Value Target</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+<div class="row hidden" id="gridrowoutput">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Data</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtFestivalTargetToSFAOutput" class="table table-bordered nowrap table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Festival scheme</th>
+                                <th>Branch</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>Dealer Code</th>
+                                <th>Master Code</th>
+                                <th>Dealer Name</th>
+                                <th>SFA Category</th>
+                                <th>Incentive Cat</th>
+                                <th>Target Cat</th>
+                                <th>Product Category</th>
+                                <th>Qty Target</th>
+                                <th>Value Target</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @*@if (Model != null)
+                                {
+                                    foreach (DataRow row in Model.AssignTargetToSFAUpload.dtAsset.Rows)
+                                    {
+                                        <tr>
+                                            @foreach (DataColumn col in Model.AssignTargetToSFAUpload.dtAsset.Columns)
+                                            {
+                                                <td>@row[col.ColumnName]</td>
+                                            }
+                                        </tr>
+                                    }
+                                }*@
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            debugger
+            $.ajax({
+                url: "@Url.Action("GetAllFestivalScheme", "Common")",
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#ddlScheme").html("");
+                    $(result).each(function () {
+                        $("#ddlScheme").append($("<option></option>").val(this.Id).html(this.SchemeName));
+                    });
+                    $('#ddlScheme').val(null).change();
+                    $("#ddlScheme").select2({ placeholder: "Select Festival Schemes" });
+                },
+                error: function (data) {
+                    debugger;
+                    if (data.statusCode == 401 || data.status == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', "Error occured while loading branch.")
+                }
+            });
+
+            $("#btnUpload").click(function () {
+                if (Savefile()) {
+                    var formData = new FormData();
+                    var file = document.getElementById("fileUpload").files[0];
+                    formData.append("file", file);
+                    formData.append("SchemeId", $("#ddlScheme").val());
+                    //return formData;
+                    $.ajax({
+                        url: '@Url.Action("UploadDataFestivalTargetToSFA", "AssignTargetToSFA")',
+                        type: "POST",
+                        data: formData,
+                        dataType: 'json',
+                        contentType: false,
+                        processData: false,
+                        beforeSend: function () {
+                            var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                            if ($("#gridrow").hasClass("hidden"))
+                                $("#gridrowoutput").append(loader);
+                            else
+                                $("#gridrow").append(loader);
+                        },
+                        success: function (response) {
+                            debugger;
+                            if (response.Data != null) {
+                                if ($.fn.dataTable.isDataTable('#dtFestivalTargetToSFAOutput')) {
+                                    $('#dtFestivalTargetToSFAOutput').DataTable().destroy();
+                                    $('#dtFestivalTargetToSFAOutput tbody').empty();
+                                }
+                                $("#gridrow").addClass("hidden");
+                                $("#gridrowoutput").removeClass("hidden");
+                                dtFestivalTargetToSFAOutput = $('#dtFestivalTargetToSFAOutput').DataTable({
+                                    "scrollX": true,
+                                    "scrollY": true,
+                                    data: response.Data,
+                                    order: [[0, "asc"]],
+
+                                    columns: [
+                                               //{ data: "Id", "visible": false },
+                                               { data: "SchemeName"},
+                                               { data: "Branch" },
+                                               { data: "City" },
+                                               { data: "Location" },
+                                               { data: "SFACode" },
+                                               { data: "SFAName" },
+                                               { data: "DealerCode" },
+                                               { data: "MasterCode" },
+                                               { data: "DealerName" },
+                                               { data: "SFACategory" },
+                                               { data: "IncentiveCategory" },
+                                               { data: "TargetCategory" },
+                                               { data: "ProductCategory" },
+                                               { data: "QtyTarget" },
+                                               { data: "ValueTarget" },
+                                               { data: "status" },
+                                               { data: "Reason" },
+                                    ]
+                                });
+                                common.notify('success', response.Message);
+
+                                
+                            }
+
+                        },
+
+                        error: function (response) {
+                            if (response.statusCode == 401 || response.status == 401) {
+                                var output = $.parseJSON(response.responseText);
+
+                                if (output.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', response.Message);
+                            //console.log(errorMessage);
+                        },
+                        complete: function () {
+                            $("#gridrow").find('.overlay').remove();
+                            $("#gridrowoutput").find('.overlay').remove();
+                        }
+                    });
+                }
+
+
+            });
+
+
+            $("#btnDownloadData").click(function () {
+                if (Save()) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("ExportFestivalTargetToSFAData", "AssignTargetToSFA")',
+                        data: { SchemeId: $("#ddlScheme").val() },
+                        beforeSend: function () {
+                            var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                            $("#gridrow").append(loader);
+                        },
+                        success: function (returnValue) {
+                            if (returnValue) {
+                                window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                                common.notify('success', "File downloaded successfully");
+                            }
+                            else {
+                                common.notify('error', "Empty file returned");
+                            }
+                        },
+                        error: function (returnValue) {
+                            if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                                var response = $.parseJSON(returnValue.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', "Error while downloading file.")
+                        },
+                        complete: function () {
+                            $("#gridrow").find('.overlay').remove();
+                        }
+                    });
+                }
+
+            });
+
+            $("#btnShowData").click(function () {
+                debugger;
+                if (Save()) {
+
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("ShowFestivalTarget", "AssignTargetToSFA")",
+                        data: { SchemeId: $("#ddlScheme").val() },
+                        //contentType: "application/json; charset=utf-8",
+                        //dataType: "json",
+                        beforeSend: function () {
+                            var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                            $("#gridrow").append(loader);
+                        },
+                        success: function (data) {
+                            if (data != null) {
+                                debugger;
+                                if ($.fn.dataTable.isDataTable('#dtFestivalTargetToSFA')) {
+                                    $('#dtFestivalTargetToSFA').DataTable().destroy();
+                                    $('#dtFestivalTargetToSFA tbody').empty();
+                                }
+                                $("#gridrowoutput").addClass("hidden");
+                                $("#gridrow").removeClass("hidden");
+                                dtFestivalTargetToSFA = $('#dtFestivalTargetToSFA').DataTable({
+                                    scrollX: true,
+                                    scrollY: true,
+                                    data: data,
+                                    order: [[0, "asc"]],
+
+                                    columns: [
+                                               //{ data: "Id", "visible": false },
+                                               { data: "FestivalScheme" },
+                                               { data: "Branch" },
+                                               { data: "City" },
+                                               { data: "Location" },
+                                               { data: "SFACode" },
+                                               { data: "SFAName" },
+                                               { data: "DealerCode" },
+                                               { data: "MasterCode" },
+                                               { data: "DealerName" },
+                                               { data: "SFACategory" },
+                                               { data: "FestivalIncentiveCategory" },
+                                               { data: "TargetCategory" },
+                                               { data: "ProductCategory" },
+                                               { data: "QtyTarget" },
+                                               { data: "ValueTarget" },
+                                    ]
+
+                                });
+                            }
+                            else {
+                                $("#gridrowoutput").addClass("hidden");
+                                $("#gridrow").removeClass("hidden");
+                                if ($.fn.dataTable.isDataTable('#dtFestivalTargetToSFA')) {
+                                    $('#dtFestivalTargetToSFA').DataTable().destroy();
+                                    $('#dtFestivalTargetToSFA tbody').empty();
+                                }
+                                $('#dtFestivalTargetToSFA').DataTable({
+                                    scrollX: true,
+                                    scrollY: true
+                                });
+                                common.notify('error', 'No data found');
+                            }
+
+                        },
+                        error: function (result) {
+                            debugger;
+                            if (result.statusCode == 401 || result.status == 401) {
+                                var response = $.parseJSON(result.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            $("#gridrowoutput").addClass("hidden");
+                            $("#gridrow").removeClass("hidden");
+                            if ($.fn.dataTable.isDataTable('#dtFestivalTargetToSFA')) {
+                                $('#dtFestivalTargetToSFA').DataTable().destroy();
+                                $('#dtFestivalTargetToSFA tbody').empty();
+                            }
+                            $('#dtFestivalTargetToSFA').DataTable({
+                                scrollX: true,
+                                scrollY: true
+                            });
+                            common.notify('error', 'No data found');
+                        },
+                        complete: function () {
+                            $("#gridrow").find('.overlay').remove();
+                        }
+                    });
+                }
+
+
+            });
+
+
+        });
+
+        function Savefile() {
+            debugger;
+
+            if ($("#ddlScheme").val() == null || $("#ddlScheme").val() == "" || $("#ddlScheme").val() == 0) {
+                common.notify('error', "Please select Festival Scheme");
+                return false;
+            }
+
+            var fileval = $('#fileUpload').val();
+            if (fileval == '' || fileval == null) {
+                common.notify('error', "Please select an Excel file to upload data");
+                return false;
+            }
+
+            var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+            /*Checks whether the file is a valid excel file*/
+            if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                debugger;
+                common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                return false;
+            }
+
+            //if ($('#txtBranch').val() == 0 || $("#txtBranch").val() == "") {
+            //    common.notify('error', "Please select Branch");
+            //    return false;
+            //}
+            return true;
+        }
+
+        function Save() {
+            if ($("#ddlScheme").val() == null || $("#ddlScheme").val() == "" || $("#ddlScheme").val() == 0) {
+                common.notify('error',"Please select Festival Scheme");
+                return false;
+            }
+
+            return true;
+        }
+
+    </script>
+}

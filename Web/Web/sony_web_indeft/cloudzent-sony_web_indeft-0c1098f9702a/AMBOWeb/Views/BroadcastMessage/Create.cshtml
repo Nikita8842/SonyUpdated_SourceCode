@@ -1,0 +1,542 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.CreateBroadcastMessageForm
+
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageCSS{
+<link href="~/Content/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css" rel="stylesheet" />
+<style>
+    #loading {
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        position: fixed;
+        display: block;
+        opacity: 0.7;
+        background-color: #fff;
+        z-index: 99;
+        text-align: center;
+    }
+
+    #loading-image {
+        position: absolute;
+        top: 100px;
+        left: 240px;
+        z-index: 100;
+    }
+</style>
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/Content/js/validations/broadcastmessage.js"></script>
+<script language="javascript" type="text/javascript">
+
+    $(window).bind("load", function () {
+        // code here
+        $('#loading').hide();
+    });
+
+    $('#btnSend').click(function () {
+
+        $('#loading').show();
+    })
+
+</script>
+    <script>
+
+        function getRoleDD() {
+            common.ajax_get("@Url.Action("GetRoles", "Common")", null, null, function (roles) {
+                $("#ddlRole").html("");
+                $.each(roles, function (i, role) {
+                    if(role.Name =="SFA" || role.Name =="Sales PIC" || role.Name =="RDI" || role.Name =="NRDI" || role.Name =="BM")
+                    {
+                        $("#ddlRole").append($('<option></option>').val(role.RoleId).html(role.Name));
+
+                    }
+                });
+                @*var RoleId = @Model.RoleId;
+                if(RoleId != null)
+                {
+                    $('#ddlRole').val(RoleId).change();
+
+                }*@
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlRole").html("");
+                });
+        }
+
+        $('#ddAddSFADivision').on('change', function () {
+            //GetSFAFromDivisionAndBranch();
+            //GetSIDFromBranchForBroadcast();
+
+
+            var data = new Object();
+            data.DivisionIds = $('#ddAddSFADivision').val();
+            data.BranchIds = $('#ddAddBranch').val();
+            data.RoleIds = $('#ddlRole').val();
+
+            ////////////////////////
+
+            if (data.DivisionIds.length > 0 || data.BranchIds.length > 0) {
+                common.ajax_post("@Url.Action("GetSFAFromDivisionAndBranchAndRole", "Common")", data, "#tabData", function (sfa) {
+                    $("#ddAddSFA").html("");
+                    $.each(sfa, function (i) {
+                        $("#ddAddSFA").append($('<option></option>').val(sfa[i].SFAUserId).html(sfa[i].SFAName));
+                    });
+                    //$('#ddAddSFA').parent().find('select').first().children().prop("selected", "selected").change();
+                    //if (IsEdit == 1) {
+                    //    $("#ddAddSFA").val(SFA);
+                    //    $("#ddAddSFA").trigger("change");
+                    //}
+                }, function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'No SFA found for selected division and branch.')
+                    $("#ddAddSFA").html("");
+                });
+
+            }
+            else {
+                $("#ddAddSFA").html("");
+                $("#ddAddSID").html("");
+            }
+
+
+            var data = new Object();
+            data.BranchIds = $('#ddAddBranch').val();
+
+            @*if (data.BranchIds.length > 0) {
+
+                common.ajax_post("@Url.Action("GetSIDFromBranchForBroadcast", "Common")", data, "#tabData", function (sid) {
+                    $("#ddAddSID").html("");
+                    $.each(sid, function (i) {
+                        $("#ddAddSID").append($('<option></option>').val(sid[i].SIDUserId).html(sid[i].SIDName));
+                    });
+                    // $('#ddAddSID').parent().find('select').first().children().prop("selected", "selected").change();
+                    //if (IsEdit == 1) {
+                    //    $("#ddAddSID").val(SID);
+                    //    $("#ddAddSID").trigger("change");
+                    //}
+                }, function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'No SID found for selected branch.')
+                    $("#ddAddSID").html("");
+                });
+            }
+            else {
+                $("#ddAddSFA").html("");
+                $("#ddAddSID").html("");
+            }*@
+        });
+
+
+        /// <reference path="~/Content/js/common.js" />
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabData", function (divisions) {
+                $("#ddAddSFADivision").html("");
+                $.each(divisions, function (i, division) {
+                    $("#ddAddSFADivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                $('.ddSFADivision').val(null).change();
+            }, function (returnValue) {
+                if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                    var response = $.parseJSON(returnValue.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddSFADivision").html("");
+            });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabData", function (branches) {
+                $("#ddAddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddAddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                // $('.ddBranch').val(null).change();
+                var Branch = @Model.BranchId;
+                if(Branch !=null && Branch !=0)
+                {
+                    $('#ddAddBranch').val(Branch).change();
+                    $('#ddAddBranch').attr('readonly', 'readonly');
+                }
+
+            }, function (returnValue) {
+                if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                    var response = $.parseJSON(returnValue.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddBranch").html("");
+            });
+        }
+
+        function GetSFAFromDivisionAndBranch() {
+            debugger;
+            var data = new Object();
+            data.DivisionIds = $('#ddAddSFADivision').val();
+            data.BranchIds = $('#ddAddBranch').val();
+            data.RoleIds = $('#ddlRole').val();
+            ////////////////////////
+
+            if (data.DivisionIds.length > 0 || data.BranchIds.length > 0) {
+                common.ajax_post("@Url.Action("GetSFAFromDivisionAndBranchAndRole", "Common")", data, "#tabData", function (sfa) {
+                    $("#ddAddSFA").html("");
+                    $.each(sfa, function (i) {
+                        $("#ddAddSFA").append($('<option></option>').val(sfa[i].SFAUserId).html(sfa[i].SFAName));
+                    });
+                    //$('#ddAddSFA').parent().find('select').first().children().prop("selected", "selected").change();
+                }, function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'No SFA found for selected division and branch.')
+                    $("#ddAddSFA").html("");
+                });
+
+            }
+            else {
+                $("#ddAddSFA").html("");
+                $("#ddAddSID").html("");
+            }
+
+
+        }
+
+        function GetSIDFromBranchForBroadcast() {
+            var data = new Object();
+            $("#ddAddSID").html("");
+            data.BranchIds = $('#ddAddBranch').val();
+            data.RoleIds = $('#ddlRole').val();
+
+            if (data.BranchIds.length > 0) {
+
+                common.ajax_post("@Url.Action("GetSIDFromBranchAndRoleForBroadcast", "Common")", data, "#tabData", function (sid) {
+                    $("#ddAddSID").html("");
+                    $.each(sid, function (i) {
+                        $("#ddAddSID").append($('<option></option>').val(sid[i].SIDUserId).html(sid[i].SIDName));
+                    });
+                    // $('#ddAddSID').parent().find('select').first().children().prop("selected", "selected").change();
+                }, function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'No SID found for selected branch.')
+                    $("#ddAddSID").html("");
+                });
+            }
+            else {
+                $("#ddAddSFA").html("");
+                $("#ddAddSID").html("");
+            }
+
+        }
+
+        function init() {
+            try {
+                common.createDatePicker('#txtStartDate');
+                common.createDatePicker('#txtEndDate');
+                $('#ddAddSFADivision').select2({ placeholder: 'Select SFA Division...' });
+                $('#ddAddBranch').select2({ placeholder: 'Select Branch...' });
+                $('#ddAddSFA').select2({ placeholder: 'Select SFA Names...' });
+                $('#ddAddSID').select2({ placeholder: 'Select SID Names...' });
+                $('#ddlRole').select2({ placeholder: 'Select Role' });
+                $('.textarea').wysihtml5({
+                    toolbar: {
+                        "font-styles": true, // Font styling, e.g. h1, h2, etc.
+                        "emphasis": true, // Italics, bold, etc.
+                        "lists": false, // (Un)ordered lists, e.g. Bullets, Numbers.
+                        "link": true, // Button to insert a link.
+                        "image": false, // Button to insert an image.
+                        "blockquote": false, // Blockquote
+                        "size": "sm", // options are xs, sm, lg
+                        }
+                });
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        $(document).ready(function () {
+            var IsEdit = 0;
+            getDivisionsDD();
+            getBranchDD();
+            getRoleDD();
+            init();
+
+            if ('@UserSession.RoleName' == 'RDI')
+            {
+                @Html.Raw("$('.text-blue.small').css('display','none')");
+            }
+
+            common.linkDatePickers('#txtStartDate', '#txtEndDate');
+            //$('#ddAddSFADivision').on('change', function () {
+            //    GetSFAFromDivisionAndBranch();
+            //});
+            $('#ddAddBranch').on('change', function () {
+                GetSFAFromDivisionAndBranch();
+                GetSIDFromBranchForBroadcast();
+            });
+
+            $('#btnBack').click(function () {
+                debugger;
+                window.location.href = '../BroadcastMessage/Index';
+            });
+            //$("#lblDivision + span").hide();
+            //$("#lblBranch + span").hide();
+        });
+
+
+
+
+        $('#ddlRole').on('change', function () {
+            //GetSFAFromDivisionAndBranch();
+            //GetSIDFromBranchForBroadcast();
+            debugger;
+
+            var data = new Object();
+            data.DivisionIds = $('#ddAddSFADivision').val();
+            data.BranchIds = $('#ddAddBranch').val();
+            data.RoleIds = $('#ddlRole').val();
+            $("#ddAddSID").html("");
+            $("#ddAddSFA").html("");
+            ////////////////////////
+
+            if (data.DivisionIds.length > 0 || data.BranchIds.length > 0) {
+                common.ajax_post("@Url.Action("GetSFAFromDivisionAndBranchAndRole", "Common")", data, "#tabData", function (sfa) {
+                    $("#ddAddSFA").html("");
+                    $.each(sfa, function (i) {
+                        $("#ddAddSFA").append($('<option></option>').val(sfa[i].SFAUserId).html(sfa[i].SFAName));
+                    });
+                    //$('#ddAddSFA').parent().find('select').first().children().prop("selected", "selected").change();
+                    //if (IsEdit == 1) {
+                    //    $("#ddAddSFA").val(SFA);
+                    //    $("#ddAddSFA").trigger("change");
+                    //}
+                }, function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'No SFA found for selected division and branch.')
+                    $("#ddAddSFA").html("");
+                });
+
+                if (data.BranchIds.length > 0) {
+
+                    common.ajax_post("@Url.Action("GetSIDFromBranchAndRoleForBroadcast", "Common")", data, "#tabData", function (sid) {
+                        $("#ddAddSID").html("");
+                        $.each(sid, function (i) {
+                            debugger;
+                            $("#ddAddSID").append($('<option></option>').val(sid[i].SIDUserId).html(sid[i].SIDName));
+                        });
+                        // $('#ddAddSID').parent().find('select').first().children().prop("selected", "selected").change();
+                        //if (IsEdit == 1) {
+                        //    $("#ddAddSID").val(SID);
+                        //    $("#ddAddSID").trigger("change");
+                        //}
+                    }, function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'No SID found for selected branch.')
+                        $("#ddAddSID").html("");
+                    });
+                }
+            }
+            else {
+                $("#ddAddSFA").html("");
+                $("#ddAddSID").html("");
+            }
+
+        });
+
+    </script>
+
+<script type="text/javascript">
+        $(function () {
+            var d = new Date().getDate();
+            var m = new Date().getMonth() + 1; // JavaScript months are 0-11
+            var y = new Date().getFullYear();
+            $("[id$=txtStartDate]").val(d + "/" + m + "/" + y);
+            $("[id$=txtStartDate]").datepicker({ weekStart: 1, dateFormat: 'dd/mm/yy' });
+
+        if (d > 29)
+        {
+            m = m+1;
+            d=1;
+        }
+        else
+        {
+       if(d>=26 && m==2)
+            {
+                m = m+1;
+                d=1;
+            }
+        else
+            d=(d+3);
+        }
+
+
+            $("[id$=txtEndDate]").val((d) + "/" + m + "/" + y);
+            $("[id$=txtEndDate]").datepicker({ weekStart: 1, dateFormat: 'dd/mm/yy' });
+        });
+</script>
+
+ 
+}
+
+
+@section PageModals
+{
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-comments"></i> Add a new message for broadcasting
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Create", "BroadcastMessage", FormMethod.Post, new { @id = "AddBroadcastMessageForm", enctype = "multipart/form-data" }))
+                    {
+                        <div class="row">
+                            <div class="col-lg-3">
+                                @Html.AmboTextboxFor(Model => Model.StartDate, "txtStartDate", "Start Date", "Enter Start Date Here...", "", "")
+                            </div>
+                            <div class="col-lg-3">
+                                @Html.AmboTextboxFor(Model => Model.EndDate, "txtEndDate", "End Date", "Enter End Date Here...", "", "")
+                            </div>
+                            <div class="col-lg-3">
+                                @Html.AmboTextboxFor(Model => Model.Subject, "txtSubject", "Subject(Max 120 Character Allowed)", "Enter Subject Here...", "", InputTypes.AlphaNumericSymbol1WithSpace)
+                            </div>
+                            <div class="col-lg-3">
+                                @Html.AmboFileUploadFor("Attachment", "fileChooser", "Attachment")
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                @Html.AmboTextareaFor(Model => Model.Message, "txtMessage", "Write your message here(Max 500 Character Allowed)...", "")
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <label id="lblDivision">Role</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("RoleIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlRole", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                            <div class="col-lg-6">
+                                @*@Html.AmboDropdownMultipleFor(Model => Model.BranchIds, "ddAddBranch", "Branch", "ddBranch")*@
+                                <label id="lblBranch">Branch</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("BranchIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddAddBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @*@Html.AmboDropdownMultipleFor(Model => Model.DivisionIds, "ddAddSFADivision", "SFA Division", "ddSFADivision")*@
+                                <label id="lblDivision">SFA Division</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("DivisionIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddAddSFADivision", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @*@Html.AmboDropdownMultipleFor(Model => Model.SFAIds, "ddAddSFA", "SFA Names", "ddSFA")*@
+                                <label>SFA Names</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("SFAIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddAddSFA", @Class = "form-control input-sm", @multiple = "multiple" })
+
+
+                            </div>
+                            <div class="col-lg-6">
+                                @*@Html.AmboDropdownMultipleFor(Model => Model.SIDIds, "ddAddSID", "SID Names", "ddSID")*@
+                                <label>SID Names</label>
+                                <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                                @Html.DropDownList("SIDIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddAddSID", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-12 col-xs-12" style="padding:24px 0px 0px 0px;">
+                                <button id="btnSend" name="Status" value="1" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-bell"></i> Send Message</button>
+                                <button id="btnSave" name="Status" value="2" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-floppy-o"></i> Save as Draft</button>
+                                <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Go Back</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div id="loading">
+            <i id="loading-image" class="fa fa-refresh fa-spin" style="top: 50%;left: 50%;margin-left: -15px; margin-top: -15px;
+            color: #000;font-size: 30px;"></i>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,338 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Shift Name:</label>
+                        @Html.DropDownList("ddlShift", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlShift", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4 col-lg-offset-3">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Shift Name Master</a></li>
+                <li class="pull-right"><button id="AddNew" data-toggle="modal" data-target="#modalAddNew" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtShift" class="table table-bordered table-striped datatable" style="width:100%"></table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddNew">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmAdd">
+                    @Html.Hidden("ID", "", new { id = "hdnID" })
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class="fa fa-plus"></i> Add New Shift Name</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtText">Shift Name</label>
+                            @Html.TextBox("Shift Name", "", new { id = "txtShiftName", @class = "form-control", maxlength = "50", placeholder = "Enter Shift Name" })
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Save();" id="btnSave"><i class="fa fa-check"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+    </div>
+
+    <div class="modal fade" id="divDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmDelete">
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class='fa fa-trash'></i> Delete Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtMessage">Do you really want to delete shift name?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Delete();"><i class="fa fa-check"></i>Yes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        var dt;
+        function Search()
+        {
+            if ($.fn.dataTable.isDataTable('#dtShift')) {
+                $('#dtShift').DataTable().destroy();
+                $('#dtShift tbody').empty();
+                //dt.destroy();
+            }
+
+            dt = $('#dtShift').DataTable({
+                searching: false,
+                "processing": true,
+                "scrollY": "330px",
+                "ajax": {
+                    url: "@Url.Action("GetShiftMaster", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.ShiftIds = $('#ddlShift').val();
+                    },
+                    dataSrc:""
+                },
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                "columns": [
+                    { "data": "ShiftName", "title": "Shift Name" },
+                    //{ "data": "ShiftCreationDate", "title": "Creation Date" },
+                    {
+                        "data": function (data, type, row) {
+                            return '<a data-placement="left" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                            '<a data-toggle="modal" data-target="#divDelete" data-placement="left" title="Delete" class="delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        "orderable": false
+                    }
+                ]
+            });
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetShiftTiming", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    //console.log(result);
+                    //if(result.MessageCode == 302)
+                    //{
+                        $(result).each(function () {                            
+                            $("#ddlShift").append($("<option></option>").val(this.ShiftNameId).html(this.ShiftName));
+                        });
+                        $("#ddlShift").val(null).trigger('change');
+                    //}
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlShift").html("");
+                    $("#ddlShift").val(null).trigger('change');
+                }
+            });
+
+            $('#ddlShift').select2({ placeholder: "---All Shift Name---" });
+
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+
+            $('#modalAddNew').on('shown.bs.modal', function () {
+                $("#txtShiftName").focus();
+            });
+            $('#modalAddNew,#divDelete').on('hidden.bs.modal', function () {
+                $("#txtShiftName").val('');
+                $("#hdnID").val('');
+                $(".modal-title").html("<i class='fa fa-plus'></i> Add New Shift Name");
+            });
+
+            Search();
+
+            $('#dtShift').on('click', ".delete", function () {
+                $("#hdnID").val(dt.row($(this).parents('tr')).data().Id);
+            });
+            $('#dtShift').on('click', ".edit", function () {
+                var Id = dt.row($(this).parents('tr')).data().Id;
+                var Name = dt.row($(this).parents('tr')).data().ShiftName;
+                $("#txtShiftName").val(Name);
+                $("#hdnID").val(Id);
+                $(".modal-title").html("<i class='fa fa-pencil'></i> Update Shift Name");
+                $("#btnsave").text("Update");
+                $("#AddNew").trigger("click");
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.ShiftIds = $('#ddlShift').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelShift", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.ShiftMaster), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+        function Save() {
+            if ($("#txtShiftName").val() == null || $("#txtShiftName").val() == "") {
+                alert("Please provide Shift Name.");
+                return false;
+            }
+            //if (!$("#txtShiftName").val().match(/^[0-9a-zA-Z ]+$/)) {
+            //    alert("Only alphanumeric values are allowed in Shift Name.");
+            //    return false;
+            //}
+            var url;
+            if ($("#hdnID").val() != null && $("#hdnID").val() != '')
+                url = '@Url.Action("UpdateShift", "Shift")';
+            else
+                url = '@Url.Action("CreateShift", "Shift")';
+            var Id = $("#hdnID").val();
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { ShiftName: $("#txtShiftName").val(),Id:Id },
+                contentType: "application/json",
+                dataType: 'json',
+                success: function (data) {
+                    //debugger;
+                    //code modified to show notification in either case
+                    if (data.ErrorCode == 1) {
+                        //common.notify('success', data.ErrorMessage);
+                        $("#modalAddNew").modal("toggle");
+
+                        location.reload();
+
+                    }
+                    else {
+                        common.notify('error', data.ErrorMessage);
+                    }
+
+                },
+                error: function (output) {
+                    //console.log('output',output);
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    alert("OOPS! Something happened. Please try again.");
+                }
+            });
+        }
+        function Delete() {
+            var ShiftId = $("#hdnID").val();
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("DeleteShift", "Shift")',
+                data: { ShiftId: ShiftId },
+                contentType: "application/json",
+                dataType: 'json',
+                success: function (data) {
+                    //code modified to show notification in either case
+                    if (data.ErrorCode == 1) {
+                        $("#divDelete").modal("toggle");
+                        //common.notify('success', data.ErrorMessage);
+                        location.reload();
+                    }
+                    else {
+                        common.notify('error', data.ErrorMessage);
+                    }
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    alert("OOPS! Something happened. Please try again.");
+                }
+            });
+        }
+    </script>
+}

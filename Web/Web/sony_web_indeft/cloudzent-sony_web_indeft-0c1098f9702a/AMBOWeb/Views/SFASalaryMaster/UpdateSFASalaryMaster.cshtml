@@ -1,0 +1,293 @@
+@model AMBOModels.MasterMaintenance.SFASalaryMasterGrid
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model !=null && (Model.Id != null || Model.Id != 0))
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update SFA Salary Master")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a Salary record for SFA")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("UpdateSFASalaryMaster", "SFASalaryMaster", FormMethod.Post, new { id = "formSFASalaryMaster"}))
+                    {
+                        if (Model !=null && (Model.Id != null || Model.Id != 0))
+                        {
+                            @Html.HiddenFor(m => m.Id, new { Id = "txtSFASalaryMasterId", @value = Model.Id })
+                        }
+
+                        @Html.HiddenFor(m => m.LoginId, new { Id = "txtSFASalaryMasterLoginId", @value = Model.LoginId })
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>SFA Code</label>
+                                    @Html.TextBoxFor(m => m.SFACode, new { @readonly = "readonly", @Id = "lblSFACode", @value = Model.SFACode, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>SFA Name</label>
+                                    @Html.TextBoxFor(m => m.SFAName, new { @readonly = "readonly", @Id = "lblSFAName", @value = Model.SFAName, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Branch</label>
+                                    @Html.TextBoxFor(m => m.Branch, new { @readonly = "readonly", @Id = "txtBranch", @value = Model.Branch, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>State</label>
+                                    @Html.TextBoxFor(m => m.State, new { @readonly = "readonly",@Id = "txtState", @value = Model.State, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>City</label>
+                                    @Html.TextBoxFor(m => m.City, new { @readonly = "readonly", @Id = "txtCity", @value = Model.City, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Division</label>
+                                    @Html.TextBoxFor(m => m.Division, new { @readonly = "readonly", @Id = "txtDivision", @value = Model.Division, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>SFA Level</label>
+                                    @Html.TextBoxFor(m => m.SFALevel, new { @readonly = "readonly", @Id = "txtSFALevel", @value = Model.SFALevel, @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Basic<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Basic)</span>
+                                    @Html.TextBoxFor(m => m.Basic, new { Id = "txtBasic", @Class = "form-control input-sm", @onkeypress = "return isNumberKey(event)", @value = Model.Basic })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>HRA<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.HRA)</span>
+                                    @Html.TextBoxFor(m => m.HRA, new { Id = "txtHRA", @Class = "form-control input-sm", @value = Model.HRA, @onkeypress = "return isNumberKey(event)" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label>Medical<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Med)</span>
+                                    @Html.TextBoxFor(m => m.Med, new { Id = "txtMedical", @Class = "form-control input-sm", @value = Model.Med, @onkeypress = "return isNumberKey(event)" })
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Convinience<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Conv)</span>
+                                        @Html.TextBoxFor(m => m.Conv, new { Id = "txtConvinience", @Class = "form-control input-sm", @value = Model.Conv, @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Other Allowance<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Other)</span>
+                                        @Html.TextBoxFor(m => m.Other, new { Id = "txtOther", @Class = "form-control input-sm", @value = Model.Other, @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Airtime Allowance<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Airtime)</span>
+                                        @Html.TextBoxFor(m => m.Airtime, new { Id = "txtAirtime", @Class = "form-control input-sm", @value = Model.Airtime, @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Insurance<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Insurance)</span>
+                                        @Html.TextBoxFor(m => m.Insurance, new { Id = "txtInsurance", @Class = "form-control input-sm", @value = Model.Insurance,  @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Other Allowance 1</label>
+                                        @Html.TextBoxFor(m => m.OtherAllowance1, new { Id = "txtOtherAll1", @Class = "form-control input-sm", @value = Model.OtherAllowance1, @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Other Allowance 2</label>
+                                        @Html.TextBoxFor(m => m.OtherAllowance2, new { Id = "txtOtherAll2", @Class = "form-control input-sm", @value = Model.OtherAllowance2, @tabindex = "55", @onkeypress = "return isNumberKey(event)" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save</button>
+                                        @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default btn-flat" })
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section PageJS{
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+
+    <script>
+        $(document).ready(function ()
+        {
+            $("#btnSubmit").click(function () {
+                if (Save())
+                {
+                    debugger;
+                    var modeldata = new Object();
+                    modeldata.LoginId = $("#txtSFASalaryMasterLoginId").val();
+                    modeldata.Id = $("#txtSFASalaryMasterId").val();
+                    modeldata.SFACode = $("#lblSFACode").val();
+                    modeldata.SFAName = $("#lblSFAName").val();
+                    modeldata.Branch = $("#txtBranch").val();
+                    modeldata.State = $("#txtState").val();
+                    modeldata.City = $("#txtCity").val();
+                    modeldata.Division = $("#txtDivision").val();
+                    modeldata.SFALevel = $("#txtSFALevel").val();
+                    modeldata.Basic = $("#txtBasic").val();
+                    modeldata.HRA = $("#txtHRA").val();
+                    modeldata.Med = $("#txtMedical").val();
+                    modeldata.Conv = $("#txtConvinience").val();
+                    modeldata.Other = $("#txtOther").val();
+                    modeldata.Airtime = $("#txtAirtime").val();
+                    modeldata.Insurance = $("#txtInsurance").val();
+                    modeldata.OtherAllowance1 = $("#txtOtherAll1").val();
+                    modeldata.OtherAllowance2 = $("#txtOtherAll2").val();
+
+                    //console.log(JSON.stringify(model));
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UpdateSFASalaryMaster", "SFASalaryMaster")',
+                        data: { objFormData: modeldata },
+                        success: function (output) {
+                            if (output.Data) {
+                                //common.notify('success', output.Message);
+                                $(location).attr('href', '@Url.Action("Index", "SFASalaryMaster")');
+                            }
+                            else {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                        error: function (output) {
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message)
+                        }
+                    });
+                }
+            });
+
+        });
+
+        function Save() {
+            if ($("#txtBasic").val() == null || $("#txtBasic").val() == "") {
+                common.notify('error', "Please enter basic salary amount.");
+                return false;
+            }
+
+            if ($("#txtHRA").val() == null || $("#txtHRA").val() == "") {
+                common.notify('error', "Please enter amount for HRA.");
+                return false;
+            }
+
+            if ($("#txtMedical").val() == null || $("#txtMedical").val() == "") {
+                common.notify('error', "Please enter amount for medical.");
+                return false;
+            }
+
+            if ($("#txtConvinience").val() == null || $("#txtConvinience").val() == "") {
+                common.notify('error', "Please enter amount for convinience");
+                return false;
+            }
+
+            if (!$("#txtOther").val() == null || $("#txtOther").val() == "") {
+                common.notify('error', "Please enter other amount.");
+                return false;
+            }
+
+            if (!$("#txtAirtime").val() == null || $("#txtAirtime").val() == "") {
+                common.notify('error', "Please enter amount for airtime");
+                return false;
+            }
+
+            if (!$("#txtInsurance").val() == null || $("#txtInsurance").val() == "") {
+                common.notify('error', "Please enter amount for insurance");
+                return false;
+            }
+
+
+            return true;
+        }
+
+        function validatenumeric(evt) {
+            var RE = /d*\.{0,2}\d+$/;
+            if (!(RE.test(evt.keyCode))) {
+                $(this).val() = '';
+                common.notify('error', "Enter numeric value");
+            }
+            return true;
+        }
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode!=46 && charCode > 31 && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        function validateName(evt) {
+            //var event = (evt.which) ? evt.which : evt.keyCode;
+            if (!((evt.keyCode >= 65) && (evt.keyCode <= 90) || (evt.keyCode >= 97) && (evt.keyCode <= 122) || (evt.keyCode == 32)))
+                return false;
+            return true;
+        }
+
+    </script>
+}

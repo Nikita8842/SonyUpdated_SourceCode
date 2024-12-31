@@ -1,0 +1,765 @@
+﻿@model AMBOModels.UserManagement.SFAFormData
+
+@{ 
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            debugger;
+
+            if ('@UserSession.RoleName' == 'RDI' && '@Model.isUpdate' == 'True') {
+                @Html.Raw("$('#txtLoginId').prop('readonly',true);");
+                @Html.Raw("$('#txtEmployeeCode').prop('readonly',true);");
+                @Html.Raw("$('#ddBranch').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddState').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddDivision').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddRegion').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddCity').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddRole').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddSFALevel').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddSFAType').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddAgency').attr('readonly', 'readonly');");
+                @Html.Raw("$('#txtFirstName').prop('readonly',true);");
+                @Html.Raw("$('#txtLastName').prop('readonly',true);");
+                @Html.Raw("$('#ddlGender').attr('readonly', 'readonly');");
+                @Html.Raw("$('#txtFatherName').prop('readonly',true);");
+                @Html.Raw("$('#txtAddress').prop('readonly',true);");
+                @Html.Raw("$('#txtPANNo').prop('readonly',true);");
+                @Html.Raw("$('#txtDOB').prop('readonly',true);");
+                @Html.Raw("$('#txtDOJ').prop('readonly',true);");
+                @Html.Raw("$('#txtDOL').prop('readonly',true);");
+                @Html.Raw("$('#radioStatusA').attr('disabled', 'disabled');");
+                @Html.Raw("$('#radioStatusI').attr('disabled', 'disabled');");
+            }
+
+        function init()
+        {
+            try
+            {
+                $('#ddBranch').select2();
+                $('#ddState').select2();
+                $('#ddDivision').select2();
+                $('#ddRegion').select2();
+                $('#ddCity').select2();
+                $('#ddRole').select2();
+                $('#ddSFALevel').select2();
+                $('#ddSFAType').select2();
+                $('#ddAgency').select2();
+                $('#ddlGender').select2();
+                $('#txtDOB').prop('data-inputmask',"'alias': 'dd/mm/yyyy'");
+                $('#txtDOB').prop('data-mask','');
+                $('#txtDOB').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                $('#txtDOJ').prop('data-inputmask',"'alias': 'dd/mm/yyyy'");
+                $('#txtDOJ').prop('data-mask','');
+                $('#txtDOJ').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                $('#txtDOL').prop('data-inputmask',"'alias': 'dd/mm/yyyy'");
+                $('#txtDOL').prop('data-mask','');
+                $('#txtDOL').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                var dtDOB = new Date();
+                dtDOB.setFullYear(new Date().getFullYear()-18);
+                $('#txtDOB').datepicker({
+                    autoclose: true,
+                    format: "dd/mm/yyyy",
+                    endDate: dtDOB
+                });
+                $('#txtDOJ').datepicker({
+                    autoclose: true,
+                    format: "dd/mm/yyyy"
+                });
+
+                //var dtDOLstart = new Date();
+                //dtDOLstart.setDate(dtDOLstart.getDate() - 7);
+                //var dtDOLend = new Date();
+                //dtDOLend.setDate(dtDOLend.getDate() + 30);
+                $('#txtDOL').datepicker({
+                    autoclose: true,
+                    format: "dd/mm/yyyy"
+                    //startDate: dtDOLstart,
+                    //endDate: dtDOLend
+                });
+                $('#txtEmployeeCode').focus();
+                debugger;
+                @if (Model.isUpdate)
+                    {
+                        if (Model.IsSFAOffered)
+                        {
+                            @Html.Raw("$('#txtIsSFAOffered').val(true);");
+                        }
+                        @Html.Raw("$('#txtLoginId').prop('readonly',true);");
+                        @Html.Raw("$('#txtEmployeeCode').prop('readonly',true);");
+
+                            if (Model.Status)
+                            {
+
+                                @Html.Raw("$('#radioStatusA').iCheck('check');");
+                            }
+                            else
+                            {
+                                @Html.Raw("$('#radioStatusI').iCheck('check');");
+                        }
+                    }
+                    else
+                    {
+                        @Html.Raw("$('#radioStatusA').iCheck('check');");
+                    }
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function getRegionDD() {
+            common.ajax_get("@Url.Action("GetRegion", "Common")", null, "#tabForm", function (regions) {
+                $("#ddRegion").html("");
+                $("#ddRegion").append($('<option></option>').val(0).html("---Select Region---"));
+                $.each(regions, function (i, region) {
+                    $("#ddRegion").append($('<option></option>').val(region.ID).html(region.RegionName));
+                });
+                var RegionId = @Model.RegionId;
+                if(RegionId != 0)
+                {
+                    $('#ddRegion').val(RegionId).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddRegion").html("");
+                $("#ddRegion").append($('<option></option>').val(0).html("---Select Region---"));
+            });
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#tabForm", function (sfatypes) {
+                $("#ddSFAType").html("");
+                $("#ddSFAType").append($('<option></option>').val(0).html("---Select SFA Type---"));
+                $.each(sfatypes, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).text(sfatype.SFATypeName));
+                });
+                var SFATypeId = @Model.SFATypeId;
+                if(SFATypeId != 0)
+                {
+                    $('#ddSFAType').val(SFATypeId).trigger('change');
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+                $("#ddSFAType").append($('<option></option>').val(0).text("---Select SFA Type---"));
+            });
+        }
+
+        function getRolesDD() {
+            common.ajax_get("@Url.Action("GetRoles", "Common")", null, "#tabForm", function (output) {
+                $("#ddRole").html("");
+                $("#ddRole").append($('<option></option>').val(0).html("---Select Role---"));
+                $.each(output, function (i, role) {
+                    debugger;
+                    if(role.RoleId == 61)
+                    {
+                        $("#ddRole").append($('<option></option>').val(role.RoleId).html(role.Name));
+                    }
+                });
+                $("#ddRole").val($("#ddRole option").eq(1).val()).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddRole").html("");
+                $("#ddRole").append($('<option></option>').val(0).html("---Select Role---"));
+            });
+        }
+
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabForm", function (divisions) {
+                $("#ddDivision").html("");
+                $("#ddDivision").append($('<option></option>').val(0).html("---Select Division---"));
+                $.each(divisions, function (i, division) {
+                    $("#ddDivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                var DivisionId = @Model.DivisionId;
+                if(DivisionId != null)
+                {
+                    $('#ddDivision').val(DivisionId).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDivision").html("");
+                $("#ddDivision").append($('<option></option>').val(0).html("---Select Division---"));
+            });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabForm", function (branches) {
+                $("#ddBranch").html("");
+                $("#ddBranch").append($('<option></option>').val(0).html("---Select Branch---"));
+                $.each(branches, function (i, branch) {
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                var BranchId = @Model.BranchId;
+                if(BranchId != null)
+                {
+                    $('#ddBranch').val(BranchId).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+                $("#ddBranch").append($('<option></option>').val(0).html("---Select Branch---"));
+            });
+        }
+
+
+
+        function getSFALevelDD() {
+            common.ajax_get("@Url.Action("GetSFALevels", "Common")", null, "#tabForm", function (levels) {
+                $("#ddSFALevel").html("");
+                $("#ddSFALevel").append($('<option></option>').val(0).html("---Select SFA Sub Level---"));
+                $.each(levels, function (i, level) {
+                    $("#ddSFALevel").append($('<option></option>').val(level.Id).html(level.SFASubLevelName));
+                });
+                var SFALevel = @Model.SFALevel;
+                if(SFALevel != 0)
+                {
+                    $('#ddSFALevel').val(SFALevel).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFALevel").html("");
+                $("#ddSFALevel").append($('<option></option>').val(0).html("---Select SFA Level---"));
+            });
+        }
+
+            $('#ddBranch').on('change', function (e) {
+                debugger;
+                var url = '@Url.Action("GetAgency", "Common")';
+                var data = new Object();
+                data.BranchId = this.value;
+                if(this.value!=0 && this.value!=null && this.value != undefined)
+                {
+                    var ajaxCall = common.ajax_post(url, data, "#tabForm", function (agencies) {
+                        debugger;
+                        $("#ddAgency").html("");
+                        $("#ddAgency").append($('<option></option>').val(0).html("---Select Agency---"));
+                        $.each(agencies, function (i, agency) {
+                            debugger;
+                            $("#ddAgency").append($('<option></option>').val(agency.AgencyId).html(agency.AgencyName));
+                        });
+                        var AgencyId = @Model.AgencyId;
+                        if(AgencyId != null)
+                        {
+                            $('#ddAgency').val(AgencyId);
+                        }
+                    }, function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddAgency").html("");
+                        $("#ddAgency").append($('<option></option>').val(0).html("---Select Agency---"));
+                    });
+                }
+
+            });
+
+        $('#ddRegion').on('change', function (e) {
+            var url = '@Url.Action("GetStateByRegion", "Common")';
+            var data = new Object();
+            data.regionId = this.value;
+            var ajaxCall = common.ajax_post(url, data, "#tabForm", function (states) {
+                $("#ddState").html("");
+                $("#ddState").append($('<option></option>').val(0).html("---Select State---"));
+                $.each(states, function (i, state) {
+                    $("#ddState").append(
+                        $('<option></option>').val(state.ID).html(state.StateName));
+                });
+                var StateId = @Model.StateId;
+                if(StateId != null)
+                {
+                    $('#ddState').val(StateId).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddState").html("");
+                $("#ddState").append($('<option></option>').val(0).html("---Select State---"));
+            });
+        });
+
+        $('#ddState').on('change', function (e) {
+            var url = '@Url.Action("GetCityByState", "Common")';
+            var data = new Object();
+            data.stateId = this.value;
+            var ajaxCall = common.ajax_post(url, data, "#tabForm", function (cities) {
+                $("#ddCity").html("");
+                $("#ddCity").append($('<option></option>').val(0).html("---Select City---"));
+                $.each(cities, function (i, city) {
+                    $("#ddCity").append(
+                        $('<option></option>').val(city.ID).html(city.CityName));
+                });
+                var CityId = @Model.CityId;
+                if(CityId != null)
+                {
+                    $('#ddCity').val(CityId).change();
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddCity").html("");
+                $("#ddCity").append($('<option></option>').val(0).html("---Select City---"));
+            });
+        });
+
+
+        $('#btnBack').on('click', function (e) {
+            $(location).attr('href', '@Url.Action("Index", "SFA")');
+        });
+
+        getRegionDD();
+        getRolesDD();
+        getDivisionsDD();
+        getBranchDD();
+        //getAgencyDD();
+        getSFATypeDD();
+        getSFALevelDD();
+        $.ajax({
+            url: "@Url.Action("GetGender", "Common")",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $("#ddlGender").append($("<option></option>").val("").html("select gender"));
+                $(result).each(function () {
+                    $("#ddlGender").append($("<option></option>").val(this.Name).html(this.Name));
+                });
+                $('#ddlGender').select2({placeholder: 'Select gender'});
+                var Gender='@Model.Gender';
+                if(Gender != 0)
+                {
+                    $('#ddlGender').val(Gender).change();
+                }
+            },
+            error: function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+            }
+        });
+
+            $.ajax({
+                url: "@Url.Action("GetShiftTiming", "Common")",
+                type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $("#ddlShiftName").append($("<option></option>").val("").html("Select shift"));
+                $(result).each(function () {
+                    $("#ddlShiftName").append($("<option></option>").val(this.ShiftNameId).html(this.ShiftName));
+                });
+                var ShiftNameId=@Model.ShiftNameId;
+                if(ShiftNameId != 0)
+                {
+                    $('#ddlShiftName').val(ShiftNameId).change();
+                }
+            },
+            error: function (result) {
+                if (result.statusCode == 401 || result.status == 401) {
+                    var response = $.parseJSON(result.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddlShiftName").html("");
+                $("#ddlShiftName").append($('<option></option>').val(0).html("Select shift"));
+            }
+        });
+        init();
+
+        var oldPass = '@Model.OldPassword';
+        if(oldPass != null)
+        {
+            $('#txtPassword').val(oldPass);
+            $('#txtReTypePassword').val(oldPass);
+        }
+
+        @if (IsPost)
+            {
+                @Html.Raw("common.notify('error','" + Model.SubmitMessage + "');")
+            }
+
+
+
+        });
+        function validateinput() {
+            debugger;
+
+            var key1 = $('#txtEmployeeCode').val();
+            var key2 = $('#txtLoginId').val();
+            var key3 = $('#txtFirstName').val();
+            var key4 = $('#txtLastName').val();
+            var _DOJ = $('#txtDOJ').val();
+            var _DOL = $('#txtDOL').val();
+            var regex = new RegExp("^[a-zA-Z0-9 ]+$");
+            if(key1 != "")
+            {
+                if (!regex.test(key1)) {
+                    common.notify('error','Special Characters not allowed in Employee Code')
+                    return false;
+                }
+            }
+            if(key2 != "")
+            {
+                if (!regex.test(key2) ) {
+                    common.notify('error','Special Characters not allowed in Login Id ')
+                    return false;
+                }
+            }
+
+            if(_DOL != "" && _DOJ == "")
+            {
+                common.notify('error',"No DOJ exists corresponding to DOL.");
+                return false;
+            }
+            debugger;
+            if($("input[name='Status']:checked").val() == 'False' && ($("#txtDOL").val() == null || $("#txtDOL").val() == '' || $("#txtDOL").val() == undefined))
+            {
+                common.notify('error',"Please enter Date of leaving while making employee inactive");
+                return false;
+            }
+
+            return true;
+
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabForm" data-toggle="tab">
+                        @if (Model.isUpdate)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update SFA Data")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new SFA")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("AddUpdate", "SFA", FormMethod.Post, new { @id = "formSFA" }))
+                    {
+                        @Html.HiddenFor(m => m.EmployeeId)
+                        @Html.HiddenFor(m=>m.OldPassword)
+                        @Html.HiddenFor(m=>m.isPasswordChange)
+                        @Html.HiddenFor(m => m.isUpdate)
+                        @Html.HiddenFor(m => m.IsSFAOffered, new { @id = "txtIsSFAOffered"})
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtEmployeeCode">Employee Code<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.EmployeeCode)</span>
+                                        @Html.TextBoxFor(m => m.EmployeeCode, new { @class = "form-control input-sm", @id = "txtEmployeeCode", @placeholder = "Enter Employee Code Here...",@readonly="readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtLoginId">Login ID/Employee ID<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LoginId)</span>
+                                        @Html.TextBoxFor(m => m.LoginId, new { @class = "form-control input-sm", @id = "txtLoginId", @placeholder = "Enter Login ID Here...", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtPassword">Password<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Password)</span>
+                                        @Html.PasswordFor(m => m.Password, new { value = Model.Password, @class = "form-control input-sm", @id = "txtPassword", @placeholder = "Enter Password Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtReTypePassword">Re-Type Password<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.ReTypePassword)</span>
+                                        @Html.PasswordFor(m => m.ReTypePassword, new { value = Model.ReTypePassword, @class = "form-control input-sm", @id = "txtReTypePassword", @placeholder = "Re-Type Password Here..." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddBranch">Branch<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.BranchId)</span>
+                                        @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Branch---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddRegion">Region<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.RegionId)</span>
+                                        @Html.DropDownListFor(m => m.RegionId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Region---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddRegion", @style = "width:100%" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddState">State<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.StateId)</span>
+                                        @Html.DropDownListFor(m => m.StateId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select State---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddState", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddCity">City<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.CityId)</span>
+                                        @Html.DropDownListFor(m => m.CityId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select City---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddCity", @style = "width:100%" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddDivision">Division<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.DivisionId)</span>
+                                        @Html.DropDownListFor(m => m.DivisionId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Division---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddDivision", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddRole">Role<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.RoleId)</span>
+                                        @Html.DropDownListFor(m => m.RoleId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Role---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddRole", @style = "width:100%" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtFirstName">First Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.FirstName)</span>
+                                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control input-sm", @id = "txtFirstName", @placeholder = "Enter Employee's First Name Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtLastName">Last Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.LastName)</span>
+                                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control input-sm", @id = "txtLastName", @placeholder = "Enter Employee's Last Name Here..." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Gender </label>
+                                        @Html.DropDownListFor(m => m.Gender, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Class = "form-control input-sm", @Id = "ddlGender", @value = Model.Gender })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Father Name</label>
+                                        @Html.TextBoxFor(m => m.FatherName, new { Id = "txtFatherName", @Class = "form-control input-sm", @onkeypress = "return validateName(event)", @value = Model.FatherName })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtAddress">Address<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.Address)</span>
+                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control input-sm", @id = "txtAddress", @placeholder = "Enter Employee's Address Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtMobNo">Mobile Number<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.MobileNumber)</span>
+                                        @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control input-sm", @id = "txtMobNo", @placeholder = "Enter Mobile Number Here..." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtAltMobNo">Alternate Number</label><span class="text-danger">@Html.ValidationMessageFor(m => m.AltMobileNumber)</span>
+                                        @Html.TextBoxFor(m => m.AltMobileNumber, new { @class = "form-control input-sm", @id = "txtAltMobNo", @placeholder = "Enter Alternate Mobile No. Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtEmailId">Email ID<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.EmailId)</span>
+                                        @Html.TextBoxFor(m => m.EmailId, new { @class = "form-control input-sm", @id = "txtEmailId", @placeholder = "Enter Email ID Here..." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtPANNo">PAN Number</label><span class="text-danger">@Html.ValidationMessageFor(m => m.PANNo)</span>
+                                        @Html.TextBoxFor(m => m.PANNo, new { @class = "form-control input-sm", @id = "txtPANNo", @placeholder = "Enter PAN Number Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDOB">Date of Birth<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.DOB)</span>
+                                        @Html.TextBoxFor(m => m.DOB, new { @class = "form-control input-sm", @id = "txtDOB", @placeholder = "Enter Date of Birth Here...", autocomplete = "off" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDOJ">Date of Joining<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.DOJ)</span>
+                                        @Html.TextBoxFor(m => m.DOJ, new { @class = "form-control input-sm", @id = "txtDOJ", @placeholder = "Enter Date of Joining Here...", autocomplete = "off" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDOL">Date of Leaving</label><span class="text-danger">@Html.ValidationMessageFor(m => m.DOL)</span>
+                                        @Html.TextBoxFor(m => m.DOL, new { @class = "form-control input-sm", @id = "txtDOL", @placeholder = "Enter Date of Leaving Here...", autocomplete = "off" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtIMEI1">IMEI 1</label>@*<span class="text-danger">@Html.ValidationMessageFor(m => m.IMEI1)</span>*@
+                                        @Html.TextBoxFor(m => m.IMEI1, new { @class = "form-control input-sm", @id = "txtIMEI1", @placeholder = "Enter IMEI 1 Here..." })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtIMEI2">IMEI 2</label>@*<span class="text-danger">@Html.ValidationMessageFor(m => m.IMEI2)</span>*@
+                                        @Html.TextBoxFor(m => m.IMEI2, new { @class = "form-control input-sm", @id = "txtIMEI2", @placeholder = "Enter IMEI 2 Here..." })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddSFAType">SFA Type<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SFATypeId)</span>
+                                        @Html.DropDownListFor(m => m.SFATypeId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select SFA Type---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddSFAType", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddSFALevel">SFA Sub Level<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.SFALevel)</span>
+                                        @Html.DropDownListFor(m => m.SFALevel, new List<SelectListItem>() { new SelectListItem() { Text = "---Select SFA Level---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddSFALevel", @style = "width:100%" })
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="ddAgency">Agency Name<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.AgencyId)</span>
+                                        @Html.DropDownListFor(m => m.AgencyId, new List<SelectListItem>() { new SelectListItem() { Text = "---Select Agency---", Value = "0" } }, new { @class = "form-control input-sm", @id = "ddAgency", @style = "width:100%" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label>Shift Timing<span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.ShiftNameId)</span>
+                                        @Html.DropDownListFor(m => m.ShiftNameId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlShiftName", @Class = "form-control input-sm", @tabindex = "24" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="radioStatus">Status<span class="text-danger">*</span></label><br />
+                                        @Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA" }) Active
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                        @Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI" }) InActive
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat" onclick="return validateinput()"><i class="fa fa-check"></i> Save Changes</button>
+                                        <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

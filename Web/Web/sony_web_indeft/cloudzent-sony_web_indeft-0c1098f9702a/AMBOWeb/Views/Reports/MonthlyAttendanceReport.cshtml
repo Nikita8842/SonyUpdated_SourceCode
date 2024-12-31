@@ -1,0 +1,356 @@
+﻿@model AMBOModels.Reports.MonthlyAttendanceReportInput
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                    debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddBranch').val(Branch).change();
+                        $('#ddBranch').attr('readonly', 'readonly');
+                        getSFADD();
+                    }
+                    else
+                        $('#ddBranch').val(null).change();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+        function getSFADD() {
+            var BranchId = $("#ddBranch").val();
+            if (BranchId != null && BranchId != '' && BranchId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSFAByBranch", "Common")',
+                    data: { branchId: BranchId },
+                    success: function (sfa) {
+                        $("#ddSFA").html(""); // clear before appending new list
+                        $("#ddSFA").append($('<option></option>').val(0).html("---All SFA---"));
+                        $.each(sfa, function (i, sfadet) {
+                            debugger;
+                            $("#ddSFA").append($('<option></option>').val(sfadet.EmployeeId).html(sfadet.SFAFullName));
+                        });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddSFA").html("");
+                        $('#ddSFA').attr("placeholder", "---All SFA---");
+                    }
+                });
+            }
+            else {
+                $("#ddSFA").html("");
+                $('#ddSFA').attr("placeholder", "---All SFA---");
+            }
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#filterBox", function (types) {
+                $("#ddSFAType").html("");
+                $.each(types, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).html(sfatype.SFATypeName));
+                });
+                $('#ddSFAType').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+            });
+        }
+
+        function init() {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddSFAType').select2({ placeholder: "---All SFA types---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+                onSelect: function(dateText, inst){
+                    alert("in");
+                    $("#txtToDate").datepicker("option","minDate",$("#txtFromDate").datepicker("getDate"));
+                    $("#txtToDate").datepicker("option","maxDate","+30d");
+                }
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                maxDate: new Date(),
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            //if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select From Date.";
+            //    return output;
+            //}
+            //if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select To Date.";
+            //    return output;
+            //}
+            //if ($('#ddDealer').val() == null || $('#ddDealer').val() == undefined || $('#ddDealer').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one dealer for generating report.";
+            //    return output;
+            //}
+            //if ($('#ddCompany').val() == null || $('#ddCompany').val() == undefined || $('#ddCompany').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one Company for generating report.";
+            //    return output;
+            //}
+            if (!ValidateFromToDate())
+            {
+                output.status = false;
+                output.message = "To Date Can't be less than From Date";
+                return output;
+            }
+
+            if (!ValidateCurrentDate())
+            {
+                output.status = false;
+                output.message = "From/To Date Can't be future Date  ";
+                return output;
+            }
+
+            return output;
+        }
+
+        function Search() {
+           var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                $("#divData").html("");
+                var Obj = new Object();
+                Obj.StartDate = $("#txtFromDate").val();
+                Obj.EndDate = $("#txtToDate").val();
+                Obj.SFAId = parseInt($("#ddSFA").val());
+                Obj.BranchId = parseInt($("#ddBranch").val());
+                Obj.SFATypeId = parseInt($("#ddSFAType").val());
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetMonthlyAttendanceReport", "Reports")',
+                    data: {objGridData:Obj},
+                    beforeSend: function () {
+                        var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#gridtable").append(loader);
+                    },
+                    success: function (Data) {
+                        $("#divData").html(Data);
+                        $("#dtMonthlyAttReport").DataTable(
+                    {
+                        bSort: false,
+                        scrollX: true,
+                    });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error','No Data Found');
+                    },
+                    complete: function () {
+                        $("#gridtable").find('.overlay').remove();
+                    }
+                });
+            }
+            else {
+                common.notify('error', result.message);
+            }
+
+        }
+
+
+        $(document).ready(function () {
+            getBranchDD();
+            getSFATypeDD();
+            init();
+
+            $("#btnDownload").click(function () {
+                debugger;
+                var datainput = new Object();
+                datainput.StartDate = $("#txtFromDate").val();
+                datainput.EndDate = $("#txtToDate").val();
+                datainput.SFAId = parseInt($("#ddSFA").val());
+                datainput.BranchId = $("#ddBranch").val();
+                datainput.SFATypeId = parseInt($("#ddSFAType").val());
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcel", "Reports")',
+                    data: {objGridData : datainput},
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Monthly Attendance Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", onchange = "getSFADD();" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA:</label>
+                        @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA Type:</label>
+                        @Html.DropDownListFor(m => m.SFATypeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFAType", @Class = "form-control input-sm" })
+                    </div>
+                </div>
+
+                <div class="row">                    
+                    <div class="col-lg-4">
+                        <label>From Date:</label>
+                        <input type="text" class="form-control input-sm" autocomplete="off" id="txtFromDate" placeholder="Select Date" />
+                    </div>
+                    <div class="col-lg-4">
+                        <label>To Date:</label>
+                        <input type="text" class="form-control input-sm" autocomplete="off" id="txtToDate" placeholder="Select To Date" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <br/>
+                    <div class="col-lg-offset-4 col-lg-6">
+                        <button class="btn btn-flat btn-primary" onclick="Search();" type="button" ><i class="fa fa-search"></i> Search</button>
+                        <button id="btnDownload"  type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i>Monthly Attendance Report</a></li>
+                
+            </ul>
+            <div id="divData" class="tab-content">
+
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

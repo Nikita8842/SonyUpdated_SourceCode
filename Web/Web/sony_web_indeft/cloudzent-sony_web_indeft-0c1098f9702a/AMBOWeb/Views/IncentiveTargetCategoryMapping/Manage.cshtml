@@ -1,0 +1,395 @@
+﻿@model AMBOModels.Mappings.IncentiveTargetCategoryMapping
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        function getProductCategoryDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#AddEditLoad", function (categories) {
+                debugger;
+                $("#ddProductCategory").html("");
+                $.each(categories, function (i, category) {
+                    debugger;
+                    $("#ddProductCategory").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProductCategory').val('');
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProductCategory").html("");
+            });
+        }
+
+        function getTargetTypeDD() {
+            common.ajax_get("@Url.Action("GetTargetTypes", "Common")", null, "#AddEditLoad", function (types) {
+                $("#ddTargetType").html("");
+                $.each(types, function (i, type) {
+                    $("#ddTargetType").append($('<option></option>').val(type.Id).html(type.TargetType));
+                });
+                $('#ddTargetType').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddTargetType").html("");
+            });
+        }
+
+        function init() {
+            try {
+                $('#ddProductCategory').select2({ placeholder: 'Select Product Category' });
+                $('#ddTargetCategory').select2({ placeholder: 'Select Target Category' });
+                $('#ddTargetType').select2({ placeholder: 'Select Target Type' });
+                $('#txtCategoryName').focus();
+                getProductCategoryDD();
+                //getTargetCategoryDD();
+                getTargetTypeDD();
+                @if(Model.isUpdate)
+                {
+                    <text>$('#txtCategoryName').prop('disabled', 'disabled');</text>
+                }
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57))
+                return false;
+            return true;
+        }
+
+        $(document).ready(function () {
+            init();
+            var dt = $('#dtITCMapping').DataTable({
+                paging: false,
+                searching: false,
+                ordering: false,
+                columns: [
+                { data: "TargetCategoryId", visible: false },
+                { data: "TargetCategoryName" },
+                { data: "Weightage" },
+                { data: "TargetTypeId", visible: false },
+                { data: "TargetTypeName" },
+                {
+                    data: function (data, type, row) {
+                        return '<a data-placement="left" class="btnEdit" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                       '<a data-placement="left" title="Delete" class="btnDelete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                    },
+                    orderable: false
+                }]
+            });
+            @if(Model.isUpdate)
+            {
+                //adding fetched rows from model to datatable
+                if(Model.TargetCategoryMappings != null)
+                {
+                    <text>var data = null;</text>
+                    foreach(AMBOModels.Mappings.TargetCategoryList mappingRow in Model.TargetCategoryMappings)
+                    {
+                        <text>
+            data = new Object();
+            data.TargetCategoryId = @mappingRow.TargetCategoryId;
+            data.TargetCategoryName = '@mappingRow.TargetCategoryName';
+            data.Weightage = @mappingRow.Weightage;
+            data.TargetTypeId = @mappingRow.TargetTypeId;
+            data.TargetTypeName = '@mappingRow.TargetTypeName';
+            dt.row.add(data).draw(false);
+            </text>
+                    }
+                }
+
+            }
+
+            $('#ddProductCategory').on('change', function () {
+                debugger;
+                var data = new Object();
+                data.ProductCategoryIds = $("#ddProductCategory").val();
+                common.ajax_post("@Url.Action("GetTargetCategoriesByProductCategories", "Common")", data, "#AddEditLoad", function (categories) {
+                    $("#ddTargetCategory").html("");
+                    $.each(categories.Data, function (i, category) {
+                        $("#ddTargetCategory").append($('<option></option>').val(category.TargetCategoryId).html(category.TargetCategoryName));
+                    });
+                    $('#ddTargetCategory').val(null).change();
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddTargetCategory").html("");
+                });
+            });
+
+            $('#modalAddRow').on('shown.bs.modal', function () {
+                $('#ddTargetCategory').focus();
+            });
+            $('#modalAddRow').on('hidden.bs.modal', function () {
+                $('#ddProductCategory').val(null).change();
+                $('#ddTargetCategory').val(null).change();
+                $('#txtWeightage').val(0).change();
+                $('#ddTargetType').val(null).change();
+                $('#rowIndex').val(null).change();
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                dt.row($(this).parent().parent()).remove().draw(false);
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#rowIndex').val(dt.row($(this).parent().parent()).index());
+                $('#ddProductCategory').val(data.ProductCategoryId).trigger('change');
+                $('#ddTargetCategory').val(data.TargetCategoryId).trigger('change');
+                $('#txtWeightage').val(data.Weightage);
+                $('#ddTargetType').val(data.TargetTypeId).trigger('change');
+                $('#modalAddRowTitle').html('<i class="fa fa-pencil"></i> Update an existing row');
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddRowTitle').html('<i class="fa fa-plus"></i> Add a new row');
+                $('#rowIndex').val(null);
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Index", "IncentiveTargetCategoryMapping")');
+            });
+
+
+
+            $('#btnSubmitRow').on('click', function () {
+                var data = new Object();
+                data.ProductCategoryId = parseInt($('#ddProductCategory').val());
+                data.TargetCategoryId = parseInt($('#ddTargetCategory').val());
+                data.TargetCategoryName = $('#ddTargetCategory').children("option:selected").text();
+                data.Weightage = $('#txtWeightage').val();
+                data.TargetTypeId = parseInt($('#ddTargetType').val());
+                data.TargetTypeName = $('#ddTargetType').children("option:selected").text();
+
+                if(isNaN(data.TargetCategoryId) || data.TargetCategoryId == 0)
+                {
+                    common.notify("error","Please select a target category.");
+                    return;
+                }
+
+                if(isNaN(data.TargetTypeId) || data.TargetTypeId == 0)
+                {
+                    common.notify("error","Please select a target type.");
+                    return;
+                }
+
+                if(data.Weightage <= 0)
+                {
+                    common.notify("error","Weightage value cannot be 0 or less than 0.");
+                    return;
+                }
+
+                if(data.Weightage > 100)
+                {
+                    common.notify("error","Weightage value cannot be greater than 100.");
+                    return;
+                }
+
+                if ($('#rowIndex').val() == null || $('#rowIndex').val() == undefined || $('#rowIndex').val() == "")
+                    dt.row.add(data).draw(false);//create
+                else
+                    dt.row($('#rowIndex').val()).data(data).draw(false);//update
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('#btnSubmit').on('click', function () {
+                var data = new Object();
+                data.IncentiveCategoryName = $('#txtCategoryName').val();
+                data.TargetCategoryMappings = new Array();
+                data.Status = $('#radioStatusA').is(':checked') ? true : false;
+                debugger;
+                @if (Model.isUpdate)
+                {                    
+                    <text>data.IncentiveCategoryName = $('#txtCategoryName').val(); data.IncentiveCategoryId = $('#txtIncentiveCategoryId').val()</text>
+                }
+                dt.rows().every(function (index, tableLoop, rowLoop) {
+                    var row = this.data();
+                    data.TargetCategoryMappings.push({
+                        TargetCategoryId: row.TargetCategoryId,
+                        Weightage: row.Weightage,
+                        TargetTypeId: row.TargetTypeId
+                    });
+                });
+
+                if(data.TargetCategoryMappings.length == 0)
+                {
+                    common.notify("error","At least one row should be added to create an Incentive Category.");
+                    return;
+                }
+
+                var totalWeightage = 0;
+                for (var i = 0; i < data.TargetCategoryMappings.length; i++) {
+                    totalWeightage = parseInt(totalWeightage) + parseInt(data.TargetCategoryMappings[i].Weightage);
+                }
+
+                if(data.IncentiveCategoryName == null || data.IncentiveCategoryName == undefined || data.IncentiveCategoryName == '')
+                {
+                    common.notify("error","Incentive Category Name cannot be empty.");
+                    return;
+                }
+
+                if(totalWeightage != 100)
+                {
+                    common.notify("error","Sum of all weightages should be equal to 100.");
+                    return;
+                }
+
+                common.ajax_post("@Url.Action("Manage", "IncentiveTargetCategoryMapping")", data, "#AddEditLoad", function (output) {
+                    if (output.Data)
+                        $(location).attr('href', '@Url.Action("Index", "IncentiveTargetCategoryMapping")');
+                    common.notify('error', output.Message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to save data. Please contact your administrator.');
+                });
+            });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddRow">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddRowTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="rowIndex" />
+                    <div class="form-group">
+                        <label for="ddTargetCategory">Product Category</label>
+                        @Html.DropDownList("ddProductCategory", new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddProductCategory", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddTargetCategory">Target Category</label>
+                        @Html.DropDownListFor(m => m.TargetCategoryId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddTargetCategory", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="txtWeightage">Weightage</label>
+                        @Html.TextBoxFor(m => m.Weightage, new { @class = "form-control input-sm", @id = "txtWeightage", @style = "width:100%", @onkeypress = "return isNumberKey(event)" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddTargetType">Target Type</label>
+                        @Html.DropDownListFor(m => m.TargetTypeId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddTargetType", @style = "width:100%" })
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmitRow" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @if (Model.isUpdate)
+                        {
+                            @Html.Raw("<i class=\"fa fa-pencil\"></i> Update existing Mapping")
+                        }
+                        else
+                        {
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Add a new Mapping")
+                        }
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @Html.HiddenFor(m=>m.IncentiveCategoryId , new { @id = "txtIncentiveCategoryId" })
+                            <div class="form-group">
+                                <label for="txtCategoryName">Incentive Category Name</label>
+                                @Html.TextBoxFor(m => m.IncentiveCategoryName, new { @class = "form-control input-sm", @id = "txtCategoryName"})
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="txtStatus">Status</label><br />
+                                <span class="radio-control">@Html.RadioButtonFor(m => m.Status, true, new { @id = "radioStatusA" })&nbsp;&nbsp;<div class="inline radio-text">Active</div></span>
+                                &emsp;&emsp;&emsp;
+                                <span class="radio-control">@Html.RadioButtonFor(m => m.Status, false, new { @id = "radioStatusI" })&nbsp;&nbsp;<div class="inline radio-text">InActive</div></span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group pull-right">
+                                <label></label>
+                                <button id="btnAdd" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New Row</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <table id="dtITCMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Target Category ID</th>
+                                        <th>Target Category</th>
+                                        <th>Weightage</th>
+                                        <th>Target Type ID</th>
+                                        <th>Target Type</th>
+                                        <th>Quick Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                            <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

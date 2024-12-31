@@ -1,0 +1,269 @@
+﻿@model AMBOModels.Mappings.DealerClassificationMapping
+
+@section PageCSS{
+}
+
+@section PageJS{
+<script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        ///<reference path="/Content/js/common.js"/>
+        dealerClassTypes = '';
+        function init() {
+            try {
+                $('#ddProdCat').select2({ placeholder: "Select Product Category" });
+                $('#ddBranch').select2({ placeholder: "Select Branch" });
+            }
+            catch (ex) {
+                common.notify('error', 'Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function getProdCatsDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+                @if(Model != null && Model.ProductCategoryId != 0)
+                {
+                    <text>$('#ddProdCat').val('@Model.ProductCategoryId').change();</text>
+                }
+            }, function (categories) {
+                if (categories.status == 401 || categories.statusCode == 401) {
+                    var response = $.parseJSON(categories.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabForm", function (branches) {
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                $('#ddBranch').val(null).change();
+                @if(Model != null && Model.BranchId != 0)
+                {
+                    <text>$('#ddBranch').val('@Model.BranchId').change();</text>
+                }
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+            });
+        }
+
+        function getClassificationDD() {
+            common.ajax_get("@Url.Action("GetDealerClassificationTypes", "Common")", null, "#tabForm", function (classes) {
+                $.each(classes, function (i, _class) {
+                    dealerClassTypes += '<option value="' + _class.ID + '">' + _class.ClassificationName + '</option>';
+                });
+            },
+            function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+            });
+        }
+
+        function linkBranchWithTable() {
+
+            $("#ddBranch").on('change', function () {
+                var branchId = $(this).val();
+                if (!(branchId == null || branchId == undefined || branchId == 0 || branchId == '')) {
+                    var input = new Object();
+                    input.BranchId = $(this).val();
+                    input.ProductCategoryId = $("#ddProdCat").val();
+                    if (!(input.ProductCategoryId == null || input.ProductCategoryId == undefined || input.ProductCategoryId == 0 || input.ProductCategoryId == ''))
+                    {
+                        common.ajax_post('@Url.Action("Search", "DealerClassificationMapping")', input, '#tabForm',
+                        function (success) {
+                            if (success.MessageCode == MessageCodes.Acceptable.Found) {
+                                dtDealerClassificationMapping.clear().draw();
+                                $.each(success.Data.MappingTable, function (i, dealer) {
+                                    var data = new Object();
+                                    data.DealerId = dealer.DealerId;
+                                    data.DealerCode = dealer.DealerCode;
+                                    data.DealerName = dealer.DealerName;
+                                    data.LocationName = dealer.LocationName;
+                                    data.Classification = dealer.ClassificationId;
+                                    dtDealerClassificationMapping.row.add(data).draw(false);
+                                    $('#ddClassFor' + data.DealerId + '').select2({ placeholder: 'Select Classification'});
+                                    $('#ddClassFor' + data.DealerId + '').val(data.Classification).change();
+                                });
+                            }
+                            else
+                                common.notify('error', 'Error occured while fetching dealers. Please contact your administrator.');
+                        },
+                        function (error) {
+                            if (error.status == 401 || error.statusCode == 401) {
+                                var response = $.parseJSON(error.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            dtDealerClassificationMapping.clear().draw();
+                            common.notify('error', 'No dealer found under this branch.');
+                        });
+                    }
+                    else
+                        common.notify('error', 'Please select a product category.');
+                }
+            });
+
+        }
+
+        $(document).ready(function () {
+            dtDealerClassificationMapping = $('#dtDealerClassificationMapping').DataTable({
+                paging: false,
+                searching: false,
+                ordering: true,
+                columns: [
+                    { data: "DealerId", visible: false },
+                    { data: "DealerCode" },                    
+                    { data: "DealerName" },
+                    { data: "LocationName" },
+                    { data: "Classification" }
+                ],
+                createdRow: function (row, data, index) {
+                    var customDD = '<select style="width:100%" class="dynamicRowDD input-sm" id="ddClassFor' + data.DealerId + '">' + dealerClassTypes + '</select>';
+                    $('td', row).eq(3).html(customDD);
+                }
+            });
+
+            getClassificationDD();
+            getBranchDD();
+            getProdCatsDD();
+            linkBranchWithTable();
+            init();
+
+            $('#btnBack').on('click', function (e) {
+                $(location).attr('href', '@Url.Action("Index", "DealerClassificationMapping")');
+            });
+
+            $('#btnSubmit').on('click', function (e) {
+                if ($('#AddDealerClassificationMappingForm').valid()) {
+                    var data = new Object();
+                    data.ProductCategoryId = $('#ddProdCat').val();
+                    data.BranchId = $('#ddBranch').val();
+                    data.MappingTable = new Array();
+
+                    //select already mapped target categories for each row
+                    dtDealerClassificationMapping.rows().every(function (index, tableLoop, rowLoop) {
+                        var row = this.data();
+                        var selectedClass = $('#ddClassFor' + row.DealerId).val();
+                        if (!(selectedClass == null || selectedClass == undefined || selectedClass == '' || selectedClass == 0)) {
+                            data.MappingTable.push({
+                                DealerId: row.DealerId,
+                                ClassificationId: $('#ddClassFor' + row.DealerId).val()
+                            });
+                        }
+                    });
+
+                    common.ajax_post('@Url.Action("Manage","DealerClassificationMapping")', data, '#tabForm',
+                        function (output) {
+                            if (output.MessageCode == MessageCodes.Acceptable.Created)
+                                $(location).attr('href', '@Url.Action("Index", "DealerClassificationMapping")');
+                            else
+                                common.notify('error', output.Message);
+                        },
+                        function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', 'Could not submit mappings. Please contact administrator.');
+                        });
+                }
+                else
+                {
+                    common.notify('error', 'Please select valid classification for respective dealers.');
+                }
+            });
+        });
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-plus"></i> Add a new Mapping
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Create", "DealerClassificationMapping", FormMethod.Post, new { @id = "AddDealerClassificationMappingForm" }))
+                    {
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="ddProdCat">Product Category</label>
+                                    @Html.DropDownListFor(m => m.ProductCategoryId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddProdCat", @style = "width:100%" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label for="ddBranch">Branch</label>
+                                    @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <table id="dtDealerClassificationMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Dealer Id</th>
+                                            <th>Dealer Code</th>
+                                            <th>Dealer Name</th>
+                                            <th>Location</th>
+                                            <th>Classification</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12 text-center">
+                                <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

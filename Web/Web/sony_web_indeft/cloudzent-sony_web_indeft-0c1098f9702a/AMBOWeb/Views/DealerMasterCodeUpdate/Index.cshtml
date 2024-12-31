@@ -1,0 +1,209 @@
+﻿@model AMBOModels.Modules.DealerMasterCodeUpdate
+
+@using System.Collections.Generic;
+@using System;
+
+@section PageCSS{
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+<script src="~/Content/plugins/typeahead.js-master/dist/typeahead.bundle.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            var data;
+
+            $.ajax({                
+                url: '@Url.Action("GetDealerMasterCodeList", "DealerMasterCodeUpdate")',
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    debugger;
+                    if(result!=null)
+                    {
+                        data = result;
+                        //$("#modalSearch").modal('show');
+                        $("#txtMasterCode").focus();
+                        var substringMatcher = function (strs) {
+                            debugger;
+                            return function findMatches(q, cb) {
+                                var matches, substringRegex;
+
+                                // an array that will be populated with substring matches
+                                matches = [];
+
+                                // regex used to determine if a string contains the substring `q`
+                                substrRegex = new RegExp(q, 'i');
+
+                                // iterate through the pool of strings and for any string that
+                                // contains the substring `q`, add it to the `matches` array
+                                $.each(strs, function (i, str) {
+                                    if (substrRegex.test(str)) {
+                                        matches.push(str);
+                                    }
+                                });
+
+                                cb(matches);
+                            };
+                        };
+
+
+                        $('#the-basics .typeahead').typeahead({
+                            hint: true,
+                            highlight: true,
+                            minLength: 1
+                        },
+                        {
+                            //name: 'data',
+                            //displayKey: 'value',
+                            source: substringMatcher(data)
+                        });
+                        $('.tt-input').css("width:100%");
+                        $('.tt-hint').css("width:100%");
+                        //$('#txtMaterialCode').removeClass('typeahead');
+                        //$('.tt-input').css("position", "absolute");
+                        $('.tt-input').css("vertical-align", "");
+                        $('.tt-input').addClass('form-control');
+                        $('.tt-hint').css("vertical-align", "");
+                        $('.twitter-typeahead').css("display", "inherit");
+                        $('.tt-hint').addClass('form-control');
+                        
+                    }
+                },
+                error: function (data) {
+                    if (data.status == 401 || data.statusCode == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Error while loading dealer details.')
+                }
+            });
+
+           
+            @*var data = @Html.Raw(Json.Encode(@ViewBag.CodeList));*@           
+
+            
+        });
+
+        function getdata()
+        {
+            Model.DealerDet = $("#cbDealerList").val();
+        }
+
+        $("#btnSearch").click(function () {
+            debugger;
+            if ($('#txtMasterCode').val() == '' || $('#txtMasterCode').val() == null || $('#txtMasterCode').val() == undefined) {
+                common.notify('error', 'Please Enter Dealer Code');
+                $("#txtMasterCode").focus();
+                return false
+            }
+
+            else {
+                var MasterCode = $('#txtMasterCode').val();
+                debugger;
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ValidateDealerMasterCode", "DealerMasterCodeUpdate")',
+                    data: { mastercode: MasterCode },
+                    success: function (data) {
+                        if (data.Data) {
+                            $(location).attr("href", "@Url.Action("GetDealerMasterCode", "DealerMasterCodeUpdate")" + "?mastercode=" + MasterCode)
+                        }
+
+                        else {
+                            $('#txtMasterCode').val(null);
+                            common.notify('error', data.Message);
+                        }
+                    },
+                    error: function (data) {
+                        if (data.status == 401 || data.statusCode == 401) {
+                            var response = $.parseJSON(data.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        //alert("OOPS! Something happened. Please try again.");
+                    }
+                });
+
+            }
+
+        });
+
+    </script>
+
+}
+
+@*@section PageModals{
+
+    <div class="modal fade" id="modalSearch">
+        <div class="modal-dialog" style="margin-top:100px">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    @*<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="box-title margin-r-5"><i class="fa fa-search"></i>  Search Dealer Master Code</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-10">
+                            <div id="the-basics" class="form-group">
+                                <div class="col-md-9">
+                                    <input class="typeahead" type="text" placeholder="Enter dealer master code" id="txtMasterCode">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-primary" id="btnSearch"><i class="fa fa-search"></i> Search </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}*@
+
+<div class="row" style="margin-top:100px">
+    <div class="col-lg-offset-2 col-lg-8">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i>  Search Dealer Master Code</a></li>
+                
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <div class="row">
+                        <div class="col-lg-10">
+                            <div id="the-basics" class="form-group">
+                                <div class="col-lg-offset-2 col-lg-6">
+                                    <input class="typeahead" type="text" placeholder="Enter dealer master code" id="txtMasterCode">
+                                </div>
+
+                                <div class="col-lg-offset-1 col-lg-3">
+                                    <button type="button" class="btn btn-primary" id="btnSearch"><i class="fa fa-search"></i> Search </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+

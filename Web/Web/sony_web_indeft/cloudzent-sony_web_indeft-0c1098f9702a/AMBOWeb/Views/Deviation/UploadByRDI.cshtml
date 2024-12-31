@@ -1,0 +1,441 @@
+﻿@model AMBOModels.IncentiveManagement.DeviationUploadByRDIExcel
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script>
+        DeviationReasons = new Array();
+        dtDeviationReasons = $('#dtDeviationReasons').DataTable({
+            scrollX: true,
+            columns: [
+                { data: "Branch" },
+                { data: "City" },
+                { data: "Location" },
+                { data: "SFACode" },
+                { data: "SFA" },
+                { data: "DealerCode" },
+                { data: "SAPCode" },
+                { data: "Dealer" },
+                { data: "Division" },
+                { data: "IncentiveCat" },
+                { data: "TargetCat" },
+                { data: "ProductCat" },
+                { data: "QtyTarget" },
+                { data: "ValueTarget" },
+                { data: "QtyAch" },
+                { data: "ValueAch" },
+                { data: "QtyPerc" },
+                { data: "ValuePerc" },
+                { data: "BaseIncentive" },
+                { data: "PerPieceQty" },
+                { data: "PerPieceIncentive" },
+                { data: "ProposedDeviation" },
+                {
+                    data: "DeviationReasonId",
+                    render: function (data, type, row, meta) {
+                        var html = "";
+                        html += '<br><select class="ddReason form-control input-sm" id="ddReason_' + row.RecordId + '" style="width: 200px">';
+                        html += '</select>';
+                        return html;
+                    }
+                },
+                {
+                    data: "Attribute1Value",
+                    render: function (data, type, row, meta) {
+                        return '<div class="form-group"><span id="label1_' + row.RecordId + '"></span><br/><input type="text" class="txtRemark1 form-control input-sm" id="txtRemark1_' + row.RecordId + '" value="' + data + '"></div>';
+                    }
+                },
+                {
+                    data: "Attribute2Value",
+                    render: function (data, type, row, meta) {
+                        return '<div class="form-group"><span id="label2_' + row.RecordId + '"></span><br/><input type="text" class="txtRemark2 form-control input-sm" id="txtRemark2_' + row.RecordId + '" value="' + data + '"></div>';
+                    }
+                }
+            ],
+            createdRow: function (row, data, index) {
+                var dropdownID = $('td', row).eq(22).find('select').first();
+                $(dropdownID).select2({ placeholder: 'Select Reason' });
+                $.each(DeviationReasons, function (i, reason) {
+                    $(dropdownID).append($('<option></option>').val(reason.Id).text(reason.ReasonName));
+                });
+                $(dropdownID).on('change', function () {
+                    var attributes = DeviationReasons.find(x => x.Id == $(this).val());
+                    $('td', row).eq(23).find('span').first().html(attributes == null || attributes == undefined ? '' : attributes.Attribute1);
+                    $('td', row).eq(24).find('span').first().html(attributes == null || attributes == undefined ? '' : attributes.Attribute2);
+                    dtDeviationReasons.columns.adjust().draw();
+                });
+                if (!(data["DeviationReasonId"] == null || data["DeviationReasonId"] == undefined || data["DeviationReasonId"] == "" || data["DeviationReasonId"] == 0))
+                    $(dropdownID).val(data["DeviationReasonId"]).change();
+                else
+                    $(dropdownID).val(null).change();
+            },
+        });
+
+        function getDeviationReasonDDAndGrid() {
+            common.ajax_get("@Url.Action("GetAllDeviationReasons", "Common")", null, "#filterBox", function (reasons) {
+                $.each(reasons, function (i, reason) {
+                    DeviationReasons.push({
+                        Id: reason.Id,
+                        ReasonName: reason.ReasonName,
+                        Attribute1: reason.Attribute1,
+                        Attribute2: reason.Attribute2
+                    });
+                });
+                //populateGrid();
+            }, function (reasons) {
+                if (reasons.statusCode == 401 || reasons.status == 401) {
+                    var response = $.parseJSON(reasons.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                common.notify('error', 'Could not fetch deviation reasons. Please contact your administrator.');
+            });
+        }
+        function ValidateDownloadExcelForm() {
+            if ($('#txtMonth').val() == null || $('#txtMonth').val() == undefined || $('#txtMonth').val() == "") {
+                common.notify('error', 'Please select Incentive Month.');
+                return false;
+            }
+            return true;
+        }
+        function DownloadExcel() {
+            if (ValidateDownloadExcelForm()) {
+                var data = new Object();
+                data.IncentiveMonth = $('#txtMonth').val();
+                data.BranchId = $('#ddBranch').val();
+
+                common.ajax_post('@Url.Action("UploadByRDIDownloadExcel", "Deviation")', data, '#filterBox', function (output) {
+                    if (output.status)
+                        window.location = '@Url.Action("Download", "Deviation")' + '?fileGuid=' + output.FileGuid
+                                      + '&filename=' + output.FileName;
+                    else
+                        common.notify('error', output.message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to download proposed deviation excel file. Please contact your administrator.');
+                });
+            }
+        }
+        @*function populateGrid()
+        {
+            @if(Model != null && Model.ExcelData != null && Model.ExcelData.Rows.Count > 0)
+            {
+                foreach(System.Data.DataRow row in Model.ExcelData.Rows)
+                {
+                    <text>
+                    var data = new Object();
+                    data.RecordId = "@row["Record Id"]";
+                    data.Branch = "@row["Branch"]";
+                    data.City= "@row["City"]";
+                    data.Location= "@row["Location"]";
+                    data.SFACode= "@row["SFA Code"]";
+                    data.SFA= "@row["SFA"]";
+                    data.DealerCode= "@row["Dealer Code"]";
+                    data.SAPCode= "@row["Master Code"]";
+                    data.Dealer= "@row["Dealer"]";
+                    data.Division= "@row["SFA Division"]";
+                    data.IncentiveCat= "@row["Incentive Category"]";
+                    data.TargetCat= "@row["Target Category"]";
+                    data.ProductCat= "@row["Product Category"]";
+                    data.QtyTarget= "@row["Quantity Target"]";
+                    data.ValueTarget= "@row["Value Target"]";
+                    data.QtyAch= "@row["Quantity Achieved"]";
+                    data.ValueAch= "@row["Value Achieved"]";
+                    data.QtyPerc= "@row["Quantity Percentage"]";
+                    data.ValuePerc= "@row["Value Percentage"]";
+                    data.BaseIncentive= "@row["Base Incentive"]";
+                    data.PerPieceQty= "@row["Per Piece Quantity"]";
+                    data.PerPieceIncentive= "@row["Per Piece Incentive Amount"]";
+                    data.ProposedDeviation= "@row["Proposed Deviation Amount"]";
+                    data.DeviationReasonId = "@row["DeviationReasonId"]";
+                    data.Attribute1Value = "@row["Attribute1Value"]";
+                    data.Attribute2Value = "@row["Attribute2Value"]";
+                    dtDeviationReasons.row.add(data).draw(false);
+            </text>
+                }
+            }
+        }*@
+
+        function SaveReasons() {
+            var totalRecords = $("#dtDeviationReasons").DataTable().page.info().recordsTotal;
+            if (totalRecords == 0)
+                common.notify('error', 'No data available.');
+            else {
+                var data = new Object();
+                data.SaveReasonsDataList = new Array();
+
+                dtDeviationReasons.rows().every(function (index, tableLoop, rowLoop) {
+                    var rowData = this.data();
+
+                    data.SaveReasonsDataList.push({
+                        RecordId: rowData.RecordId,
+                        ReasonId: $('#ddReason_' + rowData.RecordId).val(),
+                        Remark1: $('#txtRemark1_' + rowData.RecordId).val(),
+                        Remark2: $('#txtRemark2_' + rowData.RecordId).val(),
+                    });
+                });
+
+                common.ajax_post("@Url.Action("UploadByRDISaveDeviationReasons", "Deviation")", data, null, function (output) {
+                    if (output.MessageCode == MessageCodes.Acceptable.Created) {
+                        dtDeviationReasons.clear().draw();
+                        common.notify('success', output.Message);
+                    }
+                    else
+                        common.notify('error', output.Message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to save data. Please contact your administrator.');
+                });
+            }
+        }
+
+        function GetReasons() {
+            if (ValidateDownloadExcelForm()) {
+                var form = document.createElement("form");
+                var element1 = document.createElement("input");
+                form.method = "POST";
+                form.action = '@Url.Action("GetSavedDeviationReasons", "Deviation")';
+                element1.value = $('#txtMonth').val();
+                element1.name = "IncentiveMonth";
+                form.appendChild(element1);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function ApproveReasons() {
+            var totalRecords = $("#dtDeviationReasons").DataTable().page.info().recordsTotal;
+            if (totalRecords == 0)
+                common.notify('error', 'No data available.');
+            else {
+                var data = new Object();
+                data.SaveReasonsDataList = new Array();
+
+                dtDeviationReasons.rows().every(function (index, tableLoop, rowLoop) {
+                    var rowData = this.data();
+
+                    data.SaveReasonsDataList.push({
+                        RecordId: rowData.RecordId,
+                        ReasonId: $('#ddReason_' + rowData.RecordId).val(),
+                        Remark1: $('#txtRemark1_' + rowData.RecordId).val(),
+                        Remark2: $('#txtRemark2_' + rowData.RecordId).val(),
+                    });
+                });
+
+                common.ajax_post("@Url.Action("UploadByRDIApproveDeviationReasons", "Deviation")", data, null, function (output) {
+                    if (output.MessageCode == MessageCodes.Acceptable.Created) {
+                        dtDeviationReasons.clear().draw();
+                        common.notify('success', output.Message);
+                    }
+                    else
+                        common.notify('error', output.Message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to save data. Please contact your administrator.');
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            getBranchDD();
+            $('#btnDownload').click(function (e) { e.preventDefault(); DownloadExcel(); });
+            $('#btnBack').click(function (e) { $(location).attr('href', '@Url.Action("Index","Dashboard")'); });
+            $('#btnSave').click(function (e) { SaveReasons(); });
+            $('#btnGetReasons').click(function (e) { GetReasons(); });
+            $('#btnUpload').click(function (e) { ApproveReasons(); });
+            getDeviationReasonDDAndGrid();
+
+            $('#txtMonth').prop('data-inputmask', "'alias': 'mm/yyyy'");
+            $('#txtMonth').prop('data-mask', '');
+            $('#txtMonth').inputmask('mm/yyyy', { 'placeholder': 'mm/yyyy' })
+            $('#txtMonth').datepicker({
+                autoclose: true,
+                format: "mm/yyyy",
+                startView: "months",
+                minViewMode: "months"
+            });
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+        });
+
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                    debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    if ('@ViewBag.BranchId' != 0) {
+                        $('#ddBranch').val(@ViewBag.BranchId);
+                        $('#ddBranch').attr("disabled", "disabled");
+                        getSFADD();
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Deviation Upload By RDI</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <form action="@Url.Action("UploadByRDIUploadExcel","Deviation")" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Branch:</label>
+                                @Html.DropDownList("BranchId", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm" })
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Incentive Month:</label>
+                                <input name="IncentiveMonth" type="text" required="required" class="form-control input-sm" id="txtMonth" placeholder="Select Incnetive Month" />
+                            </div>
+                        </div>
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <button id="btnDownload" class="btn btn-flat btn-success" type="button"><i class="fa fa-download"></i> Download</button>
+                            @*<button id="btnGetReasons" class="btn btn-flat btn-success" type="button"><i class="fa fa-download"></i> Get Reasons</button>*@
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>Deviation Upload File:</label>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <button onclick="$('#fileChooser').click();" type="button" class="btn btn-primary">Browse...</button>
+                                    </div>
+                                    <input id="fileChooserValue" type="text" class="form-control" disabled>
+                                    <input name="ExcelUploadFile" type="file" class="hidden" id="fileChooser" onchange="$('#fileChooserValue').val(document.getElementById('fileChooser').files[0].name);" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload</button>
+                        </div>
+                    </div>
+                    @*<div class="row">
+                            <div class="col-lg-4 col-lg-offset-5">
+                                <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index","Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                                <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                            </div>
+                        </div>*@
+                </form>
+            </div>
+        </div>
+    </div>
+    @*<div class="col-lg-12">
+            <div class="box box-solid box-primary">
+                <div class="box-body">
+                    <table id="dtDeviationReasons" class="table table-bordered table-striped nowrap reportstable">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>SFA Code</th>
+                                <th>SFA</th>
+                                <th>Dealer Code</th>
+                                <th>Master Code</th>
+                                <th>Dealer</th>
+                                <th>SFA Division</th>
+                                <th>Incentive Category</th>
+                                <th>Target Category</th>
+                                <th>Product Category</th>
+                                <th>Qty Target</th>
+                                <th>Value Target</th>
+                                <th>Qty Achieved</th>
+                                <th>Value Achieved</th>
+                                <th>Qty %age</th>
+                                <th>Value %age</th>
+                                <th>Base Incentive</th>
+                                <th>Per Piece Qty</th>
+                                <th>Per Piece Incentive</th>
+                                <th>Proposed Deviation</th>
+                                <th>Deviation Reason</th>
+                                <th>Remarks</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="nowrap"></tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-12 col-xs-12">
+                            <button id="btnSave" type="button" class="btn btn-primary btn-flat"><i class="fa fa-save"></i> Save Reasons & Remarks</button>
+                            <button id="btnUpload" type="button" class="btn btn-primary btn-flat"><i class="fa fa-cloud-upload"></i> Upload Reasons & Remarks</button>
+                            <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Go Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+</div>

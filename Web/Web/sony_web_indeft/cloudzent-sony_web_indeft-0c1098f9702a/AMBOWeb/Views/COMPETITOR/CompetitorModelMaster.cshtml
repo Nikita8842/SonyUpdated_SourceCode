@@ -1,0 +1,488 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+
+    <script>
+
+function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtCompetitor')) {
+                $('#dtCompetitor').DataTable().destroy();
+                $('#dtCompetitor tbody').empty();
+                //dt.destroy();
+            }
+
+
+            //Grid initialization
+            dt = $('#dtCompetitor').DataTable({
+                searching: false,
+                "processing": true,
+                "scrollY":true,
+                "ajax": {
+                    url: "@Url.Action("GetCompetitorModelMasterGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.CompetitorIds = $('#ddlCompetitor').val();
+                        d.ProductCatIds = $('#ddlCompProCat').val();
+                        d.ModelIds = $('#ddlModel').val();
+                        d.Status = $('#ddlStatus').val();
+                        d.SonyProCatId = $('#ddlSonyProCat').val();
+                        d.SonyProSubCatIds = $('#ddlSonySubProCat').val();
+
+                    },
+                    dataSrc: ""
+                },
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                "columns": [
+                    { "data": "CompetitorCode" },
+                    { "data": "CompetitorProductCategory" },
+                    { "data": "SonyProductCategory" },
+                    { "data": "SonyProductSubCategoryName" },
+                    { "data": "ModelName" },
+                    { "data": "SonyModel" },
+                    { "data": "CompetitorModelStatus" },
+                    {
+                        "data": function (data, type, row) {
+                            return '<a  data-placement="left" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                           '<a  data-toggle="modal" data-target="#divDelete" data-placement="left" title="Delete" class="delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        "orderable": false
+                    }
+                ],
+                "createdRow": function (row, data, index) {
+
+                    if (data["CompetitorModelStatus"] == "Active")
+                        $('td', row).eq(6).html('<span class="badge bg-green">' + data["CompetitorModelStatus"] + '</span>');
+                    else
+                        $('td', row).eq(6).html('<span class="badge bg-red">' + data["CompetitorModelStatus"] + '</span>');
+                },
+                "fnDrawCallback": function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        $('#ddlSonyProCat').on('change', function() {
+            var CatId = $("#ddlSonyProCat").val();
+            $.ajax({
+                url: "@Url.Action("GetProductSubCategoryByCategoryId", "Common")",
+                type: "POST",
+                data: {CategoryId : CatId },
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSonySubProCat").html("");
+                    $("#ddlSonySubProCat").append($("<option></option>").val(0).html("---All Sub Categories---"));
+                    $(result).each(function () {
+                        $("#ddlSonySubProCat").append($("<option></option>").val(this.ID).html(this.SubCategoryName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSonySubProCat").html("");
+                    $("#ddlSonySubProCat").append($('<option></option>').val(0).html("---All Sub Categories---"));
+
+                }
+            });
+        });
+
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetCompetitorProductData", "Competitor")",
+                type: "POST",
+                data: {Id : 0 },
+
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlProCat").append($("<option></option>").val("").html("---All Products---"));
+                    $(result).each(function () {
+                        $("#ddlCompProCat").append($("<option></option>").val(this.ID).html(this.Name));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCompProCat").html("");
+                    //$("#ddlProCat").append($('<option></option>').val(0).html("---All Products---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetCompetitors", "Competitor")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlCompetitor").append($("<option></option>").val(0).html("---All Competitors---"));
+                    $(result).each(function () {
+                        $("#ddlCompetitor").append($("<option></option>").val(this.ID).html(this.CompetitorName));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlCompetitor").html("");
+                    //$("#ddlCompetitor").append($('<option></option>').val(0).html("---All Competitors---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetAllCompetitorModels", "Competitor")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    //$("#ddlModel").append($("<option></option>").val("").html("---All Models---"));
+                    $(result).each(function () {
+                        $("#ddlModel").append($("<option></option>").val(this.ID).html(this.ModelName));
+                    });
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlModel").html("");
+                    //$("#ddlModel").append($('<option></option>').val(0).html("---All Models---"));
+
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetProductCategories", "Common")",
+                type: "GET",
+
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSonyProCat").html("");
+                    $("#ddlSonyProCat").append($("<option></option>").val(0).html("---All Sony Products---"));
+                    $(result).each(function () {
+                        $("#ddlSonyProCat").append($("<option></option>").val(this.ID).html(this.CategoryName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSonyProCat").html("");
+                    $("#ddlSonyProCat").append($('<option></option>').val(0).html("---All Products---"));
+
+                }
+            });
+
+            debugger;
+
+            $.ajax({
+                url: "@Url.Action("GetProductSubCategoryByCategoryId", "Common")",
+                type: "POST",
+                data: {CategoryId : 0 },
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlSonySubProCat").append($("<option></option>").val(0).html("---All Sub Categories---"));
+                    $(result).each(function () {
+                        $("#ddlSonySubProCat").append($("<option></option>").val(this.ID).html(this.SubCategoryName));
+                    });
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSonySubProCat").html("");
+                    $("#ddlSonySubProCat").append($('<option></option>').val(0).html("---All Sub Categories---"));
+
+                }
+            });
+
+
+            $('#ddlSonyProCat').select2({ placeholder: "---All Sony Products---" });
+            $('#ddlSonySubProCat').select2({ placeholder: "---All Sony Sub Categories---" });
+
+            $('#ddlCompProCat').select2({ placeholder: "---All Products---" });
+            $('#ddlCompetitor').select2({ placeholder: "---All Competitors---" });
+            $('#ddlModel').select2({ placeholder: "---All Models---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            $('#divDelete').on('hidden.bs.modal', function () {
+                $("#hdnID").val('');
+            });
+
+            $('#dtCompetitor').on('click', ".delete", function () {
+                $("#hdnID").val(dt.row($(this).parents('tr')).data().ID);
+            });
+            $('#dtCompetitor').on('click', ".edit", function () {
+                var Id = dt.row($(this).parents('tr')).data().ID;
+                @*var url = "@System.Configuration.ConfigurationManager.AppSettings["URLInitial"].ToString()/Competitor/CreateCompetitorModel?ModelId=" + Id + "&Operation=Update";
+                window.location.href = url;*@
+                $(location).attr("href", "@Url.Action("CreateCompetitorModel", "Competitor")" + "?ModelId=" + Id + "&Operation=Update");
+
+            });
+
+            $('#btnAddDealer').click( function () {
+                $(location).attr("href", "@Url.Action("CreateCompetitorModel", "Competitor")");
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.CompetitorIds = $('#ddlCompetitor').val();
+                modeldata.ProductCatIds = $('#ddlProCat').val();
+                modeldata.ModelIds = $('#ddlModel').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelCompetitorModel", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.CompetitorModel),InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+        function Delete() {
+            var ModelId = parseInt($("#hdnID").val());
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteCompetitorModel", "Competitor")',
+                data: { ModelId: ModelId },
+                success: function (data) {
+                    if(data.Data){
+                        //common.notify('success', 'Competitor Model deleted successfully.');
+                        $("#divDelete").modal("toggle");
+                        window.location.href = 'CompetitorModelMaster';
+                    }
+                    else{
+                        common.notify('error', data.Message);
+                    }
+                },
+                error: function (returnValue) {
+                    if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                        var response = $.parseJSON(returnValue.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', "Something went wrong, Please try again.");
+                }
+            });
+        }
+    </script>
+}
+
+@section PageModals
+{
+    <div class="modal fade" id="divDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmDelete">
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class='fa fa-trash'></i> Delete Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtMessage">Do you really want to delete this Competitor model?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Delete();"><i class="fa fa-check"></i>Yes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    @Html.Hidden("Hidden ID","",new {id= "hdnID" })
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Competitor Name:</label>
+                        @Html.DropDownList("ddlCompetitor", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCompetitor", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Competitor Product Category:</label>
+                        @Html.DropDownList("ddlCompProCat", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlCompProCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>                  
+                    <div class="col-lg-4">
+                        <label>Competitor Model:</label>
+                        @Html.DropDownList("ddlModel", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlModel", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>                    
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Sony Product Category:</label>
+                        @Html.DropDownList("ddlSonyProCat", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlSonyProCat", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Sony Product Sub Category:</label>
+                        @Html.DropDownList("ddlSonySubProCat", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlSonySubProCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>  
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                           new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm", @onchange = "ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Competitor Model Master</a></li>
+                <li class="pull-right"><button class="btn btn-block btn-primary btn-flat" style="margin-top:2px" id="btnAddDealer" type="button"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtCompetitor" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Competitor Code</th>
+                                <th>Competitor Product Category</th>
+                                <th>Product Category</th>
+                                <th>Product Sub Category</th>
+                                <th>Model</th>
+                                <th>Sony Model</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

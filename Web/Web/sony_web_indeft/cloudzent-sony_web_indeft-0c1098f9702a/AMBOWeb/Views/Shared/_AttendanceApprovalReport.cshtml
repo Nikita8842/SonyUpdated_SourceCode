@@ -1,0 +1,579 @@
+﻿
+@model AMBOModels.Reports.ApprovalData
+@using System.Data;
+<div class="tab-pane active tabData" id="tabData">
+    <div class="tab-pane active tabData">
+        @{
+            var SFAid = Convert.ToString(Model.Dt.Rows[0]["SystemId"]);
+            var date = Convert.ToString(Model.Dt.Columns[22].ColumnName);
+            var OldattendanceType = Convert.ToString(Model.Dt.Rows[0][22]);
+            var isedit = 1;
+            var columncount = Convert.ToInt32(Model.Dt.Columns.Count);
+            // var Approval = Convert.ToInt32(Model.Dt.Rows[0][columncount - 1]);
+            var att = Model.Dt.Rows[0][columncount - 2].ToString();
+            var DealerCode = Convert.ToString(Model.Dt.Rows[0]["DealerCode"]); //nikita 30/12/2024
+            var Approval = Convert.ToInt32(Model.ApprovalGrid.FirstOrDefault().Approval);
+
+            if (@Approval == 1)
+            {
+                <button id="Approvebutton" style="display:none" type="button" class="btn btn-primary btnUpdate" onclick="updatePresent(@SFAid, '@date', '@OldattendanceType',@DealerCode, @isedit)"><i class="fa fa-check"></i> Approve</button>
+            }
+            else
+            {
+                <button id="Approvebutton" type="button" class="btn btn-primary btnUpdate" onclick="updatePresent(@SFAid, '@date', '@OldattendanceType',@DealerCode, @isedit)"><i class="fa fa-check"></i> Approve</button>
+            }
+            if (att == "-")
+            {
+                <button id="Approvebutton" style="display:none" type="button" class="btn btn-primary btnUpdate" onclick="updatePresent(@SFAid, '@date', '@OldattendanceType',@DealerCode, @isedit)"><i class="fa fa-check"></i> Approve</button>
+
+            }
+
+
+
+
+        }
+
+    </div>
+    <div><p style="color:#ff0000">*Approval can be done only one time for selected month.</p></div>
+
+    <table id="dtMonthlyAttReport" class="table table-bordered table-striped table-hover datatable dtMonthlyAttReport" style="width:100%">
+        <thead>
+            @{
+                int count = 0;
+                if (Model.Dt != null)
+                {
+                    <tr>
+                        @foreach (var column in Model.Dt.Columns)
+                        {
+                            if (column.ToString() != "Id")
+                            {
+                                <th>@column</th>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </thead>
+        <tbody>
+            @{
+
+
+                int count1 = 0;
+                int Rowcount = 0;
+                bool Flag = false;
+                string Date = "";
+                int newcount = 0;
+                var _OrignalId = "";
+
+                if (Model.Dt != null && Model.Dt.Rows.Count > 0)
+                {
+
+                    foreach (DataRow Data in Model.Dt.Rows)
+                    {
+
+                        <tr>
+                            @foreach (DataColumn col in Model.Dt.Columns)
+                            {
+                                count1++;
+                                if (col.ToString() != "Id")
+                                {
+
+
+
+                                    if ((Data[col].ToString() == "L"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        { 
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])))
+                                            {
+
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+
+
+                                                        <td style="background-color:yellow;cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow;">
+                                                            <a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a>
+                                                        </td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;">
+                                                            <a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">
+                                                                @Data[col]
+                                                            </a>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>
+                                                            <a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">
+                                                                @Data[col]
+                                                            </a>
+                                                        </td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                        @*else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                            }*@
+
+                                    }
+
+
+                                    else if ((Data[col].ToString() == "W"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        {
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])))
+                                            {
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="background-color:yellow;cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow;"><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                        @*else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                            }*@
+                                    }
+                                    //shivani 4 dec 2024
+                                    else if ((Data[col].ToString() == "HD"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        {
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21]) && x.DealerCode == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[3])))
+                                            {
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="background-color:yellow;cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow;"><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                        @*else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                            }*@
+                                    }
+
+                                    else if ((Data[col].ToString() == "A"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        {
+
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21]) && x.DealerCode == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[3])))
+                                            {
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21]) && x.DealerCode == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[3])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="background-color:yellow;cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow;"><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+
+                                                    //if (@Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[20])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType == "L")
+                                                    //{
+                                                    //    var total = Convert.ToInt32(Model.Dt.Rows[newcount].ItemArray[16]) + Convert.ToInt32(1);
+                                                    //    Data["Total"] = total.ToString();
+                                                    //    var num = Convert.ToInt32(Model.Dt.Rows[newcount].ItemArray[13]) + Convert.ToInt32(1);
+
+                                                    //    Model.Dt.Rows[newcount].SetField<string>(13, num.ToString());
+                                                    //    //Model.Dt.Rows[newcount].ItemArray[16] = Convert.ToString(Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[16]) + 1);
+                                                    //    //Model.Dt.Rows[newcount].ItemArray[15] = Convert.ToString(Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[15]) - 1);
+                                                    //}
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                    }
+                                    else if ((Data[col].ToString() == "T/M"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        {
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])))
+                                            {
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="background-color:yellow;cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow;"><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col] | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType</a></td>}
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                        @*else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                            }*@
+                                    }
+
+                                    else if ((Data[col].ToString() == "P"))
+                                    {
+                                        if (Model.ApprovalGrid != null)
+                                        {
+                                            if (Model.ApprovalGrid.Any(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])))
+                                            {
+                                                if (Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21])).Any(x => x.AttendanceDates == col.ToString()))
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="background-color:yellow;cursor:not-allowed;">
+                                                            <a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">
+                                                                @Data[col]
+                                                                | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21]) && x.DealerCode == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[3])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType
+                                                            </a>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="background-color:yellow; ">
+                                                            <a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col],'@Model.Dt.Rows[newcount].ItemArray[3]'')">
+                                                                @Data[col]
+                                                                | @Model.ApprovalGrid.Where(x => x.SFAIds == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[21]) && x.DealerCode == Convert.ToInt64(Model.Dt.Rows[newcount].ItemArray[3])).Where(x => x.AttendanceDates == col.ToString()).FirstOrDefault().NewAttendanceType
+                                                            </a>
+                                                        </td>}
+                                                }
+                                                else
+                                                {
+                                                    if (@Approval == 1)
+                                                    {
+                                                        <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (@Approval == 1)
+                                                {
+                                                    <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                                }
+                                                //<td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (@Approval == 1)
+                                            {
+                                                <td style="cursor:not-allowed;"><a style="pointer-events:none;" href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[21]','@col','@Data[col]','@Model.Dt.Rows[newcount].ItemArray[3]')">@Data[col]</a></td>
+
+                                            }
+                                            // <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                        }
+                                        @*else
+                                                    {
+                                                        <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <td><a href="javascript:updatePresent('@Model.Dt.Rows[newcount].ItemArray[20]','@col','@Data[col]')">@Data[col]</a></td>
+
+                                            }*@
+                                    }
+                                    else
+                                    {
+                                        <td> @Data[col] </td>
+                                    }
+
+                                }
+
+                            }
+                        </tr>
+                        newcount++;
+                    }
+
+
+                    Rowcount++;
+
+                }
+                else
+                {
+                    <tr><td style="text-align:center">No Data Found</td></tr>
+                }
+
+
+
+            }
+        </tbody>
+
+    </table>
+</div>

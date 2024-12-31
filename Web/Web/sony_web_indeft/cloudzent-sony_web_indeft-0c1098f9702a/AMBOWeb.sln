@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMBOWeb", "AMBOWeb\AMBOWeb.csproj", "{45ED7897-B83C-4E25-8BFC-76EBE7D65536}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIAccessLayer", "APIAccessLayer\APIAccessLayer.csproj", "{8CA2C640-0140-4BC1-B273-B4E0606023B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMBOModels", "AMBOModels\AMBOModels.csproj", "{E90F58A1-CD2D-4294-9CB1-7F78EB437579}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{45ED7897-B83C-4E25-8BFC-76EBE7D65536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45ED7897-B83C-4E25-8BFC-76EBE7D65536}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45ED7897-B83C-4E25-8BFC-76EBE7D65536}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45ED7897-B83C-4E25-8BFC-76EBE7D65536}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CA2C640-0140-4BC1-B273-B4E0606023B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CA2C640-0140-4BC1-B273-B4E0606023B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CA2C640-0140-4BC1-B273-B4E0606023B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CA2C640-0140-4BC1-B273-B4E0606023B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E90F58A1-CD2D-4294-9CB1-7F78EB437579}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E90F58A1-CD2D-4294-9CB1-7F78EB437579}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E90F58A1-CD2D-4294-9CB1-7F78EB437579}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E90F58A1-CD2D-4294-9CB1-7F78EB437579}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

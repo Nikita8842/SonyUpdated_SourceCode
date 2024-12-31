@@ -1,0 +1,337 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.UserManagement.UserBasicProperties
+
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+<script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+    function SetDropdown() {
+
+        _val = $('#ddStatus').val();
+            debugger;
+            if (_val == "4000") {
+                $('#ddStatus').val(null);
+            }
+
+    }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#filterBox", function (branches) {
+                $(".ddBranch").html("");
+                var list = '';
+                var options = [];
+                for (var i = 0; i < branches.length; i++) {
+                    list += '<option value="' + branches[i].BranchId + '">' + branches[i].BranchCode + "-" + branches[i].BranchName + '</option>';
+                }
+                $(".ddBranch").html(list);
+                var Branch = @Model.BranchId;
+                if(Branch !=null && Branch !=0)
+                {
+                    $('.ddBranch').val(Branch).change();
+                    $('.ddBranch').attr('readonly', 'readonly');
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddBranch").html("");
+            });
+        }
+
+        function getStateDD() {
+            common.ajax_get("@Url.Action("GetStates", "Common")", null, "#filterBox", function (states) {
+                $("#ddState").html("");
+                $.each(states, function (i, state) {
+                    $("#ddState").append($('<option></option>').val(state.ID).html(state.StateName));
+                });
+                $('#ddState').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddState").html("");
+            });
+        }
+
+        function getCityDD() {
+            common.ajax_get("@Url.Action("GetAllCities", "Common")", null, "#filterBox", function (cities) {
+                $("#ddCity").html("");
+                $.each(cities, function (i, city) {
+                    $("#ddCity").append($('<option></option>').val(city.CityId).html(city.CityName));
+                });
+                $('#ddCity').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddCity").html("");
+            });
+        }
+
+        function getStatusDD()
+        {
+            $("#ddStatus").append($('<option></option>').val("0").html('InActive'));
+            $("#ddStatus").append($('<option></option>').val("1").html('Active'));
+            $("#ddStatus").append($('<option></option>').val("4000").html('Select All'));
+            $('#ddStatus').val(null).change();
+        }
+        function init() {
+            try {
+                $('.ddState').select2({
+                    placeholder: '---All States---'
+                });
+                $('.ddBranch').select2({
+                    placeholder: '---All Branches---'
+                });
+                $('.ddCity').select2({
+                    placeholder: '---All Cities---'
+                });
+                $('.ddAgency').select2({
+                    placeholder: '---All Agencies---'
+                });
+                $('.ddStatus').select2({
+                    placeholder: '---Any Status---'
+                });
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+        getBranchDD();
+        getStateDD();
+        getCityDD();
+        getStatusDD();
+        init();
+
+        $(document).ready(function () {
+
+            var dtOfferedGrid;
+            dtEmployeeGrid = $('#dtEmployee').DataTable({
+                serverSide: true,
+                processing: true,
+                //Bug ID: 0001910
+                //Added by Nikhil Thakral to disable jquery search box
+                searching: false,
+                //till here
+                ajax: {
+                    url: "@Url.Action("EmployeeMasterGrid", "Grid")",
+                    type: 'POST',
+                    data: function(d){
+                        var Branch = @Model.BranchId;
+                        if(Branch !=null && Branch !=0)
+                        {
+                            d.BranchIds = Branch;
+                        }
+                        else
+                            d.BranchIds = $('#ddBranch').val();
+                        d.StateIds = $('#ddState').val();
+                        d.CityIds = $('#ddCity').val();
+                        d.Status = $('#ddStatus').val();
+                        d.LoginId = $('#txtLoginId').val();
+                        d.EmployeeName = $('#txtEmployeeName').val();
+                    }
+                },
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "EmployeeId", "visible": false},
+                    { data: "FirstName" },
+                    { data: "LastName" },
+                    { data: "LoginId" },
+                    { data: "BranchName" },
+                    { data: "Role" },
+                    { data: "StatusName" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["StatusName"] == "Active")
+                        $('td', row).eq(5).html('<span class="badge bg-green">' + data["StatusName"] + '</span>');
+                    else
+                        $('td', row).eq(5).html('<span class="badge bg-red">' + data["StatusName"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            $('.clearDD').hide();
+
+
+
+            $('body').on('click','#btnSearch',function(){
+                $('#filterBoxHeader').trigger('click');
+                SetDropdown();
+                dtEmployeeGrid.ajax.reload();
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr("href", "@Url.Action("Create","Employee")");
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                debugger;
+                var data = dtEmployeeGrid.row($(this).parent().parent()).data();
+                $(location).attr("href", "@Url.Action("Update","Employee")" + "?ID=" + data.EmployeeId);
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                debugger;
+                var data = dtEmployeeGrid.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtEmployeeID').val(data.EmployeeId);
+                $('#displayEmployeeName').html(data.FirstName + " " + data.LastName);
+            });
+
+
+            $('body').on('click', '#btnDelete', function () {
+                var url = "@Url.Action("Delete","Employee")";
+                var data = new Object();
+                data.EmployeeId = $("#txtEmployeeID").val();
+
+                common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        common.notify('success',output.Message);
+                        dtEmployeeGrid.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.BranchIds = $('#ddBranch').val();
+                modeldata.StateIds = $('#ddState').val();
+                modeldata.CityIds = $('#ddCity').val();
+                modeldata.Status = $('#ddStatus').val();
+                modeldata.LoginId = $('#txtLoginId').val();
+                modeldata.EmployeeName = $('#txtEmployeeName').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelEmployee", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.Employee), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.statusCode == 401 || returnValue.status == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+        });
+    </script>
+}
+
+@section PageModals
+{
+    <div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            <div class="modal-header custom-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing employee</h4>
+            </div>
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.EmployeeId, new { @id = "txtEmployeeID" })
+                User: <strong><span id="displayEmployeeName"></span></strong> will be deleted from the system. Are you sure to proceed?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+}
+
+@{Html.RenderAction("GetEmployeeMasterGridFilters", "Employee");}
+
+<div id="divEmp" class="row">
+    <div class="col-lg-12">
+        <div class="box box-solid box-primary">
+            <div class="box-body">
+                <table id="dtEmployee" class="table table-bordered table-striped datatable" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Login ID</th>
+                            <th>Branch</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Quick Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

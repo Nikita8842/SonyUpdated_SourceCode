@@ -1,0 +1,35 @@
+﻿@using AMBOWeb.Classes;
+@model AMBOModels.MasterMaintenance.ProductTargetCategoryGridFilters
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Product Target Category Mapping Filters</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.AmboDropdownMultipleFor(Model => Model.ProductCategoryIds, "ddFilterProdCat", "Product Category:", "ddFilterProdCat")
+                    </div>
+                    <div class="col-lg-6">
+                        @Html.AmboTextboxFor(Model => Model.TargetCategory, "txtFilterTargetCat", "Target Category:", "Enter Target Category here...", "", "")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <button class="btn btn-flat btn-primary" type="button" id="btnSearch"><i class="fa fa-search"></i> Search</button>
+                        &emsp;<button id="btnDownload" type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button>
+                        &emsp;<button id="btnAdd" type="button" class="btn btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button>
+                        &emsp;<button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index","Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

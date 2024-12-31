@@ -1,0 +1,368 @@
+﻿@model AMBOModels.Mappings.DealerProductMapping
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddRow">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddRowTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="rowIndex" />
+                    <div class="form-group">
+                        <label for="ddProdCat">Product Category</label>
+                        @Html.DropDownListFor(m => m.ProductCategoryId, new List<SelectListItem>(), new { @class = "form-control", @id = "ddProdCat", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddClass">Classification</label>
+                        @Html.DropDownListFor(m => m.ClassificationId, new List<SelectListItem>(), new { @class = "form-control", @id = "ddClass", @style = "width:100%" })
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmitRow" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#tabForm" data-toggle="tab">
+                            @Html.Raw("<i class=\"fa fa-plus\"></i> Map Dealer with Product Category")
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="tabForm">
+                        @using (Html.BeginForm("Create", "DealerProductMapping", FormMethod.Post, new { @id = "formDealer" }))
+                        {                           
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDealerId">Dealer ID</label>
+                                        @Html.TextBoxFor(m => m.DealerId, new { @class = "form-control input-sm", @id = "txtDealerID", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDealercode">Dealer Code</label>
+                                        @Html.TextBoxFor(m => m.DealerCode, new { @class = "form-control input-sm", @id = "txtDealercode", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtDealerName">Dealer Name</label>
+                                        @Html.TextBoxFor(m => m.DealerName, new { @class = "form-control input-sm", @id = "txtDealerName", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtBranch">Branch Name</label>
+                                        @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtEmail">Email ID</label>
+                                        @Html.TextBoxFor(m => m.EmailID, new { @class = "form-control input-sm", @id = "txtEmail", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtMobile">Mobile Number</label>
+                                        @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control input-sm", @id = "txtMobile", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            @*<div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtContactperson">Contact Person</label>
+                                        @Html.TextBoxFor(m => m.ContactPerson, new { @class = "form-control input-sm", @id = "txtContactperson", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="txtAdd">Address</label>
+                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control input-sm", @id = "txtAdd", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>*@
+
+                            <div class="row">
+                                <div class="col-lg-3">
+                                    <div class="form-group pull-left">
+                                        <label></label>
+                                        <button id="btnAdd" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New Product</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table id="dtNewProClass" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Product Category ID</th>
+                                                <th>Product Category</th>
+                                                <th>Classification ID</th>
+                                                <th>Classification</th>
+                                                <th>Quick Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                    <div class="form-group">
+                                        <button id="btnSubmit" type="button" class="btn btn-primary btn-flat" ><i class="fa fa-check"></i> Save Changes</button>
+                                        <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+<script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script>
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, null, function (branches) {
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                var BranchId = @Model.BranchId;
+                if(BranchId != null)
+                {
+                    $('#ddBranch').val(BranchId).change();
+
+                }
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+            });
+        }
+
+        function getClassDD() {
+            common.ajax_get("@Url.Action("GetDealerClassificationTypes", "Common")", null, null, function (classes) {
+                $("#ddClass").html("");
+                $.each(classes, function (i, _class) {
+                    $("#ddClass").append($('<option></option>').val(_class.ID).html(_class.ClassificationName));
+                });
+                $('#ddClass').val(null).change();
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddClass").html("");
+            });
+        }
+
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, null, function (prodcats) {
+                $("#ddProdCat").html("");
+                $.each(prodcats, function (i, prodcat) {
+                    $("#ddProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+
+        function init()
+        {
+            try
+            {
+                $('#ddClass').select2({ placeholder: 'Select Classification' });
+                $('#ddProdCat').select2({ placeholder: 'Select Product Category' });
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function Save() {
+            if ($("#ddClass").val() == null || $("#ddClass").val() == "") {
+                common.notify('error', "Please select classification.");
+                return false;
+            }
+
+            if ($("#ddProdCat").val() == null || $("#ddProdCat").val() == "") {
+                common.notify('error', "Please select product category");
+                return false;
+            }
+
+            return true;
+        }
+
+        function clearAllDD()
+        {
+            $('#ddClass').val(null).change();
+            $('#ddProdCat').val(null).change();
+        }
+
+        $(document).ready(function ()
+        {
+            init();
+            getBranchDD();
+            getProdCatDD();
+            getClassDD();
+
+            var dt = $('#dtNewProClass').DataTable({
+                paging: false,
+                searching: false,
+                ordering: false,
+                columns: [
+                { data: "ProductCategoryId", visible: false },
+                { data: "ProductCategoryName" },
+                { data: "ClassificationId", visible: false },
+                { data: "ClassificationName" },
+                {
+                    data: function (data, type, row) {
+                        return '<a data-placement="left" class="btnEdit" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                       '<a data-placement="left" title="Delete" class="btnDelete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                    },
+                    orderable: false
+                }]
+            });
+
+            $('#modalAddRow').on('shown.bs.modal', function () {
+                $('#ddProdCat').focus();
+            });
+            $('#modalAddRow').on('hidden.bs.modal', function () {
+                $('#ddProdCat').val(null).change();
+                $('#ddClass').val(null).change();
+                $('#rowIndex').val(null).change();
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                dt.row($(this).parent().parent()).remove().draw(false);
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dt.row($(this).parent().parent()).data();
+                $('#rowIndex').val(dt.row($(this).parent().parent()).index());
+                $('#ddProdCat').val(data.ProductCategoryId).trigger('change');
+                $('#ddClass').val(data.ClassificationId).trigger('change');
+                $('#modalAddRowTitle').html('<i class="fa fa-pencil"></i> Update an existing row');
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddRowTitle').html('<i class="fa fa-plus"></i> Add a new row');
+                $('#rowIndex').val(null);
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Index", "Dealer")');
+            });
+
+            $('#btnSubmitRow').on('click', function () {
+                var data = new Object();
+                data.ProductCategoryId = $('#ddProdCat').val();
+                data.ProductCategoryName = $('#ddProdCat').children("option:selected").text();
+                data.ClassificationId = $('#ddClass').val();
+                data.ClassificationName = $('#ddClass').children("option:selected").text();
+                if ($('#rowIndex').val() == null || $('#rowIndex').val() == undefined || $('#rowIndex').val() == "")
+                    dt.row.add(data).draw(false);//create
+                else
+                    dt.row($('#rowIndex').val()).data(data).draw(false);//update
+                $('#modalAddRow').modal('toggle');
+            });
+
+
+
+            $("#btnSubmit").click(function () {
+                var data = new Object();
+                data.DealerId = $("#txtDealerID").val();
+                data.BranchId = $("#ddBranch").val();
+                data.listProductClassification = new Array();
+                
+                dt.rows().every(function (index, tableLoop, rowLoop) {
+                    var row = this.data();
+                    data.listProductClassification.push({
+                        ProductCategoryId: row.ProductCategoryId,
+                        ClassificationId: row.ClassificationId
+                    });
+                });
+
+                common.ajax_post("@Url.Action("Create", "DealerProductMapping")", data, null, function (output) {
+                    if (output.Data)
+                    {
+                        common.notify('success', output.Message);
+                        $(location).attr('href', '@Url.Action("Index", "DealerClassificationMapping")');
+                        
+                    }
+                    else
+                        common.notify('error', output.Message);
+                }, function (output) {
+                    if (output.status == 401 || output.statusCode == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to save data. Please contact your administrator.');
+                });
+                
+            });
+
+        });
+</script>
+}
+
+

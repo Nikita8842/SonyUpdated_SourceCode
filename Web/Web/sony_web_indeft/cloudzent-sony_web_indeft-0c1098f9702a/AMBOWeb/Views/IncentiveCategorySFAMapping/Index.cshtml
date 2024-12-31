@@ -1,0 +1,192 @@
+﻿@model AMBOModels.Mappings.IncentiveCategorySFAMapping
+
+
+@section PageCSS{
+}
+
+@section PageJS{
+<script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btnDownload').click(function () {
+                $(location).attr('href', '@Url.Action("Download", "IncentiveCategorySFAMapping")' + '?RDIId=' + '@Convert.ToInt64(Session["UserId"])');
+            });
+
+            $("#btnUpload").click(function () {
+                debugger;
+                var fileval = $('#fileChooser').val();
+                if (fileval == '' || fileval == null) {
+                    common.notify('error', "Please select an Excel file to upload data");
+                    return false;
+                }
+
+                var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+                /*Checks whether the file is a valid excel file*/
+                if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                    debugger;                
+                    common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                    return false;
+                }
+
+                //if ($('#txtBranch').val() == 0 || $("#txtBranch").val() == "") {
+                //    common.notify('error', "Please select Branch");
+                //    return false;
+                //}
+                return true;
+            });
+
+            var dt = $('#dtMappingOutput').DataTable({
+                scrollX: true,
+                language: {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "Id" },
+                    { data: "BranchName" },
+                    { data: "City" },
+                    { data: "Location" },
+                    { data: "SFACode" },
+                    { data: "SFAName" },
+                    { data: "DealerCode" },
+                    { data: "MasterCode" },
+                    { data: "DealerName" },
+                    { data: "SFACategory" },
+                    { data: "IncentiveCategory" },
+                    { data: "FestivalIncentiveCategory" },
+                    { data: "Status" },
+                    { data: "Description" },
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Success")
+                        $('td', row).eq(12).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(12).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+
+            @if(IsPost)
+            {
+                if(!( Model == null || Model.MappingExcelData == null || Model.MappingExcelData.Rows.Count == 0 ||
+                    Model.MappingExcelData.Columns[0].ColumnName.ToUpper() == "STATUS"))
+                {
+                    <text>var data = null;</text>
+                    foreach(System.Data.DataRow mappingRow in Model.MappingExcelData.Rows)
+                    {
+                        <text>
+            data = new Object();
+            data.Id = @mappingRow["Id"];
+            data.BranchName = '@mappingRow["BranchName"]';
+            data.City = '@mappingRow["City"]';
+            data.Location = '@mappingRow["Location"]';
+            data.SFACode = '@mappingRow["SFACode"]';
+            data.SFAName = '@mappingRow["SFAName"]';
+            data.DealerCode = '@mappingRow["DealerCode"]';
+            data.MasterCode = '@mappingRow["MasterCode"]';
+            data.DealerName = '@mappingRow["DealerName"]';
+            data.SFACategory = '@mappingRow["SFACategory"]';
+            data.IncentiveCategory = '@mappingRow["IncentiveCategory"]';
+            data.FestivalIncentiveCategory = '@mappingRow["FestivalIncentiveCategory"]';
+            data.Status = '@mappingRow["Status"]';
+            data.Description = '@mappingRow["Description"]';
+            dt.row.add(data).draw(false);
+            </text>
+                    }
+                    <text>$('#tableView').removeClass('hidden');dt.columns.adjust().draw();</text>
+                }
+            }
+        });
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-pencil"></i> Download/Upload Mappings
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                   <div class="row">
+                       <div class="col-lg-3 text-center">
+                       <div class="form-group">
+                           <label>SFA List</label>
+                           <div class="input-group">
+                               <div class="input-group-btn">
+                                   <button id="btnDownload" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download SFA List</button>
+                               </div>
+                           </div>
+                       </div>
+                       </div>
+                       @using (Html.BeginForm("Upload", "IncentiveCategorySFAMapping", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                       {
+                        <div class="col-lg-6 text-center">
+                            <div class="form-group">
+                                <label>Choose file for upload</label>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <button onclick="$('#fileChooser').click();" type="button" class="btn btn-primary">Browse...</button>
+                                    </div>
+                                    <input id="fileChooserValue" type="text" class="form-control" disabled>
+                                    <input name="ExcelUploadFile" type="file" class="hidden" id="fileChooser" onchange="$('#fileChooserValue').val(document.getElementById('fileChooser').files[0].name);" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 text-center">
+                            <div class="form-group">
+                                <label>Upload File</label>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <button type="submit" id="btnUpload" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload Excel Data</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       }
+                       
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="tableView">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid">
+            <div class="box-header with-border">
+                <h3 class="box-title">Excel Upload Statistics</h3>
+            </div>
+            <div class="box-body">
+                <table id="dtMappingOutput" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Branch Name</th>
+                            <th>City</th>
+                            <th>Location</th>
+                            <th>SFA Code</th>
+                            <th>SFA Name</th>
+                            <th>Dealer Code</th>
+                            <th>Master Code</th>
+                            <th>Dealer Name</th>
+                            <th>SFA Category</th>
+                            <th>Incentive</th>
+                            <th>Festival Incentive</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

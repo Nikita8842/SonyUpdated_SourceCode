@@ -1,0 +1,433 @@
+﻿@model AMBOModels.IncentiveManagement.CreatePerPieceIncentive
+@using AMBOWeb.Classes
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        /// <reference path="~/Content/js/common.js"/>
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabData", function (prodcats) {
+                $(".ddProdCat").html("");
+                $.each(prodcats, function (i, prodcat) {
+                    $(".ddProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                });
+                @if(IsPost)
+                {
+                    if(Model.ProductCategoryIds != null)
+                    {
+                        if(Model.TargetCategoryIds != null)
+                        {
+                            @Html.Raw("$('.ddProdCat').val(['" + String.Join("','", Model.ProductCategoryIds) + "']).trigger('change', [{ value: ['" + String.Join("','", Model.TargetCategoryIds) + "']},{ value: ['" + String.Join("','",Model.PerPieceTargetCategoryIds)+"']}]);")
+                        }
+                        else
+                        {
+                            @Html.Raw("$('.ddProdCat').val(['" + String.Join("','", Model.ProductCategoryIds) + "']).change();")
+                        }
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('.ddProdCat').val(null).change();")
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddProdCat").html("");
+            });
+        }
+
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabData", function (divisions) {
+                $(".ddSFADivision").html("");
+                $.each(divisions, function (i, division) {
+                    $(".ddSFADivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                @if(IsPost)
+                {
+                    if(Model.DivisionIds != null)
+                    {
+                        @Html.Raw("$('.ddSFADivision').val(['" + String.Join("','", Model.DivisionIds) + "']).change();")
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('.ddSFADivision').val(null).change();")
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddSFADivision").html("");
+            });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#tabData", function (branches) {
+                $(".ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $(".ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                @if(IsPost)
+                {
+                    if(Model.BranchIds != null)
+                    {
+                        @Html.Raw("$('.ddBranch').val(['" + String.Join("','", Model.BranchIds) + "']).change();")
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('.ddBranch').val(null).change();")
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddBranch").html("");
+            });
+        }
+
+        function getChannelsDD() {
+            common.ajax_get("@Url.Action("GetChannels", "Common")", null, "#tabData", function (channels) {
+                $(".ddChannel").html("");
+                $.each(channels, function (i, channel) {
+                    $(".ddChannel").append($('<option></option>').val(channel.Id).html(channel.ChannelName));
+                });
+                @if(IsPost)
+                {
+                    if(Model.ChannelIds != null)
+                    {
+                        @Html.Raw("$('.ddChannel').val(['" + String.Join("','", Model.ChannelIds) + "']).change();")
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('.ddChannel').val(null).change();")
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddChannel").html("");
+            });
+        }
+
+        function linkProdCatTargetCatCatDD() {
+            debugger;
+            $('.ddProdCat').on('change', function (e, targetcat, pptargetcat) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == '')) {
+                    var data = new Object();
+                    data.ProductCategoryIds = $(this).val();
+                    common.ajax_post("@Url.Action("GetTargetCategoriesByProductCategories", "Common")", data, '#tabForm',
+                    function (output) {
+                        debugger;
+                        if (output.MessageCode == MessageCodes.Acceptable.Found) {
+                            $('.ddTargetCat').html('');
+                            $.each(output.Data, function (i) {
+                                $('.ddTargetCat').append($('<option>', { value: output.Data[i].TargetCategoryId }).text(output.Data[i].TargetCategoryName));
+                            });
+                            if (!(targetcat == null || targetcat == undefined || targetcat.value == null || targetcat.value == undefined ||
+                                targetcat.value == '0' && targetcat.value == ''))
+                                $('.ddTargetCat').val(targetcat.value).change();
+                            else
+                                $('.ddTargetCat').val(null).change();
+                            $('.ddAddPPTargetCat').html('');
+                            $.each(output.Data, function (i) {
+                                $('.ddAddPPTargetCat').append($('<option>', { value: output.Data[i].TargetCategoryId }).text(output.Data[i].TargetCategoryName));
+                            });
+                            if (!(pptargetcat == null || pptargetcat == undefined || pptargetcat.value == null || pptargetcat.value == undefined ||
+                                pptargetcat.value == '0' && pptargetcat.value == ''))
+                                $('.ddAddPPTargetCat').val(pptargetcat.value).change();
+                            else
+                                $('.ddAddPPTargetCat').val(null).change();
+
+                        }
+                        else
+                            common.notify('error', output.Message);
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('.ddTargetCat').html('');
+                    $('.ddTargetCat').val(null).change();
+
+                    common.notify('error', 'No target categories found for selected product categories.');
+                });
+
+
+                }
+            });
+        }
+
+
+        function DownloadExcel() {
+            if ($('input[name="Applicability"]').val() == null || $('input[name="Applicability"]').val() == undefined || $('input[name="Applicability"]').val() == 0) {
+                common.notify('error', 'Please select at least one applicability.');
+                return;
+            }
+
+            if ($('#ddAddProdCat').val() == null || $('#ddAddProdCat').val() == undefined || $('#ddAddProdCat').val() == 0) {
+                common.notify('error', 'Please select at least one product category.');
+                return;
+            }
+
+            var data = new Object();
+            data.SchemeId = $('#txtSchemeId').val();
+            data.Applicability = $('#AddradioProdName').iCheck('update')[0].checked ? $('#AddradioProdName').val() : $('#AddradioTargetCat').val();
+            data.ProductCategoryIds = $('#ddAddProdCat').val();
+
+            common.ajax_post('@Url.Action("Download", "PerPieceIncentive")', data, '#tabForm', function (output) {
+                if (output.status)
+                    window.location = '@Url.Action("Download", "PerPieceIncentive")' + '?fileGuid=' + output.FileGuid
+                                  + '&filename=' + output.FileName;
+                else
+                    common.notify('error', output.message);
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                common.notify('error', 'Unable to download per piece incentive definition excel file. Please contact your administrator.');
+            });
+        }
+
+        function init() {
+            try {
+                $('#txtDateFrom').prop('data-inputmask', "'alias': 'mm/yyyy'");
+                $('#txtDateFrom').prop('data-mask', '');
+                $('#txtDateFrom').inputmask('mm/yyyy', { 'placeholder': 'mm/yyyy' })
+                $('#txtDateFrom').datepicker({
+                    autoclose: true,
+                    format: "mm/yyyy",
+                    startView: "months",
+                    minViewMode: "months"
+                });
+                $('#txtDateTo').prop('data-inputmask', "'alias': 'mm/yyyy'");
+                $('#txtDateTo').prop('data-mask', '');
+                $('#txtDateTo').inputmask('mm/yyyy', { 'placeholder': 'mm/yyyy' })
+                $('#txtDateTo').datepicker({
+                    autoclose: true,
+                    format: "mm/yyyy",
+                    startView: "months",
+                    minViewMode: "months"
+                });
+                $('.ddTargetCat').select2({
+                    placeholder: 'Select Target Categories'
+                });
+                $('.ddAddPPTargetCat').select2({
+                    placeholder: 'Select Target Categories'
+                });
+                $('.ddProdCat').select2({
+                    placeholder: 'Select Product Categories'
+                });
+                $('.ddSFADivision').select2({
+                    placeholder: 'Select SFA Divisions'
+                });
+                $('.ddBranch').select2({
+                    placeholder: 'Select Branches'
+                });
+                $('.ddChannel').select2({
+                    placeholder: 'Select Channels'
+                });
+                //$('#AddPerPieceIncentiveForm').validate();
+                //$("#AddPerPieceIncentiveForm").find('.has-error').removeClass('has-error');
+                //$("#AddPerPieceIncentiveForm").find('.has-success').removeClass('has-success');
+                $('#txtSchemeName').focus();
+                @if(IsPost)
+                {
+                    switch(Model.Applicability.ToString())
+                    {
+                        case "1":
+                            @Html.Raw("$('#AddradioProdName').iCheck('check');")
+                        break;
+                        case "2":
+                            @Html.Raw("$('#AddradioTargetCat').iCheck('check');")
+                        break;
+                        default:
+                            @Html.Raw("$('#AddradioProdName').iCheck('check');")
+                        break;
+                    }
+                }
+                else
+                {
+                    @Html.Raw("$('#AddradioProdName').iCheck('check');")
+                }
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        $(document).ready(function () {
+            getProdCatDD();
+            getDivisionsDD();
+            getBranchDD();
+            getChannelsDD();
+            linkProdCatTargetCatCatDD();
+
+            init();
+
+            $('#btnDownload').click(function () { DownloadExcel(); });
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Index", "PerPieceIncentive")');
+            });
+
+        });
+    </script>
+    @*<script src="~/Content/js/validations/perpieceincentive.js"></script>*@
+}
+
+
+@section PageModals
+{
+
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-plus"></i> Add a new Per Piece Incentive Definition
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Upload", "PerPieceIncentive", FormMethod.Post, new { @id = "AddPerPieceIncentiveForm", enctype = "multipart/form-data" }))
+                    {
+                        @Html.HiddenFor(m=>m.SchemeId, new { @id = "txtSchemeId" })
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="txtSchemeName">Scheme Name</label>
+                                    @Html.ValidationMessageFor(m => m.SchemeName,"", new { @class = "text-red"})
+                                    @Html.TextBoxFor(m=>m.SchemeName, new { @class = "form-control input-sm", @id = "txtSchemeName", @placeholder = "Enter Scheme Name Here..." })
+                                </div>
+                                @*@Html.AmboTextboxFor(m => m.SchemeName, "txtSchemeName", "Scheme Name", "Enter Scheme Name Here...", "", InputTypes.AlphaNumericSymbol1WithSpace)*@
+                            </div>
+                            <div class="col-lg-3">
+
+                                @Html.AmboTextboxFor(m => m.DateFrom, "txtDateFrom", "Start Month", "Enter Start Month Here...", "", "")
+                            </div>
+                            <div class="col-lg-3">
+                                @Html.AmboTextboxFor(m => m.DateTo, "txtDateTo", "End Month", "Enter End Month Here...", "", "")
+                            </div>
+                            <div class="col-lg-3">
+                                @Html.Ambo2RadioButtonGroupFor(m => m.Applicability, "Applicability", "AddradioProdName", "1", "Product Name", "AddradioTargetCat", "2", "Target Category")
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.ProductCategoryIds, "ddAddProdCat", "Applicable Product Categories", "ddProdCat")
+                            </div>
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.TargetCategoryIds, "ddAddTargetCat", "Applicable Basic Target Categories", "ddTargetCat")
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.PerPieceTargetCategoryIds, "ddAddPPTargetCat", "Applicable PerPiece Target Categories", "ddAddPPTargetCat")
+                            </div>
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.DivisionIds, "ddAddSFADivision", "Applicable SFA Divisions", "ddSFADivision")
+                            </div>                            
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.ChannelIds, "ddAddChannel", "Applicable Channels", "ddChannel")
+                            </div>
+                            <div class="col-lg-6">
+                                @Html.AmboDropdownMultipleFor(m => m.BranchIds, "ddAddBranch", "Applicable Branches", "ddBranch")
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnDownload" type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                <div class="col-lg-4 col-lg-offset-1">
+                                    @Html.AmboFileUploadFor("ExcelUploadFile","fileChooser","")
+                                    @*<div class="form-group">
+                                        <label>Choose file for upload</label>
+                                        <div class="input-group">
+                                            <div class="input-group-btn">
+                                                <button onclick="$('#fileChooser').click();" type="button" class="btn btn-primary">Browse...</button>
+                                            </div>
+                                            <input id="fileChooserValue" type="text" class="form-control" disabled>
+                                            <input name="ExcelUploadFile" type="file" class="hidden" id="fileChooser" onchange="$('#fileChooserValue').val(document.getElementById('fileChooser').files[0].name);" />
+                                        </div>
+                                    </div>*@
+                                </div>
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label></label>
+                                    <div class="input-group">
+                                        <div class="input-group-btn">
+                                            <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

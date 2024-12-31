@@ -1,0 +1,178 @@
+﻿@model AMBOModels.Modules.DealerMasterCodeUpdate
+
+
+
+@section PageCSS{
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+}
+
+<div class="row">
+    <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        @Html.Raw("<i class=\"fa fa-pencil\"></i> Update Dealer Master Code")
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("UpdateDealerMasterCode", "DealerMasterCodeUpdate", FormMethod.Post, new { @Id = "formUpdateMasterCode"}))
+                    {
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Old Master Code</label>
+                                    @Html.TextBoxFor(m => m.MasterCode, new { @readonly = "readonly", Id = "txtMasterCode", @Class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >Dealer(s) <span class="text-danger">*</span></label>  <a id="btnSelectall">Select All</a> / <a  id="btnDselectAll">Remove All</a><span class="text-danger">@Html.ValidationMessageFor(m => m.DealerIds)</span>
+                                    @Html.ListBoxFor(m => m.DealerIds, new SelectList(Enumerable.Empty<SelectListItem>()), new { Id = "txtDealerlist", @class = "form-control input-sm", multiple = "multiple" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-3 col-lg-6 col-md-6">
+                                <div class="form-group">
+                                    <label >New Master Code <span class="text-danger">*</span></label><span class="text-danger">@Html.ValidationMessageFor(m => m.NewMasterCode)</span>
+                                    @Html.TextBoxFor(m => m.NewMasterCode, new { @Id = "txtNewMasterCode", @class = "form-control input-sm" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button type="button" id="btnSubmit" class="btn btn-primary btn-flat">Save</button>
+                                    @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-default btn-flat", onclick = "response" })
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            debugger;
+            var MasterCode = $("#txtMasterCode").val();
+            $.ajax({
+                url: '@Url.Action("GetDealerByMasterCode", "DealerMasterCodeUpdate")',
+                type: "POST",
+                data: { mastercode: MasterCode },
+                //contentType: "application/json; charset=utf-8",
+                //dataType: "json",
+                success: function (result) {
+                    //$("#txtDealerlist").append($("<option></option>").val("").html("Select Dealer"));
+                    $(result).each(function () {
+                    $("#txtDealerlist").append($("<option></option>").val(this.Id).html(this.DealerDetail));
+                });
+            },
+                error: function (result) {
+                    if (result.status == 401 || result.statusCode == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                common.notify('error', 'Error while loading dealer details.')
+            }
+            });
+
+            $("#txtDealerlist").select2();
+
+            $("#btnSubmit").click(function () {
+                if (Save()) {
+                    debugger;
+                    var modeldata = new Object();
+                    modeldata.MasterCode = $("#txtMasterCode").val();
+                    modeldata.DealerIds = $("#txtDealerlist").val();
+                    modeldata.NewMasterCode = $("#txtNewMasterCode").val();
+
+                    //console.log(JSON.stringify(model));
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UpdateDealerMasterCode", "DealerMasterCodeUpdate")',
+                        data: { InputParam: modeldata },
+                        success: function (output) {
+                            if (output.Data) {
+                                //common.notify('success', output.Message);
+                                //modeldata.DealerIds = $("#txtDealerlist").val(null).trigger("change");
+                                //modeldata.NewMasterCode = $("#txtNewMasterCode").val(null);
+                                $(location).attr("href", "@Url.Action("Index", "DealerMasterCodeUpdate")")
+                            }
+                            else {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                        error: function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message)
+                        }
+                    });
+                }
+            });
+
+            $("#btnSelectall").click(function () {
+
+                $("#txtDealerlist > option").prop("selected", "selected");
+                $("#txtDealerlist").trigger("change");
+
+            });
+
+            $("#btnDselectAll").click(function () {
+
+                $("#txtDealerlist").val(null).trigger("change");
+
+            });
+
+
+        });
+
+        function Save() {
+            if ($("#txtDealerlist").val() == null || $("#txtDealerlist").val() == "") {
+                common.notify('error', "Please select Dealer(s)");
+                return false;
+            }
+            if ($("#txtNewMasterCode").val() == null || $("#txtNewMasterCode").val() == "") {
+                common.notify('error', "Please enter new Master Code");
+                return false;
+            }
+            //if ($("#txtNewMasterCode").val().length > 10) {
+            //    common.notify('error', "New Master Code cannot be more than 10 characters");
+            //    return false;
+            //}
+            return true;
+        }
+
+
+    </script>
+}
+
+

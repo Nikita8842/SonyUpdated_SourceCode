@@ -1,0 +1,3162 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SonyAmbo</name>
+    </assembly>
+    <members>
+        <member name="M:SonyAmbo.Areas.HelpPage.ApiDescriptionExtensions.GetFriendlyId(System.Web.Http.Description.ApiDescription)">
+            <summary>
+            Generates an URI-friendly ID for the <see cref="T:System.Web.Http.Description.ApiDescription"/>. E.g. "Get-Values-id_name" instead of "GetValues/{id}?name={name}"
+            </summary>
+            <param name="description">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <returns>The ID as a string.</returns>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.HelpPageConfig">
+            <summary>
+            Use this class to customize the Help Page.
+            For example you can set a custom <see cref="T:System.Web.Http.Description.IDocumentationProvider"/> to supply the documentation
+            or you can provide the samples for the requests/responses.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.Controllers.HelpController">
+            <summary>
+            The controller that will handle requests for the help page.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetDocumentationProvider(System.Web.Http.HttpConfiguration,System.Web.Http.Description.IDocumentationProvider)">
+            <summary>
+            Sets the documentation provider for help page.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="documentationProvider">The documentation provider.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleObjects(System.Web.Http.HttpConfiguration,System.Collections.Generic.IDictionary{System.Type,System.Object})">
+            <summary>
+            Sets the objects that will be used by the formatters to produce sample requests/responses.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sampleObjects">The sample objects.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleRequest(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue,System.String,System.String)">
+            <summary>
+            Sets the sample request directly for the specified media type and action.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample request.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleRequest(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue,System.String,System.String,System.String[])">
+            <summary>
+            Sets the sample request directly for the specified media type and action with parameters.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample request.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleResponse(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue,System.String,System.String)">
+            <summary>
+            Sets the sample request directly for the specified media type of the action.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample response.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleResponse(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue,System.String,System.String,System.String[])">
+            <summary>
+            Sets the sample response directly for the specified media type of the action with specific parameters.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample response.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleForMediaType(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue)">
+            <summary>
+            Sets the sample directly for all actions with the specified media type.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample.</param>
+            <param name="mediaType">The media type.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetSampleForType(System.Web.Http.HttpConfiguration,System.Object,System.Net.Http.Headers.MediaTypeHeaderValue,System.Type)">
+            <summary>
+            Sets the sample directly for all actions with the specified type and media type.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sample">The sample.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="type">The parameter type or return type of an action.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetActualRequestType(System.Web.Http.HttpConfiguration,System.Type,System.String,System.String)">
+            <summary>
+            Specifies the actual type of <see cref="T:System.Net.Http.ObjectContent`1"/> passed to the <see cref="T:System.Net.Http.HttpRequestMessage"/> in an action.
+            The help page will use this information to produce more accurate request samples.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="type">The type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetActualRequestType(System.Web.Http.HttpConfiguration,System.Type,System.String,System.String,System.String[])">
+            <summary>
+            Specifies the actual type of <see cref="T:System.Net.Http.ObjectContent`1"/> passed to the <see cref="T:System.Net.Http.HttpRequestMessage"/> in an action.
+            The help page will use this information to produce more accurate request samples.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="type">The type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetActualResponseType(System.Web.Http.HttpConfiguration,System.Type,System.String,System.String)">
+            <summary>
+            Specifies the actual type of <see cref="T:System.Net.Http.ObjectContent`1"/> returned as part of the <see cref="T:System.Net.Http.HttpRequestMessage"/> in an action.
+            The help page will use this information to produce more accurate response samples.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="type">The type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetActualResponseType(System.Web.Http.HttpConfiguration,System.Type,System.String,System.String,System.String[])">
+            <summary>
+            Specifies the actual type of <see cref="T:System.Net.Http.ObjectContent`1"/> returned as part of the <see cref="T:System.Net.Http.HttpRequestMessage"/> in an action.
+            The help page will use this information to produce more accurate response samples.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="type">The type.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.GetHelpPageSampleGenerator(System.Web.Http.HttpConfiguration)">
+            <summary>
+            Gets the help page sample generator.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <returns>The help page sample generator.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.SetHelpPageSampleGenerator(System.Web.Http.HttpConfiguration,SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator)">
+            <summary>
+            Sets the help page sample generator.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="sampleGenerator">The help page sample generator.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.GetModelDescriptionGenerator(System.Web.Http.HttpConfiguration)">
+            <summary>
+            Gets the model description generator.
+            </summary>
+            <param name="config">The configuration.</param>
+            <returns>The <see cref="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescriptionGenerator"/></returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageConfigurationExtensions.GetHelpPageApiModel(System.Web.Http.HttpConfiguration,System.String)">
+            <summary>
+            Gets the model that represents an API displayed on the help page. The model is initialized on the first call and cached for subsequent calls.
+            </summary>
+            <param name="config">The <see cref="T:System.Web.Http.HttpConfiguration"/>.</param>
+            <param name="apiDescriptionId">The <see cref="T:System.Web.Http.Description.ApiDescription"/> ID.</param>
+            <returns>
+            An <see cref="T:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel"/>
+            </returns>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescription">
+            <summary>
+            Describes a type model.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescriptionGenerator">
+            <summary>
+            Generates model descriptions for given types.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelNameAttribute">
+            <summary>
+            Use this attribute to change the name of the <see cref="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescription"/> generated for a type.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel">
+            <summary>
+            The model that represents an API displayed on the help page.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel"/> class.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.ApiDescription">
+            <summary>
+            Gets or sets the <see cref="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.ApiDescription"/> that describes the API.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.UriParameters">
+            <summary>
+            Gets or sets the <see cref="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ParameterDescription"/> collection that describes the URI parameters for the API.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.RequestDocumentation">
+            <summary>
+            Gets or sets the documentation for the request.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.RequestModelDescription">
+            <summary>
+            Gets or sets the <see cref="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescription"/> that describes the request body.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.RequestBodyParameters">
+            <summary>
+            Gets the request body parameter descriptions.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.ResourceDescription">
+            <summary>
+            Gets or sets the <see cref="T:SonyAmbo.Areas.HelpPage.ModelDescriptions.ModelDescription"/> that describes the resource.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.ResourceProperties">
+            <summary>
+            Gets the resource property descriptions.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.SampleRequests">
+            <summary>
+            Gets the sample requests associated with the API.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.SampleResponses">
+            <summary>
+            Gets the sample responses associated with the API.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.Models.HelpPageApiModel.ErrorMessages">
+            <summary>
+            Gets the error messages associated with this model.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator">
+            <summary>
+            This class will generate the samples for the help page.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator"/> class.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.ActualHttpMessageTypes">
+            <summary>
+            Gets CLR types that are used as the content of <see cref="T:System.Net.Http.HttpRequestMessage"/> or <see cref="T:System.Net.Http.HttpResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.ActionSamples">
+            <summary>
+            Gets the objects that are used directly as samples for certain actions.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.SampleObjects">
+            <summary>
+            Gets the objects that are serialized as samples by the supported formatters.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.SampleObjectFactories">
+            <summary>
+            Gets factories for the objects that the supported formatters will serialize as samples. Processed in order,
+            stopping when the factory successfully returns a non-<see langref="null"/> object.
+            </summary>
+            <remarks>
+            Collection includes just <see cref="M:SonyAmbo.Areas.HelpPage.ObjectGenerator.GenerateObject(System.Type)"/> initially. Use
+            <code>SampleObjectFactories.Insert(0, func)</code> to provide an override and
+            <code>SampleObjectFactories.Add(func)</code> to provide a fallback.</remarks>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.GetSampleRequests(System.Web.Http.Description.ApiDescription)">
+            <summary>
+            Gets the request body samples for a given <see cref="T:System.Web.Http.Description.ApiDescription"/>.
+            </summary>
+            <param name="api">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <returns>The samples keyed by media type.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.GetSampleResponses(System.Web.Http.Description.ApiDescription)">
+            <summary>
+            Gets the response body samples for a given <see cref="T:System.Web.Http.Description.ApiDescription"/>.
+            </summary>
+            <param name="api">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <returns>The samples keyed by media type.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.GetSample(System.Web.Http.Description.ApiDescription,SonyAmbo.Areas.HelpPage.SampleDirection)">
+            <summary>
+            Gets the request or response body samples.
+            </summary>
+            <param name="api">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <param name="sampleDirection">The value indicating whether the sample is for a request or for a response.</param>
+            <returns>The samples keyed by media type.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.GetActionSample(System.String,System.String,System.Collections.Generic.IEnumerable{System.String},System.Type,System.Net.Http.Formatting.MediaTypeFormatter,System.Net.Http.Headers.MediaTypeHeaderValue,SonyAmbo.Areas.HelpPage.SampleDirection)">
+            <summary>
+            Search for samples that are provided directly through <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.ActionSamples"/>.
+            </summary>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+            <param name="type">The CLR type.</param>
+            <param name="formatter">The formatter.</param>
+            <param name="mediaType">The media type.</param>
+            <param name="sampleDirection">The value indicating whether the sample is for a request or for a response.</param>
+            <returns>The sample that matches the parameters.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.GetSampleObject(System.Type)">
+            <summary>
+            Gets the sample object that will be serialized by the formatters. 
+            First, it will look at the <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.SampleObjects"/>. If no sample object is found, it will try to create
+            one using <see cref="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.DefaultSampleObjectFactory(SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator,System.Type)"/> (which wraps an <see cref="T:SonyAmbo.Areas.HelpPage.ObjectGenerator"/>) and other
+            factories in <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.SampleObjectFactories"/>.
+            </summary>
+            <param name="type">The type.</param>
+            <returns>The sample object.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.ResolveHttpRequestMessageType(System.Web.Http.Description.ApiDescription)">
+            <summary>
+            Resolves the actual type of <see cref="T:System.Net.Http.ObjectContent`1"/> passed to the <see cref="T:System.Net.Http.HttpRequestMessage"/> in an action.
+            </summary>
+            <param name="api">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <returns>The type.</returns>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.ResolveType(System.Web.Http.Description.ApiDescription,System.String,System.String,System.Collections.Generic.IEnumerable{System.String},SonyAmbo.Areas.HelpPage.SampleDirection,System.Collections.ObjectModel.Collection{System.Net.Http.Formatting.MediaTypeFormatter}@)">
+            <summary>
+            Resolves the type of the action parameter or return value when <see cref="T:System.Net.Http.HttpRequestMessage"/> or <see cref="T:System.Net.Http.HttpResponseMessage"/> is used.
+            </summary>
+            <param name="api">The <see cref="T:System.Web.Http.Description.ApiDescription"/>.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+            <param name="sampleDirection">The value indicating whether the sample is for a request or a response.</param>
+            <param name="formatters">The formatters.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleGenerator.WriteSampleObjectUsingFormatter(System.Net.Http.Formatting.MediaTypeFormatter,System.Object,System.Type,System.Net.Http.Headers.MediaTypeHeaderValue)">
+            <summary>
+            Writes the sample object using formatter.
+            </summary>
+            <param name="formatter">The formatter.</param>
+            <param name="value">The value.</param>
+            <param name="type">The type.</param>
+            <param name="mediaType">Type of the media.</param>
+            <returns></returns>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.HelpPageSampleKey">
+            <summary>
+            This is used to identify the place where the sample should be applied.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.#ctor(System.Net.Http.Headers.MediaTypeHeaderValue)">
+            <summary>
+            Creates a new <see cref="T:SonyAmbo.Areas.HelpPage.HelpPageSampleKey"/> based on media type.
+            </summary>
+            <param name="mediaType">The media type.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.#ctor(System.Net.Http.Headers.MediaTypeHeaderValue,System.Type)">
+            <summary>
+            Creates a new <see cref="T:SonyAmbo.Areas.HelpPage.HelpPageSampleKey"/> based on media type and CLR type.
+            </summary>
+            <param name="mediaType">The media type.</param>
+            <param name="type">The CLR type.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.#ctor(SonyAmbo.Areas.HelpPage.SampleDirection,System.String,System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a new <see cref="T:SonyAmbo.Areas.HelpPage.HelpPageSampleKey"/> based on <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection"/>, controller name, action name and parameter names.
+            </summary>
+            <param name="sampleDirection">The <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection"/>.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.#ctor(System.Net.Http.Headers.MediaTypeHeaderValue,SonyAmbo.Areas.HelpPage.SampleDirection,System.String,System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a new <see cref="T:SonyAmbo.Areas.HelpPage.HelpPageSampleKey"/> based on media type, <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection"/>, controller name, action name and parameter names.
+            </summary>
+            <param name="mediaType">The media type.</param>
+            <param name="sampleDirection">The <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection"/>.</param>
+            <param name="controllerName">Name of the controller.</param>
+            <param name="actionName">Name of the action.</param>
+            <param name="parameterNames">The parameter names.</param>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.ControllerName">
+            <summary>
+            Gets the name of the controller.
+            </summary>
+            <value>
+            The name of the controller.
+            </value>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.ActionName">
+            <summary>
+            Gets the name of the action.
+            </summary>
+            <value>
+            The name of the action.
+            </value>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.MediaType">
+            <summary>
+            Gets the media type.
+            </summary>
+            <value>
+            The media type.
+            </value>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.ParameterNames">
+            <summary>
+            Gets the parameter names.
+            </summary>
+        </member>
+        <member name="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection">
+            <summary>
+            Gets the <see cref="P:SonyAmbo.Areas.HelpPage.HelpPageSampleKey.SampleDirection"/>.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.ImageSample">
+            <summary>
+            This represents an image sample on the help page. There's a display template named ImageSample associated with this class.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.ImageSample.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SonyAmbo.Areas.HelpPage.ImageSample"/> class.
+            </summary>
+            <param name="src">The URL of an image.</param>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.InvalidSample">
+            <summary>
+            This represents an invalid sample on the help page. There's a display template named InvalidSample associated with this class.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.ObjectGenerator">
+            <summary>
+            This class will create an object of a given type and populate it with sample data.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.ObjectGenerator.GenerateObject(System.Type)">
+            <summary>
+            Generates an object for a given type. The type needs to be public, have a public default constructor and settable public properties/fields. Currently it supports the following types:
+            Simple types: <see cref="T:System.Int32"/>, <see cref="T:System.String"/>, <see cref="T:System.Enum"/>, <see cref="T:System.DateTime"/>, <see cref="T:System.Uri"/>, etc.
+            Complex types: POCO types.
+            Nullables: <see cref="T:System.Nullable`1"/>.
+            Arrays: arrays of simple types or complex types.
+            Key value pairs: <see cref="T:System.Collections.Generic.KeyValuePair`2"/>
+            Tuples: <see cref="T:System.Tuple`1"/>, <see cref="T:System.Tuple`2"/>, etc
+            Dictionaries: <see cref="T:System.Collections.Generic.IDictionary`2"/> or anything deriving from <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+            Collections: <see cref="T:System.Collections.Generic.IList`1"/>, <see cref="T:System.Collections.Generic.IEnumerable`1"/>, <see cref="T:System.Collections.Generic.ICollection`1"/>, <see cref="T:System.Collections.IList"/>, <see cref="T:System.Collections.IEnumerable"/>, <see cref="T:System.Collections.ICollection"/> or anything deriving from <see cref="T:System.Collections.Generic.ICollection`1"/> or <see cref="T:System.Collections.IList"/>.
+            Queryables: <see cref="T:System.Linq.IQueryable"/>, <see cref="T:System.Linq.IQueryable`1"/>.
+            </summary>
+            <param name="type">The type.</param>
+            <returns>An object of the given type.</returns>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.SampleDirection">
+            <summary>
+            Indicates whether the sample is used for request or response
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.TextSample">
+            <summary>
+            This represents a preformatted text sample on the help page. There's a display template named TextSample associated with this class.
+            </summary>
+        </member>
+        <member name="T:SonyAmbo.Areas.HelpPage.XmlDocumentationProvider">
+            <summary>
+            A custom <see cref="T:System.Web.Http.Description.IDocumentationProvider"/> that reads the API documentation from an XML documentation file.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Areas.HelpPage.XmlDocumentationProvider.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SonyAmbo.Areas.HelpPage.XmlDocumentationProvider"/> class.
+            </summary>
+            <param name="documentPath">The physical path to XML document.</param>
+        </member>
+        <member name="F:SonyAmbo.Controllers.CommonController._ICommonService">
+            <summary>
+            Fetching data by Id only 
+            Kritika chadha
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.#ctor(AmboServices.Interface.ICommonService)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetStatesByRegion(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active States by Region.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetCityByState(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Cities by State.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllCities">
+            <summary>
+            Get Active Cities.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllLocations">
+            <summary>
+            Get Active Locations.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetLocationByCity(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Location by City.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDealersByLocation(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Dealers by Location.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDealersByLocationNonSFA(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Dealers NONSFA by Location.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDealersByBranch(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Dealers by Branch.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllActiveSFA">
+            <summary>
+            Get all Active SFA.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllActiveDealers">
+            <summary>
+            Get all Active dealers.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllActiveDealersNonSFA">
+            <summary>
+            Get all Active dealers.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetActiveBrands">
+            <summary>
+            Get all Active dealers.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetActiveFeedbackForms">
+            <summary>
+            Get all Active dealers.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetNonSFADealerMasterCodesByBranch(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Non SFA Dealer Master Codes by Branch.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetNonSFADealersByMasterCodes(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.NonSFAMasterCodeList})">
+            <summary>
+            Get Active Non SFA Dealers by Master Codes.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFAByDealer(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active unmapped SFA by dealer.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFADropdown">
+            <summary>
+            Get Active unmapped SFA by dealer.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFAByBranch(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active unmapped SFA by branch.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFAFromDivisionAndBranch(AmboUtilities.Envelope{AmboLibrary.UserManagement.SearchSFA})">
+            <summary>
+            Get Active SFA by branch and division.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSIDFromBranchForBroadcast(AmboUtilities.Envelope{AmboLibrary.UserManagement.SearchSID})">
+            <summary>
+            Get Active SID by branch for broadcasting message.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllActiveUsersByRole(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get all active users by role.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSalesPICByBranch(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Sales PIC user list by branch.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllActiveRDI">
+            <summary>
+            Get Active RDI
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetActiveSFALevels">
+            <summary>
+            Get Active SFA levels.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetUnmappedSFAByBranch(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active unmapped SFA by branch.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductSubCategoryByCategoryId(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active Product Sub Categories by Product Category Id.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetRegion">
+            <summary>
+            Get Active Region.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetChannels">
+            <summary>
+            Get Active Channels.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetStates">
+            <summary>
+            Get Active States.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetRole">
+            <summary>
+            Get Active Role.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDealerClassificationTypes">
+            <summary>
+            Get Dealer Classification Types.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAgency(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.AgencyDropdownInput})">
+            <summary>
+            Get Active Agency.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetIncentiveCategory">
+            <summary>
+            Get Active IncentiveCategory.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductTargetCategories">
+            <summary>
+            Get Active ProductTargetCategories.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetTargetCategoriesByProductCategories(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductTargetCategorySearch})">
+            <summary>
+            Get Active ProductTargetCategories by product category.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetTargetTypes">
+            <summary>
+            Get Active Target Types.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDivisions">
+            <summary>
+            Get Active Divisions.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductCategories">
+            <summary>
+            Get Active ProductCategories.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetUnmappedProdCatsForSFA(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active unmapped ProductCategories for a SFA.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductCategoryForGroupMapping(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Get Active ProductCategoryForGroupMapping.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFALevels">
+            <summary>
+            Get Active SFALevels.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetCityType">
+            <summary>
+            To get list of City Type.
+            </summary>
+            <returns>List of City Type.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDivisionForProductCategory">
+            <summary>
+            To get list of Division list from material master.
+            </summary>
+            <returns>List of Division.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductCategoryByDivision(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            To get list of Product Category by division from material master.
+            </summary>
+            <returns>List of ProductCategory.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSize(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of Size.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSegment(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of Segment.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetTVType(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of TVType.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetResolution(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of Resolution.
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetD3(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of 3D
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetInternet(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AttributeGet})">
+            <summary>
+            To get list of Internet
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.ValidateMaterialCode(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Validating the material code is it valid or not
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetCompetitors">
+            <summary>
+            To get list of Competitors.
+            </summary>
+            <returns>List of Competitors.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetCompetitorProducts(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.CompetitorProductsInput})">
+            <summary>
+            To get Competitor's Product Categories.
+            </summary>
+            <param name="param">Competitor ID</param>
+            <returns>Competitor's Product Categories.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetMaterialDataforDD">
+            <summary>
+            To get list of Materials(Models).
+            </summary>
+            <returns>Materials(Models)</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetMaterialDataforDDByProSub(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialDDInput})">
+            <summary>
+            To get list of Materials(Models).
+            </summary>
+            <returns>Materials(Models)</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSonyProducts(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorDataInput})">
+            <summary>
+            To fetch Sony Product Category and Sub Category data based on Competitor Category Id.
+            </summary>
+            <param name="param">Competitor Category Id.</param>
+            <returns>Sony Product Category and Sub Category data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFAType">
+            <summary>
+            To get list of SFAType(Models).
+            </summary>
+            <returns>SFAType(Models)</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDisplayOrder">
+            <summary>
+            To get list of DisplayOrder(Models).
+            </summary>
+            <returns>DisplayOrder(Models)</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.ValidateSAPCode(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.Common})">
+            <summary>
+            Validating the SAP code is it valid or not
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetReferenceId">
+            <summary>
+            Get References for Asset Assignment To RDI
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetMaterialMasterCodeList">
+            <summary>
+            Get list of material master code for typeahead
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetDealerCodeList">
+            <summary>
+            Get list of dealer master code for typeahead
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetLevelOfEducation">
+            <summary>
+            to get list of level of education for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSource">
+            <summary>
+            to get list of source for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetGender">
+            <summary>
+            to get gender for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetOutletType">
+            <summary>
+            to get OutletType for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllIncentiveCategory">
+            <summary>
+            to get incentive categories for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllModules">
+            <summary>
+            to get list of all modules for dropdown
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSubModulesByModuleId(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.SubModuleMasterGet})">
+            <summary>
+            to get list of all sub modules for dropdown by moduleid
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllFestivalScheme(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.FestivalIncentiveSchemeParam})">
+            <summary>
+            to get list of all festival schemes
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllAttendanceType">
+            <summary>
+            To get all Attendance Type Data.
+            Dhruv Sharma, ValueFirst, Gurgaon
+            </summary>
+            <returns>Attendance Type List</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetAllDeviationReasons">
+            <summary>
+            To get all Deviation Reasons Data.
+            Nikhil Thakral, ValueFirst, Gurgaon
+            </summary>
+            <returns>Deviation Reasons List</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetProductCategoryGroupDropDown">
+            <summary>
+            to get all product category groups
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetBranchByUserId(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.GetBranch})">
+            <summary>
+            To get Branch details of a RDI or any particular user.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetTrainings(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.GetTrainingDropdown})">
+            <summary>
+            To get all training(s) or filter by branch/channel.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetSFAFromDivisionAndBranchAndRole(AmboUtilities.Envelope{AmboLibrary.UserManagement.SearchSFA})">
+            <summary>
+            To get all SFA(s) or filter by branch/Division/role.
+            Ehtesham Ansari, ValueFirst, Gurgaon
+            </summary>
+            <returns>sfa</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetBranchMappedForHR(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.GetBranch})">
+            <summary>
+            To get Branch for Regional HR.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.CommonController.GetShiftTiming">
+            <summary>
+            This is for mapping shift in dealer.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFALevelMasterData(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelFilter})">
+            <summary>
+            To fetch all SFA Level Master Data.
+            </summary>
+            <returns>SFA Level Master Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetShiftMasterData(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ShiftFilter})">
+            <summary>
+            This is for Shift master.
+            </summary>
+            <param name="InputParam"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFALevelMasterDataById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelInput})">
+            <summary>
+            To fetch SFA Level master data by Id.
+            </summary>
+            <param name="Input">SFA Level Id</param>
+            <returns>SFA Level master data by Id.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFASubLevelMasterData(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelFilter})">
+            <summary>
+            To fetch all SFA Sub Level Master Data.
+            </summary>
+            <returns>SFA Sub Level Master Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFASubLevelMasterDataById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelInput})">
+            <summary>
+            To fetch SFA Sub Level master data by Id.
+            </summary>
+            <param name="Input">SFA Sub Level Id</param>
+            <returns>SFA Sub Level master data by Id.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFAMasterforHRGrid(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFAMasterforHRFilter})">
+            <summary>
+            To fetch sfa details for HR by Login Id from User, Employee and Employee for HR table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetCompetitorMasterGrid(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorFilter})">
+            <summary>
+            To get Competitor Master data.
+            </summary>
+            <returns>Competitor Master data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetCompetitorProductMasterGrid(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorProductFilter})">
+            <summary>
+            To get Competitor Product Category Master Data.
+            </summary>
+            <returns>Competitor Product Category Master Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetCompetitorModelMasterGrid(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorModelFilter})">
+            <summary>
+            To get Competitor's model master grid data.
+            </summary>
+            <returns>Competitor's model master grid data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.GridController.GetSFASalaryMasterGrid(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterFilter})">
+            <summary>
+            To fetch sfa salary details for HR by Login Id from User, Employee and salary master table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveCalculationDateSettingController.GetIncentiveCalculationDateSettingReport(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.IncentiveCalculationDateSettingParam})">
+            <summary>
+            To fetch Incentive calculation date setting Report.
+            </summary>
+            <returns>Incentive calculation date setting Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveCalculationDateSettingController.UpdateIncentiveCalculationDateSetting(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.IncentiveCalculationDateSetting})">
+            <summary>
+            Update an incentive calculation date in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.ManageBaseIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.CreateBaseIncentiveForm})">
+            <summary>
+            Create a new base incentive definition. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.DeleteBaseIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DeleteBaseIncentiveForm})">
+            <summary>
+            Delete an existing base incentive definition on basis of target category id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetBaseIncentiveDefinitionByTargetCategoryId(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.GetBaseIncentive})">
+            <summary>
+            Get Base Incentive Definition By Target Category Id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetPerPieceIncentiveExcelFile(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DownloadPerPieceIncentiveExcel})">
+            <summary>
+            Get Per Piece Incentive Definition excel file data. 
+            </summary>
+            <param name="objDownloadData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.ManagePerPieceIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.CreatePerPieceIncentive})">
+            <summary>
+            Create a new per piece incentive definition. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetPerPieceIncentiveDefinitionBySchemeId(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.GetPerPieceIncentiveValues})">
+            <summary>
+            Get per piece Incentive scheme By scheme Id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetPerPieceIncentiveSchemeByProductId(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.PerPieceIncentiveSchemeByProductId})">
+            <summary>
+            Get per piece Incentive scheme By Product Category Id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.ManagePerPieceMaterialMapping(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.PerPieceIncentiveCreate})">
+            <summary>
+            Create a material-per piece mapping for new material. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.DeletePerPieceIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DeletePerPieceIncentive})">
+            <summary>
+            Delete a per piece incentive scheme. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveDefinitionExcelFile(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DownloadFestivalIncentiveDefinitionExcel})">
+            <summary>
+            Get Festival Incentive Definition excel file data. 
+            </summary>
+            <param name="objDownloadData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveSlabDefinitionExcelFile(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DownloadFestivalIncentiveDefinitionExcel})">
+            <summary>
+            Get Festival Incentive slab Definition excel file data. 
+            </summary>
+            <param name="objDownloadData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.ManageFestivalIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.CreateFestivalIncentive})">
+            <summary>
+            Create/Update festival incentive definition. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.ManageFestivalIncentiveSlabDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.CreateFestivalIncentiveSlab})">
+            <summary>
+            Create/Update festival incentive slab definition. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveDefinitionBySchemeId(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.GetFestivalIncentiveValues})">
+            <summary>
+            Get festival Incentive scheme By scheme Id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveSlabDefinitionBySchemeId(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.GetFestivalIncentiveValues})">
+            <summary>
+            Get festival Incentive scheme slab definition By scheme Id. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.DeleteFestivalIncentiveDefinition(AmboUtilities.Envelope{AmboLibrary.IncentiveManagement.DeleteFestivalIncentive})">
+            <summary>
+            Delete a festival incentive scheme. 
+            </summary>
+            <param name="objFormData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetBasePerPieceIncentiveReport(AmboUtilities.Envelope{AmboLibrary.WebReports.BasePerPieceIncentiveReportInputParam})">
+            <summary>
+            To fetch Base Per Piece Incentive Report.
+            </summary>
+            <param name="param">Branch	SFA Name	Division	Month 	Product Category</param>
+            <returns>Base Per Piece Incentive Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetBasePerPieceIncentiveDetailReport(AmboUtilities.Envelope{AmboLibrary.WebReports.BasePerPieceIncentiveReportInputParam})">
+            <summary>
+            To fetch Base Per Piece Incentive detail Report.
+            </summary>
+            <param name="param">Branch	SFA Name	Division	Month 	Product Category</param>
+            <returns>Base Per Piece Incentive Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveReport(AmboUtilities.Envelope{AmboLibrary.WebReports.FestivalIncentiveReportInputParam})">
+            <summary>
+            To fetch Festival Incentive Report.
+            </summary>
+            <param name="param">Branch	SFA Name	Division	FestivalSchemeId 	Product Category</param>
+            <returns>Festival Incentive Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalIncentiveDetailReport(AmboUtilities.Envelope{AmboLibrary.WebReports.FestivalIncentiveReportInputParam})">
+            <summary>
+            To fetch Festival Incentive detail Report.
+            </summary>
+            <param name="param">Branch	SFA Name	Division	FestivalScheme 	Product Category</param>
+            <returns>Festival Incentive Detail Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalSellThruTracker(AmboUtilities.Envelope{AmboLibrary.WebReports.FestivalSellThruTrackerInputParam})">
+            <summary>
+            To fetch sell thru tracker.
+            </summary>
+            <param name="param">FestivalNameId</param>
+            <returns>Festival sell thru tracker.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.IncentiveController.GetFestivalNameDetails">
+            <summary>
+            To fetch Festival name details.
+            </summary>
+            <returns>Festival name details.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.#ctor(AmboServices.Interface.IMappingService)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.CreateDealerSFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerSFAMapping})">
+            <summary>
+            Create a new dealer-SFA mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.UpdateDealerSFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerSFAMapping})">
+            <summary>
+            Update an existing dealer-SFA mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.DeleteDealerSFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerSFAMapping})">
+            <summary>
+            Delete a dealer-SFA mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetDealerClassificationMappingTable(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerClassificationMappingSearch})">
+            <summary>
+            Get dealer-Classification mapping table. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.CreateDealerClassificationMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerClassificationMappingTable})">
+            <summary>
+            Create a new dealer-Classification mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.UpdateDealerClassificationMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerClassificationMapping})">
+            <summary>
+            Update an existing dealer-Classification mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.DeleteDealerClassificationMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerClassificationMapping})">
+            <summary>
+            Delete a dealer-Classification mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageDealerClassificationMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DealerProductMapping})">
+            <summary>
+            Create a dealer-Classification mapping for new dealer. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.CreateProductCategorySFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.ProductCategorySFAMapping})">
+            <summary>
+            Create a new Product category-SFA mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.DeleteProductCategorySFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.ProductCategorySFAMapping})">
+            <summary>
+            Delete a Product category-SFA mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.CreateEmployeeStructureMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.EmployeeStructureMapping})">
+            <summary>
+            Create an Employee Structure Mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.DeleteEmployeeStructureMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.EmployeeStructureMapping})">
+            <summary>
+            Delete an Employee Structure Mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetSFAForStructureMapping(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAForStructureMappingInput})">
+            <summary>
+            Get SFA for employee structure mapping
+            on basis of Branch, Division and SFA Type
+            </summary>
+            <param name="objSearchData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageUserBranchChannelPCMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.UserBranchChannelPCMapping})">
+            <summary>
+            Create an User Branch Channel Product Category Mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetUserBranchChannelPCMapping(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            Get User Branch Channel Product Category Mapping. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageIncentiveTargetCategoryMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.IncentiveTargetCategoryMapping})">
+            <summary>
+            Manage an Incentive Target Category Mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetIncentiveTargetCategoryMapping(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            Get User Branch Channel Product Category Mapping. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageIncentiveCategorySFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.IncentiveCategorySFAMapping})">
+            <summary>
+            Get SFA by RDI For Incentive Category SFAMapping. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetSFAForIncentiveCategorySFAMapping(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            Get SFA by RDI For Incentive Category SFAMapping. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageProductDefinitionUnderTargetCategory(AmboUtilities.Envelope{AmboLibrary.Mappings.ProdDefUnderTargetCatGridOutput})">
+            <summary>
+            Manage an Incentive Target Category Mapping. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetProductsByCategorySubCategory(AmboUtilities.Envelope{AmboLibrary.Mappings.ProdDefUnderTargetCat})">
+            <summary>
+            Get Products by category/subcategory for defining under a targetcategory. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetProductsByCategorySubCategoryforallMat(AmboUtilities.Envelope{AmboLibrary.Mappings.ProdDefUnderTargetCatforAllMat})">
+            <summary>
+            Get Products by category/subcategory for defining under a targetcategory. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.UploadTargetToSFAByMonth(AmboUtilities.Envelope{AmboLibrary.Mappings.AssignTargetToSFAUpload})">
+            <summary>
+            Upload target to SFA from Excel and get return data of successful/unsuccessful
+            </summary>
+            <param name="targetData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetBranchByUserId(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            to get Branch Details by User Id
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.CreateIncentiveCategorySFAMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.NavigationIncentiveCategorySFAMapping})">
+            <summary>
+            Create a dealer-Classification mapping for new dealer. 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ManageSalesPICOutletMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.ManageSalesPICOutletMappingForm})">
+            <summary>
+            Create/update sales pic outlet mapping 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetSalesPICOutletMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.ManageSalesPICOutletMappingForm})">
+            <summary>
+            get sales pic outlet mapping 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.DeleteSalesPICOutletMapping(AmboUtilities.Envelope{AmboLibrary.Mappings.DeleteSalesPICOutletMappingForm})">
+            <summary>
+            delete sales pic outlet mapping 
+            </summary>
+            <param name="mappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.GetFestivalTargetToSFABySchemeId(AmboUtilities.Envelope{AmboLibrary.Mappings.AssignFestivalTargetGet})">
+            <summary>
+            Get Festival Target to SFA By Scheme 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.ShowFestivalTargetToSFABySchemeId(AmboUtilities.Envelope{AmboLibrary.Mappings.AssignFestivalTargetGet})">
+            <summary>
+            Get Festival Target to SFA By Scheme 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MappingController.UploadFestivalTargetToSFAByScheme(AmboUtilities.Envelope{AmboLibrary.Mappings.AssignFestivalTargetUpload})">
+            <summary>
+            Upload festival target to SFA from Excel and get return data of successful/unsuccessful
+            </summary>
+            <param name="targetData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.#ctor(AmboServices.Interface.IMasterMaintenanceService)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.ValidateMethod">
+            <summary>
+            Test Method
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllRegions">
+            <summary>
+            Get all active regions.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetRegionByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RegionMaster})">
+            <summary>
+            Get region data on basis of region ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateRegion(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RegionMaster})">
+            <summary>
+            Create a new region. 
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteRegion(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RegionMaster})">
+            <summary>
+            Delete an existing region.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateRegion(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RegionMaster})">
+            <summary>
+            Update an existing region in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateState(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateStateForm})">
+            <summary>
+            Create a new state which is mapped to an existing region.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllStates">
+            <summary>
+            Get all states from all regions.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteState(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteStateForm})">
+            <summary>
+            Delete an existing state if the state is not mapped to any city/location.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetStateByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.StateMaster})">
+            <summary>
+            Get state data on basis of its ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateState(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.UpdateStateForm})">
+            <summary>
+            Update an existing state.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllBranch">
+            <summary>
+            Get All Branch Details 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.AddNewBranch(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateBranchForm})">
+            <summary>
+            Method to Add New Brach 
+            Code not final. We need to Validate the User based on its Id
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteBranch(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteBranchForm})">
+            <summary>
+            Method to Delete respective Branch
+            Code not final. We need to Validate the User based on its Id
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateBranch(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.UpdateBranchForm})">
+            <summary>
+            Method to Update respective Branch
+            Code not final. We need to Validate the User based on its Id
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllCities">
+            <summary>
+            Get all cities from all states.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetCityByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CityMaster})">
+            <summary>
+            Get all data related to a city on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateCity(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateCityForm})">
+            <summary>
+            Create a new city within a state.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteCity(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteCityForm})">
+            <summary>
+            Delete an existing city if it is not mapped to any location/branch.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateCity(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.UpdateCityForm})">
+            <summary>
+            Update an existing city in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllLocations">
+            <summary>
+            Get all locations from all cities.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetLocationByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.LocationMaster})">
+            <summary>
+            Get data related to a specific location on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateLocation(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateLocationForm})">
+            <summary>
+            Create a new location inside a city.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteLocation(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteLocationForm})">
+            <summary>
+            Delete a location if no dealer or employee is mapped to it.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateLocation(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.UpdateLocationForm})">
+            <summary>
+            Update an existing location.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllProductCategories">
+            <summary>
+            Gets all product categories from all divisions.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetProductCategoryByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductCategoryMaster})">
+            <summary>
+            Get data specific to a product category on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateProductCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateProductCategoryForm})">
+            <summary>
+            Create a new product category for a division.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteProductCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteProductCategoryForm})">
+            <summary>
+            Delete a product category if it is not mapped to any SFA / Material / Product Sub category and no target is set for it.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateProductCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.UpdateProductCategoryForm})">
+            <summary>
+            Update an existing product category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllProductSubCategories">
+            <summary>
+            Get all product sub categories from all product categories.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetProductSubCategoryByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductSubCategoryMaster})">
+            <summary>
+            Get all data related to a product sub category on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateProductSubCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductSubCategoryMaster})">
+            <summary>
+            Create a new product sub category which is mapped to a product category.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteProductSubCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductSubCategoryMaster})">
+            <summary>
+            Delete a product sub category if it is not mapped to any active material.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateProductSubCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductSubCategoryMaster})">
+            <summary>
+            Update an existing product sub category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllMaterials">
+            <summary>
+            Get all materials from all product categories and sub categories.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetMaterialByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialMaster})">
+            <summary>
+            Get data related to a specific material on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateMaterial(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialMaster})">
+            <summary>
+            Create a new material inside a product category and sub category.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteMaterial(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialMaster})">
+            <summary>
+            Delete a material from the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetMaterialByMaterialCode(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialMaster})">
+            <summary>
+            Get data related to a specific material on basis of it's material code.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateMaterial(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialMaster})">
+            <summary>
+            Update an existing material in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetMaterialIdByMaterialCode(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.MaterialCodeGet})">
+            <summary>
+            Get Material Id on the basis of Material Code
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllChannels">
+            <summary>
+            Get all channels saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetChannelByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ChannelMaster})">
+            <summary>
+            Get all data related to a specific channel on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateChannel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ChannelMaster})">
+            <summary>
+            Create a new channel in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteChannel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ChannelMaster})">
+            <summary>
+            Delete a channel if it is not mapped to any active dealer.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateChannel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ChannelMaster})">
+            <summary>
+            Update an existing channel in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllSFALevels">
+            <summary>
+            Get all SFA levels defined in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetSFALevelByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelMaster})">
+            <summary>
+            Get a specific SFA level on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateSFALevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelMaster})">
+            <summary>
+            Define a new SFA level in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteSFALevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelInput})">
+            <summary>
+            Delete an SFA level definition if it is not assigned to any active employee and if no sub level is present in the system which is related to that SFA level.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateSFALevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFALevelMaster})">
+            <summary>
+            Update an SFA level definition in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllSFASubLevels">
+            <summary>
+            Get all SFA sub levels from all SFA levels.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetSFASubLevelByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelMaster})">
+            <summary>
+            Get all data related to a specific SFA sub level on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateSFASubLevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelMaster})">
+            <summary>
+            Create a new SFA sub level inside an SFA level.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteSFASubLevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelInput})">
+            <summary>
+            Delete an SFA sub level if it is not mapped to any active employee.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateSFASubLevel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASubLevelMaster})">
+            <summary>
+            Update an existing SFA sub level in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllCompetitors">
+            <summary>
+            Get all competitor companies which have been defined in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetCompetitorByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorMaster})">
+            <summary>
+            Get data related to a specific competitor company on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateCompetitor(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorMaster})">
+            <summary>
+            Create a new competitor company record in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteCompetitor(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorMaster})">
+            <summary>
+            Delete a competitor company if it is not mapped to any competitor product.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateCompetitor(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorMaster})">
+            <summary>
+            Update an existing competitor company in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllCompetitorProducts">
+            <summary>
+            Get all competitor products related to all competitor companies.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetCompetitorProductByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorProductMaster})">
+            <summary>
+            Get data related to a specific competitor product on the basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateCompetitorProduct(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorProductMaster})">
+            <summary>
+            Create a new product for a competitor.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteCompetitorProduct(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorProductMaster})">
+            <summary>
+            Delete a competitor product if no model is mapped to it.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateCompetitorProduct(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorProductMaster})">
+            <summary>
+            Update an existing competitor product in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllCompetitorModels">
+            <summary>
+            Get all competitor models registered in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetCompetitorModelByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorDataInput})">
+            <summary>
+            Get data related to a specific competitor model on the basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateCompetitorModel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorModelMaster})">
+            <summary>
+            Create a new competitor model for a competitor product.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteCompetitorModel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorModelMaster})">
+            <summary>
+            Delete a competitor model from the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateCompetitorModel(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorModelMaster})">
+            <summary>
+            Update an existing competitor model in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllDealers">
+            <summary>
+            Get all Dealers saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetDealerCode(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.PayerDetails})">
+            <summary>
+            Get Dealer Code.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetDealerByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DealerMaster})">
+            <summary>
+            Get all data related to a specific Dealer on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateDealer(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DealerMaster})">
+            <summary>
+            Create a new Dealer in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteDealer(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DealerMaster})">
+            <summary>
+            Delete a Dealer if it is not mapped to any active employee.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CheckPSIOutlet(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DealerMaster})">
+            <summary>
+            check for PSIOutlet mapping
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateDealer(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DealerMaster})">
+            <summary>
+            Update an existing Dealer in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllDivisions">
+            <summary>
+            Get all Divisions saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetDivisionByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DivisionMaster})">
+            <summary>
+            Get all data related to a specific Division on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateDivision(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DivisionMaster})">
+            <summary>
+            Create a new Division in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteDivision(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DivisionMaster})">
+            <summary>
+            Delete a Division if it is not mapped to any active employee/agency/product category.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateDivision(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DivisionMaster})">
+            <summary>
+            Update an existing Division in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllAssets">
+            <summary>
+            Get all Assets saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAssetByID(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AssetMaster})">
+            <summary>
+            Get all data related to a specific Asset on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateAsset(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AssetMaster})">
+            <summary>
+            Create a new Asset in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteAsset(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AssetMaster})">
+            <summary>
+            Delete a Asset if it has no dependency in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateAsset(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.AssetMaster})">
+            <summary>
+            Update an existing Asset in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllProductTargetCategories">
+            <summary>
+            Get all Product Target Category saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetProductTargetCategoryById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductTargetCategoryMaster})">
+            <summary>
+            Get all data related to a specific Product Target Category on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateProductTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductTargetCategoryMaster})">
+            <summary>
+            Create a new Product Target Category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteProductTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductTargetCategoryMaster})">
+            <summary>
+            Delete a Product Target Category if it has no dependency in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateProductTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductTargetCategoryMaster})">
+            <summary>
+            Update an existing Product Target Category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetAllProductDefinitionUnderTargetCategories">
+            <summary>
+            Get all Product Definition Under Target Category saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetProductDefinitionUnderTargetCategoryById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductDefinitionUnderTargetCategory})">
+            <summary>
+            Get all data related to a specific Product Definition Under Target Category on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateProductDefinitionUnderTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductDefinitionUnderTargetCategory})">
+            <summary>
+            Create a new Product Definition Under Target Category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteProductDefinitionUnderTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductDefinitionUnderTargetCategory})">
+            <summary>
+            Delete a Product Definition Under Target Category if it has no dependency in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateProductDefinitionUnderTargetCategory(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ProductDefinitionUnderTargetCategory})">
+            <summary>
+            Update an existing Product Definition Under Target Category in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteSFASalaryMaster(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterDelete})">
+            <summary>
+            Delete a SFA Salary Master if it has no dependency in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateSFASalaryMaster(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterGrid})">
+            <summary>
+            Update an existing SFA Salary Master in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetSFASalaryMasterById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterGrid})">
+            <summary>
+            to get sfa salary master row detail by LoginId i.e. Id of User table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateSFASalaryMaster(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterGrid})">
+            <summary>
+            to create new sfa salary master row by LoginId i.e. Id of User table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.SFASalaryMasterDataDownload(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.SFASalaryMasterDownload})">
+            <summary>
+            to get sfa salary master row detail by LoginId i.e. Id of User table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.ManageSFASalaryMasterData(AmboUtilities.Envelope{System.Collections.Generic.List{AmboLibrary.MasterMaintenance.SFASalaryMasterGrid}})">
+            <summary>
+            to add/update sfa salary master row detail through excel file
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateTargetDateSettingMaster(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.TargetDateSettingMaster})">
+            <summary>
+            Update an target update date in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetTargetDateSettingMasterById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.TargetDateSettingMaster})">
+            <summary>
+            to get Target Update Date row detail by Id
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateTargetDateSettingMaster(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.TargetDateSettingMaster})">
+            <summary>
+            to create new Target Update Date Master row for respective Branch
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateRoleRightsMapping(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RoleRightsMappingMaster})">
+            <summary>
+            to create role rights mapping master
+            </summary>
+            <param name="rolerightsmappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateRoleRightsMapping(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.RoleRightsMappingMaster})">
+            <summary>
+            to update existing role rights mapping master
+            </summary>
+            <param name="rolerightsmappingData"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateFeedbackForm(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateFeedbackForm})">
+            <summary>
+            To create feedback form design.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteFeedbackForm(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.DeleteFeedbackForm})">
+            <summary>
+            To delete feedback form design.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.ViewFeedbackFormDesign(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ViewFeedbackForm})">
+            <summary>
+            To view feedback form design.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateTrainingForm(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CreateTrainingForm})">
+            <summary>
+            To Create Training Form.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetShiftTiming">
+            <summary>
+            Get all shuft saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.GetShiftTimingById(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ShiftMaster})">
+            <summary>
+            Get all data related to a specific shift on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.CreateShiftTiming(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ShiftMaster})">
+            <summary>
+            Create a new Shift in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.DeleteShift(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ShiftMaster})">
+            <summary>
+            Delete a Shift if it is not mapped to any active dealer.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MasterMaintenanceController.UpdateShiftTiming(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.ShiftMaster})">
+            <summary>
+            Update an existing shift in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.#ctor(AmboServices.Interface.IModuleManagementService)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.GetDealerMasterCodeList">
+            <summary>
+            get all the master code with same text code
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.GetDealerByMasterCode(AmboUtilities.Envelope{AmboLibrary.Modules.DealerMasterCodeUpdate})">
+            <summary>
+            get all the dealer details mapped with same master code
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.UpdateDealerMasterCode(AmboUtilities.Envelope{AmboLibrary.Modules.DealerMasterCodeUpdate})">
+            <summary>
+            update Master Code corresponding to Dealers
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.ValidateDealerMasterCode(AmboUtilities.Envelope{AmboLibrary.Modules.DealerMasterCodeUpdate})">
+            <summary>
+            validate master code in Dealer Master table
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.IssueAssetToSFA(AmboUtilities.Envelope{AmboLibrary.Modules.AssetAssignmentToSFA})">
+            <summary>
+            Assign Asset to SFA
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.GetAssetIssuedToSFA(AmboUtilities.Envelope{AmboLibrary.Modules.AssetIssuedToSFAGet})">
+            <summary>
+            to get Asset issued to sfa by userid
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.GetAssetsDropDown(AmboUtilities.Envelope{AmboLibrary.Modules.AssetIssuedToSFAGet})">
+            <summary>
+            to get list of Assets issued to rdi
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.UpdateAssetAssignmentToRDI(AmboUtilities.Envelope{AmboLibrary.Modules.AssetAssignmentToRDIUpdate})">
+            <summary>
+            Update Issued Qty in the Asset assignment to RDI.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.GetAssetAssignmentToRDIById(AmboUtilities.Envelope{AmboLibrary.Modules.AssetAssignmentToRDI})">
+            <summary>
+            to get Asset assignment to RDI row detail by Id.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.UploadAssetAssignmentToRDI(AmboUtilities.Envelope{AmboLibrary.Modules.AssetAssignmentToRDIUpload})">
+            <summary>
+            Upload Asset assignment to RDI records from Excel sheet
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ModuleManagementController.UploadAssetCollectionFromSFA(AmboUtilities.Envelope{AmboLibrary.Modules.AssetCollectionFromSFA})">
+            <summary>
+            Upload Asset collection from SFA records from Excel sheet
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MPRIntegrationController.GetSalesThroughQuantity(AmboUtilities.Envelope{AmboLibrary.MPRIntegration.SalesThroughQuantityInput})">
+            <summary>
+            To get all dealer sales data.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MPRIntegrationController.GetSFADetailsBySFACode(AmboUtilities.Envelope{AmboLibrary.MPRIntegration.GetSFADetailsBySFACodeInput})">
+            <summary>
+            To get all sfa details.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.MPRIntegrationController.GetBranchDivisionWise_SFACount(AmboUtilities.Envelope{AmboLibrary.MPRIntegration.GetBranchDivisionWise_SFACountInput})">
+            <summary>
+            To get total sfa count branch and division wise.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <returns>branch</returns>
+        </member>
+        <member name="T:SonyAmbo.Controllers.ReportController">
+            <summary>
+            To fetch reports for SID Analytics App.
+            Dhruv Sharma, ValueFirst, Gurugram
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.#ctor(AmboServices.Interface.IReportService)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="IReportService"></param>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.ValidateLogin(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFAValidationInput})">
+            <summary>
+            To validate user login for SID App.
+            </summary>
+            <param name="param">User Cridentials</param>
+            <returns>User Id, Name, Role Id, Role Name</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetModelWiseTrendReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.InputParam})">
+            <summary>
+            To fetch Model Wise Trend Report.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id, ChannelId</param>
+            <returns>Model Wise Trend Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetCategoryWiseTrendReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInputParam})">
+            <summary>
+            To fetch Category Wise Trend Report.
+            </summary>
+            <param name="param">Branch Id, ChannelId</param>
+            <returns>Category Wise Trend Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetAccountWiseTrendReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.AccountWiseTrendInput})">
+            <summary>
+            To fetch Account Wise Trend Report.
+            </summary>
+            <param name="param">Master Code</param>
+            <returns>Account Wise Trend Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.MonthSellThruReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.MonthWiseSellThruReportIds})">
+            <summary>
+            To fetch Month Sell Thru Report.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id</param>
+            <returns>Month Sell Thru Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.MonthPlanvsActualReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.MonthWiseSellThruReportIds})">
+            <summary>
+            To fetch Month Plan vs Actual Report.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id</param>
+            <returns>Month Plan vs Actual Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.Last3DaysSalesReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.MonthWiseSellThruReportIds})">
+            <summary>
+            To fetch Last 3 Days Sales Report.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id</param>
+            <returns>Last 3 Days Sales Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetMTDSellThruReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.MTDSellThruReportInput})">
+            <summary>
+            To fetch MTD Sell Thru Report.
+            </summary>
+            <param name="param">Dealer Id, Product Sub Category Id</param>
+            <returns>MTD Sell Thru Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetPlanActualStockReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.PlanActualStockDataInput})">
+            <summary>
+            To fetch Plan vs Actual vs Stock Report.
+            </summary>
+            <param name="Input">DealerId, ProductCategoryId, ProductSubActegoryId</param>
+            <returns>Plan vs Actual vs Stock Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetMTDSonyVsCompSellReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.MTDSonyVsCompSellInput})">
+            <summary>
+            To fetch MTD Sony Vs Comp Sell Report.
+            </summary>
+            <param name="param">DealerId, ProductCategoryId, ProductSubActegoryId</param>
+            <returns>MTD Sony Vs Comp Sell Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetSonyVsCompSellReportYrWise(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.PlanActualStockDataInput})">
+            <summary>
+            To fetch MTD Sony vs Competitor Sell Report.
+            </summary>
+            <param name="param">Dealer Id, ProductId, SubProductId</param>
+            <returns>MTD Sony vs Competitor Sell Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetAccountCategoryWiseTrendReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.AccountCategoryWiseTrendInput})">
+            <summary>
+            To fetch Account Category Wise Trend Report.
+            </summary>
+            <param name="param">MasterCode, ProductId, SubProductId</param>
+            <returns>Account Category Wise Trend Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetCompetitionHeadCountReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.HeadCountReportInput})">
+            <summary>
+            To fetch Competition Head Count Report.
+            </summary>
+            <param name="param">BranchId, TypeId, ChannelId,DealerId</param>
+            <returns>Competition Head Count Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.Last3DaysSalesReport_V2(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.Last3DaysSalesInput})">
+            <summary>
+            To fetch Last 3 Days Sales Report based on selected date.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id,Channel Id, Date</param>
+            <returns>Last 3 Days Sales Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetBranchWiseSalesTrendReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.BranchWiseSalesReportInput})">
+            <summary>
+            To fetch Branch Wise Sales Trend Report.
+            </summary>
+            <param name="param">Branch Id, Product Category Id, Product Sub Category Id, Channel Id, Dealer Id</param>
+            <returns>Branch Wise Sales Trend Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetBranchWiseSalesTrendChart(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.BranchWiseSalesChartInput})">
+            <summary>
+            To get Branch wise sales trend report chart.
+            </summary>
+            <param name="param">Branch Id</param>
+            <returns>Branch wise sales trend report chart.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetSIDAppSync(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.SIDSyncInput})">
+            <summary>
+            To get SID App Sync Data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 23, 2018
+            </summary>
+            <param name="param">User Id</param>
+            <returns>SID App Sync Data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetSIDDisplayReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.SIDDisplayReportInput})">
+            <summary>
+            To get SID Display Report.
+            Dhruv Sharma, VFirst, Gurgaon
+            </summary>
+            <param name="param">Input parameters</param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetFestivalReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.FestivalReportInput})">
+            <summary>
+            To get Festival Report data for SID.
+            Dhruv Sharma, VFirst, Gurgaon
+            </summary>
+            <param name="param">Filters</param>
+            <returns>Festival Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetDailyRangingGraphReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.DailyRangingChartReportInputModel})">
+            <summary>
+            To get Daily Ranging Graph data for SID.
+            Dhruv Sharma, VFirst, Gurgaon
+            </summary>
+            <param name="param">Filters</param>
+            <returns>Daily Ranging Graph data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetTargetvsAchievementReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.TargetvsAchievementInputModel})">
+            <summary>
+            To get Target vs Achievement report data for SID.
+            Dhruv Sharma, VFirst, Gurgaon
+            </summary>
+            <param name="param">Filters</param>
+            <returns>Target vs Achievement report data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.ReportController.GetComptHeadCount(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ComptHeadCountParam})">
+            <summary>
+            To fetch Competition Head Count for mobile.
+            </summary>
+            <param name="param">BranchId,ChannelId,CompetitionBrand,StoreId</param>
+            <returns>Competition Head Count for mobile</returns>
+        </member>
+        <member name="T:SonyAmbo.Controllers.SFAMobileManagementController">
+            <summary>
+            Controller to Validate All the details 
+            for SFA Mobile Only
+            </summary>
+        </member>
+        <member name="F:SonyAmbo.Controllers.SFAMobileManagementController._ISFAMobileManagementService">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetProfile(AmboUtilities.Envelope{AmboLibrary.SFAManagement.Master})">
+            <summary>
+            Method to Get SAF Profile details 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.SubmitSFAAttendance(AmboUtilities.Envelope{AmboLibrary.SFAManagement.SFAAttendanceMaster})">
+            <summary>
+            Method to Submit SFA Attendance
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetLeaveTypeList">
+            <summary>
+            To fetch the list of Leave Types for Dropdown.
+            Dhruv Sharma, ValueFirst
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetSFAMTDAttendanceReport(AmboUtilities.Envelope{AmboLibrary.SFAManagement.SFAMTDAttendanceInput})">
+            <summary>
+            To fetch SFA's MTD Attendance report for mobile.
+            Dhruv Sharma, ValueFirst
+            </summary>
+            <param name="InputParam">SFA Id</param>
+            <returns>SFA's MTD Attendance Report Data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.InsertSFADemoStockRanging(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFADemoStockRangingModel})">
+            <summary>
+            To insert SFA's demo stock ranging information subbmited from Mobile App.
+            Dhruv Sharma, ValueFirst
+            May 2, 2018
+            </summary>
+            <param name="Input">List of information to be submitted.</param>
+            <returns>Status of the operation.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetDemoRangingStockData(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.DemoRagingStockInput})">
+            <summary>
+            To get Demo Ranging Stock Data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 2, 2018
+            </summary>
+            <param name="Input">SFAId, ProductCategoryId, ProductSubCategoryId</param>
+            <returns>Demo Ranging Stock Data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.InsertCompetitorSaleThru(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFACompetitionTrackingModel})">
+            <summary>
+            To insert Competitor Sales Thru
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 7, 2018
+            </summary>
+            <param name="Data">Fields to push</param>
+            <param name="ErrorMessage">Output error message</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.UpdateCompetitorSaleThru(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFACompetitionTrackingModel})">
+            <summary>
+            To update Competitor Sales Thru
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 7, 2018
+            </summary>
+            <param name="Data">Fields to push</param>
+            <param name="ErrorMessage">Output error message</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetSFACompetitionTrackingData(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CTInput})">
+            <summary>
+            To get list of SFA Competition Tracking Data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 7, 2018
+            </summary>
+            <param name="Input">User Id</param>
+            <returns>List of SFA Competition Tracking Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetMonthlyModelWiseCompSalesThru(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CTInput})">
+            <summary>
+            To get Monthly Model Wise Competitor Sales Thru Report.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 8, 2018
+            </summary>
+            <param name="Input">User Id</param>
+            <returns>Monthly Model Wise Competitor Sales Thru Report Data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetCounterShareTrackingReport(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CTInput})">
+            <summary>
+            To get Counter Share Tracking Report.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 8, 2018
+            </summary>
+            <param name="Input">User Id</param>
+            <returns>Counter Share Tracking Report.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.InsertCompetitorDisplaySKU(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CompetitorDisplaySKU})">
+            <summary>
+            To insert Competitor Display SKU data.
+            </summary>
+            <param name="Data">Input parametres to insert.</param>
+            <returns>Status of the operation.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetCompetitorDisplaySKUReport(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CTInput})">
+            <summary>
+            To get Competitor Display SKU Report.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 8, 2018
+            </summary>
+            <param name="Input">login Id</param>
+            <returns>Competitor Display SKU Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.InsertCompetitionHeadCount(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CompetitionHeadCountModel})">
+            <summary>
+            To insert Competition Head Count
+            Dhruv Sharma
+            </summary>
+            <param name="Input">Input to insert.</param>
+            <returns>Status of the operation.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetCompetitorHeadCountReport(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CTInput})">
+            <summary>
+            To get Competition Head Count Report data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 9, 2018
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>Competition Head Count Report data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.SubmitMessageReply(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFAMessageBroadcasterModel})">
+            <summary>
+            To submit Message Broadcated Reply.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 10, 2018
+            </summary>
+            <param name="Input">Data to put</param>
+            <returns>Status of operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetMessageBroadcasterList(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.MessageListProcInput})">
+            <summary>
+            To get broadcasted messages of Role selected.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 10, 2018
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>Broadcasted messages of SFA.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.ValidateSFALogin(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFAValidationInput})">
+            <summary>
+            To validate SFA mobile login.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 11, 2018
+            </summary>
+            <param name="Input">Login Details</param>
+            <returns>User Details</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.SFAMobileSync(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SyncInput})">
+            <summary>
+            To provide SFA Mobile sync data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 11, 2018
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>
+            Dealer Data
+            Attendance Type Data
+            Sony Product, Sub Product and Materials
+            Competitor Products, Subproducts and Materials
+            </returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.InsertWeeklyStoreStock(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.WeeklyStoreStockModel})">
+            <summary>
+            To insert Weekly Store Stock report.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 14, 2018
+            </summary>
+            <param name="Input">Data to input.</param>
+            <returns>Status of the operation.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetWeeklyStoreStockDataList(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.WeeklyStoreStockDataInput})">
+            <summary>
+            To get Weekly Store Stock Data List.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 14, 2018
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>List of Weekly Store Stock Data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.SubmitSaleThru(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFASaleThruSubmission})">
+            <summary>
+            To submit daily sales.
+            </summary>
+            <param name="Input">To submit</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.UpdateMessageReadStatus(AmboUtilities.Envelope{AmboLibrary.SFAMOBILEAPP.BroadcastMessageStatus})">
+            <summary>
+            To update read status of a broadcasted message.
+            Nikhil Thakral, ValueFirst, Gurugram
+            May 17, 2018
+            </summary>
+            <param name="Input"></param>
+            <returns>true/false.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.UpdateSaleThru(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFASaleThruSubmission})">
+            <summary>
+            To update sales thru
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 24, 2018
+            </summary>
+            <param name="Input">Data to be updated</param>
+            <returns>Status of operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.UpdateSFAUser(AmboUtilities.Envelope{AmboLibrary.SFAManagement.SFAProfileUpdateInput})">
+            <summary>
+            To update SFA user profile from App
+            Dhruv Sharma, Vfirst, Gurgaon
+            June 1, 2018
+            </summary>
+            <param name="Input">Input</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetActiveBrands(AmboUtilities.Envelope{AmboLibrary.Abstract.MasterAbstract})">
+            <summary>
+            To get active brands list
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 24, 2018
+            </summary>
+            <param name="Input">Data to be updated</param>
+            <returns>Status of operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetCompetitionCountTypes(AmboUtilities.Envelope{AmboLibrary.MasterMaintenance.CompetitorCountTypeInput})">
+            <summary>
+            To get active competitor count type list
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 24, 2018
+            </summary>
+            <param name="Input">Data to be updated</param>
+            <returns>Status of operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetTrainingsBySFAId(AmboUtilities.Envelope{AmboLibrary.SFAMOBILEAPP.TrainingSearch})">
+            <summary>
+            To get active training list for SFA
+            Nikhil Thakral, ValueFirst, Gurugram
+            July 24, 2018
+            </summary>
+            <param name="objData">SFA ID</param>
+            <returns>Status of operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetFeedbackForm(AmboUtilities.Envelope{AmboLibrary.SFAMOBILEAPP.SFAFeedbackDataInput})">
+            <summary>
+            To get active feedback form
+            Nikhil Thakral, ValueFirst, Gurugram
+            July 24, 2018
+            </summary>
+            <param name="objData"></param>
+            <returns>Feedback Form</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.ManageSFATrainingFeedback(AmboUtilities.Envelope{AmboLibrary.SFAMOBILEAPP.SFAFeedbackData})">
+            <summary>
+            To submit feedback form
+            Nikhil Thakral, ValueFirst, Gurugram
+            July 24, 2018
+            </summary>
+            <param name="objData"></param>
+            <returns>Feedback Form</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.UpdateUserPassword(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.UserUpdatePasswordModel})">
+            <summary>
+            To update user password from App
+            Dhruv Sharma, Vfirst, Gurgaon
+            June 24, 2018
+            </summary>
+            <param name="Data">Input</param>
+            <param name="ErrorMessage">Message</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.SubmitComboSalesData(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.ComboSales})">
+            <summary>
+            To submit combo sales from app
+            Bela Nalavade, Vfirst, Gurgaon
+            May 6, 2019
+            </summary>
+            <param name="Data">Input</param>
+            <param name="ErrorMessage">Message</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.GetMTDModelforCombo(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.ModelDropdownInput})">
+            <summary>
+            To get materials for combo sales
+            Bela Nalavade, ValueFirst, Gurugram
+            May 07, 2019
+            </summary>
+            <param name="objData">SFA ID</param>
+            <returns>list of data</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileManagementController.CancelComboSale(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.CancelComboSalesInput})">
+            <summary>
+            To cancel combo sales from app
+            Bela Nalavade, Vfirst, Gurgaon
+            June 13, 2019
+            </summary>
+            <param name="Data">Input</param>
+            <param name="ErrorMessage">Message</param>
+            <returns>Status of the operation</returns>
+        </member>
+        <member name="T:SonyAmbo.Controllers.SFAMobileReportsController">
+            <summary>
+            For SFA Mobile App Reports.
+            Dhruv Sharma, Value First, Gurugram, India
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.#ctor(AmboServices.Interface.ISFAMobileReportsService)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="ISFAMobileReportsService"></param>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetMTDSalesReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInput})">
+            <summary>
+            To get MDT Model Wise DSR Report.
+            </summary>
+            <param name="Input">LoginId</param>
+            <returns>MDT Model Wise DSR Report Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetMTDModelWiseComboReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInput})">
+            <summary>
+            To get MDT Model Wise Combo Report.
+            </summary>
+            <param name="Input">LoginId</param>
+            <returns>MDT Model Wise combo Report Data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetTodaySalesReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInput})">
+            <summary>
+            To get Today Sales Report.
+            </summary>
+            <param name="Input">Login Id</param>
+            <returns>Today Sales Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetLastDaySalesReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInput})">
+            <summary>
+            To get Last Day Sales Report.
+            </summary>
+            <param name="Input">Login Id</param>
+            <returns>Last Day Sales Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetSFATargetvsAchievementReport(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFATvsAInput})">
+            <summary>
+            To get SFA Target vs Achievement Report data.
+            Dhruv Sharma, ValueFirst, Gurugram
+            May 3, 2018
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>SFA Target vs Achievement Report data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetSFAFestivalTargetVsAchievement(AmboUtilities.Envelope{AmboLibrary.SFAMobileApp.SFATvsAInput})">
+            <summary>
+            To get SFA Target vs Achievement Report data.
+            Bela Nalavade, ValueFirst, Gurugram
+            May 8, 2019
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>SFA Festival Target vs Achievement Report data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetMTDComboSalesReport(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ReportInput})">
+            <summary>
+            To get Combo Sales Report data.
+            Bela Nalavade, ValueFirst, Gurugram
+            May 8, 2019
+            </summary>
+            <param name="Input">SFA Id</param>
+            <returns>Combo Salesvc Report data.</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetAttendanceCountSFAForRDI(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.SFAAttendanceReportForRDIInput})">
+            <summary>
+            This is for total attendance count for RDI
+            </summary>
+            <param name="Input"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.SFAMobileReportsController.GetComboSalesReportMobile(AmboUtilities.Envelope{AmboLibrary.ReportsManagement.ComboSalesReportInput})">
+            <summary>
+            This is for combosales report
+            </summary>
+            <param name="Input"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.TestController.#ctor(AmboServices.Interface.IValidateService)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.TestController.TestMethod">
+            <summary>
+            testing Only
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.TestController.ValidateMethod">
+            <summary>
+            Test Method
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:SonyAmbo.Controllers.UserManagementController">
+            <summary>
+            Controller to Manage User for the Product
+            Manbeer Singh Makhloga [06/03/2018]
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.#ctor(AmboServices.Interface.IUserManagementService)">
+            <summary>
+            Dependency injected controller
+            </summary>
+            <param name="UserManagementService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.CreateEmployee(AmboUtilities.Envelope{AmboLibrary.UserManagement.EmployeeFormData})">
+            <summary>
+            Method to Register Employee
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.CreateSFA(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAFormData})">
+            <summary>
+            Method to Register SFA
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.UpdateEmployee(AmboUtilities.Envelope{AmboLibrary.UserManagement.EmployeeFormData})">
+            <summary>
+            Method to Update Employee
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.UpdateSFA(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAFormData})">
+            <summary>
+            Method to Update SFA
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.DeleteEmployee(AmboUtilities.Envelope{AmboLibrary.UserManagement.EmployeeFormData})">
+            <summary>
+            Method to Delete Employee
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.DeleteSFA(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAFormData})">
+            <summary>
+            Method to Delete SFA
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetSFACode">
+            <summary>
+            Method to auto generate SFA Code
+            </summary>
+            <param name="none"></param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:SonyAmbo.Controllers.UserManagementController.GetUserList(AmboUtilities.Envelope{AmboLibrary.GlobalAccessible.GlobalPagination})" -->
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetEmployeeById(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            Method to Get Employee/SFA on basis of it's ID
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetOfferedEmployeeById(AmboUtilities.Envelope{System.Int64})">
+            <summary>
+            Method to Get Offered Employee on basis of it's ID
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetSFADetails(AmboUtilities.Envelope{System.String})">
+            <summary>
+            Method to Get SFA on basis of it's LoginId
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.ManageOfferedEmployee(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAFormData})">
+            <summary>
+            Method to Register offered Employee
+            </summary>
+            <param name="List"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetAllDetailsSFAMasterforHR">
+            <summary>
+            Get all SFA Master for HR saved in the system.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetSFAMasterforHRById(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAMasterForHR})">
+            <summary>
+            Get all data related to a specific SFA Master for HR on basis of it's ID.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.CreateSFAMasterforHR(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAMasterForHR})">
+            <summary>
+            Create a new Employee for HR in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.DeleteSFAMasterforHR(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAMasterforHRDelete})">
+            <summary>
+            Delete a Employee for HR if it has no dependency in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.UpdateSFAMasterforHR(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAMasterForHR})">
+            <summary>
+            Update an existing Employee for HR in the system.
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.SFAMasterforHRDataDownload(AmboUtilities.Envelope{AmboLibrary.UserManagement.SFAMasterforHRDownload})">
+            <summary>
+            Get SFA Master for HR (download purpose)
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.ManageSFAMasterforHRData(AmboUtilities.Envelope{System.Collections.Generic.List{AmboLibrary.UserManagement.SFAMasterForHR}})">
+            <summary>
+            insert SFA details from excel file
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserManagementController.GetModuleRightsByRole(AmboUtilities.Envelope{AmboLibrary.UserManagement.ModuleRightsByRoleInput})">
+            <summary>
+            Method to Get modules right
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SonyAmbo.Controllers.UserValidationController">
+            <summary>
+            To perform User validation related operations like validate Login, change password etc.
+            Dhruv Sharma, ValueFirst, Gurugram
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Controllers.UserValidationController.ValidateLogin(AmboUtilities.Envelope{AmboLibrary.UserValidation.UserValidationModel})">
+            <summary>
+            To validate user login for both Mobile and Web.
+            </summary>
+            <param name="UserDetails">User Cridentials</param>
+            <returns>User Id, Name, Role Id, Role Name</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.WebReportsController.GetDailyTimingReport(AmboUtilities.Envelope{AmboLibrary.WebReports.DailyTimingReportInput})">
+            <summary>
+            To fetch Daily Timing Report from Database.
+            Dhruv Sharma, ValueFirst, Gurgaon
+            </summary>
+            <param name="param">Input Parameters</param>
+            <returns>Daily Timing Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.WebReportsController.GetMonthlyAttendanceReport(AmboUtilities.Envelope{AmboLibrary.WebReports.MonthlyAttendanceReportInput})">
+            <summary>
+            To fetch Monthly Attendance Report from Database.
+            Dhruv Sharma, ValueFirst, Gurgaon
+            </summary>
+            <param name="param">Input Parameters</param>
+            <returns>Monthly Attendance Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.WebReportsController.IsApprovedBranch(AmboUtilities.Envelope{AmboLibrary.WebReports.MonthlyAttendanceReportInput})">
+            <summary>
+            To fetch Monthly Attendance Report from Database.
+            Dhruv Sharma, ValueFirst, Gurgaon
+            </summary>
+            <param name="param">Input Parameters</param>
+            <returns>Monthly Attendance Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.WebReportsController.GetTrainingReport(AmboUtilities.Envelope{AmboLibrary.WebReports.TrainingReport})">
+            <summary>
+            To fetch Training Report from Database.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <param name="param">Input Parameters</param>
+            <returns>Monthly Attendance Report</returns>
+        </member>
+        <member name="M:SonyAmbo.Controllers.WebReportsController.GetComboSaleseReport(AmboUtilities.Envelope{AmboLibrary.WebReports.ComboSalesReport})">
+            <summary>
+            To fetch sales data with combo sales Report from Database.
+            Bela Nalavade, ValueFirst, Gurgaon
+            </summary>
+            <param name="param">Input Parameters</param>
+            <returns>Combo Sales Report</returns>
+        </member>
+        <member name="T:SonyAmbo.Resolver.UnityResolver">
+            <summary>
+            Dependency Resolver
+            </summary>
+        </member>
+        <member name="F:SonyAmbo.Resolver.UnityResolver._container">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Resolver.UnityResolver.#ctor(Microsoft.Practices.Unity.IUnityContainer)">
+            <summary>
+            
+            </summary>
+            <param name="container"></param>
+        </member>
+        <member name="M:SonyAmbo.Resolver.UnityResolver.BeginScope">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Resolver.UnityResolver.Dispose">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:SonyAmbo.Resolver.UnityResolver.GetService(System.Type)">
+            <summary>
+            
+            </summary>
+            <param name="serviceType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SonyAmbo.Resolver.UnityResolver.GetServices(System.Type)">
+            <summary>
+            
+            </summary>
+            <param name="serviceType"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

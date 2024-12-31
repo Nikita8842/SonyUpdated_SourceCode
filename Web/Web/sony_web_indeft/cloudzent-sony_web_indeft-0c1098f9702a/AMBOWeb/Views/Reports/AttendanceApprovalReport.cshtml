@@ -1,0 +1,848 @@
+﻿@model AMBOModels.Reports.MonthlyAttendanceReportInput
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                   // debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+
+                    var Branch = @Html.Raw(Json.Encode(Model.BranchIds));
+
+                    if (@Model.BranchId!='' && @Model.BranchId !=null )
+                        $.each(branches, function (i, branch) {
+                            $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                        });
+                    else
+                        $.each(branches, function (i, branch) {
+                            if(Branch.indexOf(branch.BranchId) != -1) //if (Model.BranchIds.includes(branch.BranchId))
+                            {
+                                $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                            }
+                        });
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        var rol =  '@Session["Role"].ToString()';
+                        $('#ddBranch').val(Branch).change();
+                        if (rol.toUpperCase() =='RDI')
+                        {
+                            $('#ddBranch').attr('readonly', 'readonly');
+                        }   // Commented because there is a need to display all mappped branch...
+                        getSFADD();
+                    }
+                    else
+                        $('#ddBranch').val(null).change();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+        function getSFADD() {
+            var BranchId = $("#ddBranch").val();
+            if (BranchId != null && BranchId != '' && BranchId != undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSFAByBranch", "Common")',
+                    data: { branchId: BranchId },
+                    success: function (sfa) {
+                        $("#ddSFA").html(""); // clear before appending new list
+                        $("#ddSFA").append($('<option></option>').val(0).html("---All SFA---"));
+                        $.each(sfa, function (i, sfadet) {
+                           // debugger;
+                            $("#ddSFA").append($('<option></option>').val(sfadet.EmployeeId).html(sfadet.SFAFullName));
+                        });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddSFA").html("");
+                        $('#ddSFA').attr("placeholder", "---All SFA---");
+                    }
+                });
+            }
+            else {
+                $("#ddSFA").html("");
+                $('#ddSFA').attr("placeholder", "---All SFA---");
+            }
+        }
+        function GetModifiedDate()
+        {
+            
+              var month = $("#ddlMonth").val();
+            var year = $("#ddlYear").val(); 
+            // Return today's date and time
+            var currentTime = new Date()
+
+            // returns the month (from 0 to 11)
+            //var month = currentTime.getMonth() + 1
+
+            // returns the day of the month (from 1 to 31)
+            var day = currentTime.getDate()
+            var Prvmonth = parseInt(month) - 1;
+            if (Prvmonth < 10)
+            {
+                Prvmonth = "0" + Prvmonth;
+
+            }
+            //alert(nextmonth);
+            // returns the year (four digits)
+           
+           // var year = currentTime.getFullYear()
+
+            $("#txtFromDate").val(16 + "/" + Prvmonth + "/" + year);
+           // if (month == 1)
+               // year = parseInt(year) + 1;
+
+            // write output MM/dd/yyyy
+            
+            $("#txtToDate").val(26 + "/" + month + "/" + year); //15 updated by nikita 29/12/2024
+
+
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#filterBox", function (types) {
+                $("#ddSFAType").html("");
+                $.each(types, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).html(sfatype.SFATypeName));
+                });
+                $('#ddSFAType').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+            });
+        }
+
+        function init() {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddSFAType').select2({ placeholder: "---All SFA types---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+                onSelect: function(dateText, inst){
+                    alert("in");
+                    $("#txtToDate").datepicker("option","minDate",$("#txtFromDate").datepicker("getDate"));
+                    $("#txtToDate").datepicker("option","maxDate","+30d");
+                }
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                maxDate: new Date(),
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            //if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select From Date.";
+            //    return output;
+            //}
+            //if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select To Date.";
+            //    return output;
+            //}
+            //if ($('#ddDealer').val() == null || $('#ddDealer').val() == undefined || $('#ddDealer').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one dealer for generating report.";
+            //    return output;
+            //}
+            //if ($('#ddCompany').val() == null || $('#ddCompany').val() == undefined || $('#ddCompany').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one Company for generating report.";
+            //    return output;
+            //}
+            //if (!ValidateFromToDate())
+            //{
+            //    output.status = false;
+            //    output.message = "To Date Can't be less than From Date";
+            //    return output;
+            //}
+
+            //if (!ValidateCurrentDate())
+            //{
+            //    output.status = false;
+            //    output.message = "From/To Date Can't be future Date  ";
+            //    return output;
+            //}
+
+            return output;
+        }
+
+        function Search() {
+            var result = ValidateFilters();
+           
+            if (result.status)
+            {
+                debugger
+               
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                $("#divData").html("");
+                var Obj = new Object();
+                Obj.StartDate =$("#txtFromDate").val();
+                Obj.EndDate =$("#txtToDate").val();
+                Obj.SFAId = parseInt($("#ddSFA").val());
+                Obj.BranchId = parseInt($("#ddBranch").val());
+                Obj.SFATypeId = parseInt($("#ddSFAType").val());
+                Obj.Month = $("#ddlMonth").val(); 
+                //alert(Obj.StartDate);
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetAttendanceApprovalReport", "Reports")',
+                    data: { objGridData: Obj },
+                    beforeSend: function () {
+                       var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                        $("#gridtable").append(loader);
+                    },
+                    success: function (data)
+                    {
+                        //alert(data);
+                        debugger;
+
+                        $("#divData").html(data);
+                       // $("table#dtMonthlyAttReport th:contains('DealerId')").hide();
+    
+                        // Remove the DealerId column data (from the <tbody>)
+                       // $("table#dtMonthlyAttReport td:nth-child(22), table#dtMonthlyAttReport th:nth-child(22)").hide();
+
+                        $(".dtMonthlyAttReport").DataTable(
+                    {
+                        bSort: false,
+                        scrollX: true,
+                        scrollY: '400px',
+                        paging: false
+                    });
+                    },
+                    error: function (output)
+                    {
+                       // debugger;
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error','No Data Found');
+                    },
+                    complete: function () {
+                        $("#gridtable").find('.overlay').remove();
+                    }
+                });
+            }
+            else
+        {
+                common.notify('error', result.message);
+            }
+
+        }
+
+       
+        function ChangeValue()
+        {
+            //debugger;
+            //var _ddlval = $('.ddType').val();
+            $('.hdnNewAttType').val(_ddlval);
+        }
+
+        //updated by nikita 30/12/2024
+        function updatePresent(_SFAId,_Date1,_oldAttType,_DealerCode,isEdit)
+        {
+          //  alert($("#BranchId").val());
+
+
+            debugger;
+            $('.lblDate').html(_Date1);
+            $('.lblDate').val(_Date1);
+
+
+            // changeAttendanceType(_oldAttType);
+            $('.hdnSfacode').val(_SFAId);
+            $('.hdnAttendanceDate').val(_Date1);
+            $('.hdnoldAttType').val(_oldAttType);
+            $('.hdnoldDealerId').val(_DealerCode);
+
+            if(isEdit==1)
+             {   
+                updatedata(1);
+            }
+            else
+            {
+              $('#modalUpdatePresent').modal('toggle');
+                
+            }
+            //var _ddlval = $('.ddType').val();
+            $('.hdnIsApproved').val(_ddlval);
+
+
+        }
+
+        function updatedata(_isedit) {
+            debugger;
+            var datainput = new Object();
+            // datainput.Id=$('.hdnAttId').val();
+            datainput.SFAId = $(".hdnSfacode").val();
+            datainput.AttendanceDate =$(".lblDate").val();
+            datainput.OLD_ATT_TYPE = $(".hdnoldAttType").val();
+            datainput.BranchId = $("#ddBranch").val();
+            datainput.DealerCode=$("#hdnoldDealerId").val();
+            //alert($("#ddBranch").val());
+            //datainput.IsApproved = $(".ddType").val();
+            if(_isedit ==1 )
+            {
+                datainput.Remarks="Approve";
+                datainput.NewAttendanceTypeId = $(".hdnoldAttType").val();
+               // datainput.app
+            }
+            else
+            {
+                datainput.Remarks=$(".txtRemarks").val();
+                datainput.NewAttendanceTypeId=$('.ddTypeNew').val()
+             }
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UpdateAttendance", "Reports")',
+                data: {objFormData : datainput},
+                
+                success: function (returnValue) {
+                    if(returnValue.Data)
+                    {
+                        if(_isedit ==1 )
+                        {
+                            common.notify('success',returnValue.Message);
+                           
+                        }
+                        else
+                        {
+                            $('#modalUpdatePresent').modal('toggle');
+                            common.notify('success',returnValue.Message);
+                        }
+                        
+                    }
+                    else
+                    {
+                        common.notify('error',returnValue.Message);
+                    };
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', "Error while updating attendance.")
+                }
+            });
+
+        }
+        
+        function PopulateAttendanceType() {
+
+            $.ajax({
+                url: '@Url.Action("GetAllAttendanceType", "Common")',
+                async: false,
+                type: 'GET',
+                success: function (data) {
+                    $(".ddTypeNew").html("");
+                    $(".ddTypeNew").append($("<option></option>").val(1).html('Present'));
+                    $(".ddTypeNew").append($("<option></option>").val(0).html('Absent'));
+                    $(data).each(function () {
+                        if ((this.AttType != "Time In") && (this.AttType != "Time Out") && (this.AttTypeId != 4))
+                            $(".ddTypeNew").append($("<option></option>").val(this.AttTypeId).html(this.AttType));
+                    });
+
+                }
+            })
+        }
+
+        $(document).ready(function () {
+            getBranchDD();
+            getSFATypeDD();
+            init();
+
+            $('.modalUpdatePresent').on('shown.bs.modal', function () {
+                //$('.ddType').focus();
+                PopulateAttendanceType();
+            });
+
+            $('.modalUpdatePresent').on('hidden.bs.modal', function () {
+                //$('.ddType').val('');
+                $('.ddTypeNew').val('');
+                $('.txtRemarks').val('');
+            });
+
+            @*$("#btnDownload").click(function () {
+                debugger;
+                var datainput = new Object();
+                datainput.StartDate = $("#txtFromDate").val();
+                datainput.EndDate = $("#txtToDate").val();
+                datainput.SFAId = parseInt($("#ddSFA").val());
+                datainput.BranchId = $("#ddBranch").val();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcel", "Reports")',
+                    data: {objGridData : datainput},
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });*@
+
+            function DownLoadSearch() {
+                var result = ValidateFilters();
+
+                if (result.status) {
+                    debugger;
+                    // $('#filterBoxHeader').trigger('click');
+                    //$('#gridtable').removeClass('hidden');
+                    // $("#divData").html("");
+                    var Obj = new Object();
+                    Obj.StartDate = $("#txtFromDate").val();
+                    Obj.EndDate = $("#txtToDate").val();
+                    Obj.SFAId = parseInt($("#ddSFA").val());
+                    Obj.BranchId = parseInt($("#ddBranch").val());
+                    Obj.SFATypeId = parseInt($("#ddSFAType").val());
+                    Obj.Month = $("#ddlMonth").val();
+                   // Obj.DealerCode=$("#").val();
+                    //alert(Obj.StartDate);
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("GetAttendanceApprovalReportDownLoad", "Reports")',
+                        data: { objGridData: Obj },
+                        success: function (returnValue) {
+                            // debugger;
+                            if (returnValue) {
+                                window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download" })/?file=" + returnValue.fileName;
+                                common.notify('success', "File downloaded successfully");
+                            }
+                            else {
+                                common.notify('error', "Empty file returned");
+                            }
+                        },
+                        error: function (output) {
+                            if (output.statusCode == 401 || output.status == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', "Error while downloading file.")
+                        }
+                    });
+                }
+            }
+
+
+
+            $("#btnApprovalDownload").click(function () {
+               // debugger;
+                var datainput = new Object();
+                datainput.StartDate = $("#txtFromDate").val();
+                datainput.EndDate = $("#txtToDate").val();
+                datainput.BranchId = parseInt($("#ddBranch").val());
+                $.ajax({
+                    type: 'POST',
+                    async:false,
+                    url: '@Url.Action("ExportApprovalRecordExcel", "Reports")',
+                    data: {objGridData : datainput},
+
+                    success: function (returnValue) {
+                       // debugger;
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download" })/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+            
+            $("#btnFinalApprovalDownload").click(function () {
+               // debugger;
+                var datainput = new Object();
+                datainput.StartDate = $("#txtFromDate").val();
+                datainput.EndDate = $("#txtToDate").val();                
+                datainput.SFAId = parseInt($("#ddSFA").val());
+                datainput.BranchId = parseInt($("#ddBranch").val());
+                datainput.SFATypeId = parseInt($("#ddSFAType").val());
+                datainput.Month = $("#ddlMonth").val();
+                    //alert(Obj.StartDate);
+                   
+                $.ajax({
+                    type: 'POST',
+                    async:false,
+                    url: '@Url.Action("GetAttendanceApprovalReportDownLoad", "Reports")',
+                    data: {objGridData : datainput},
+
+                    success: function (returnValue) {
+                       // debugger;
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Reports", Action = "Download" })/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });
+
+            //$("#btnFinalApprovalDownload").click(function(){
+
+
+            //    $("input[name='GridHtml']").val($('.tabData').html());
+
+            //    //$("#hdnDataTable").html($(".tabData").html());
+            //    $("#btnFinalDownload").trigger("click");
+            //});
+        });
+
+    </script>
+
+
+
+}
+
+@section PageModals
+{
+    <div class="modal fade modalUpdatePresent" id="modalUpdatePresent">
+        <div class="modal-dialog">
+            <div class="modal-content" id="UpdatePresent">
+                <div class="modal-header custom-header">
+                    Monthly Attendance Approval
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddEditTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <span>Attendance Date:</span>  <label id="lblDate" class="lblDate"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        @*<div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="ddType">Action:</label>
+                                    @Html.DropDownList("ddType", new List<SelectListItem>
+                                             {
+                                                //new SelectListItem{ Text="select", Value = "" },
+                                                new SelectListItem{ Text="Approve", Value = "1" },
+                                                new SelectListItem{ Text="Reject", Value = "0" },
+                                               }, new { @Class = "form-control input-sm ddType", @Id = "ddType", onclick = "ChangeValue();" })
+                                </div>
+                            </div>*@
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>Attendance Type: </label>
+                                <select id="ddTypeNew" name="NewAttendanceTypeId" class="ddTypeNew"></select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+
+                            <div class="form-group">
+                                <label>Remarks :</label>
+                                <span> <textarea id="txtRemarks" style="width: 250px;" class="txtRemarks" name="Remarks"></textarea></span>
+                                @*    @Html.TextBox("txtRemarks", "", new { @class = "form-control input-sm txtRemarks", @id = "txtRemarks", @disabled = true })*@
+                            </div>
+                        </div>
+                        @*</div>*@
+                    </div>
+
+
+
+                    <input type="hidden" id="hdnAttId" class="hdnAttId" name="Id">
+                    <input type="hidden" id="hdnSfacode" class="hdnSfacode" name="SFAId" />
+                    <input type="hidden" id="hdnAttendanceDate" class="hdnAttendanceDate" name="AttendanceDate" />
+                    <input type="hidden" id="hdnoldAttType" class="hdnoldAttType" name="OLD_ATT_TYPE" />
+                    <input type="hidden" id="hdnoldDealerId" class="hdnoldDealerId" name="DealerId" />
+                    <input type="hidden" id="hdnIsApproved" class="hdnIsApproved" name="IsApproved" />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button id="btnUpdate" type="button" class="btn btn-primary btnUpdate" onclick="updatedata()"><i class="fa fa-check"></i> Update</button>
+                    </div>
+
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Attendance Approval Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                @*@using (Html.BeginForm("GetAttendanceApprovalReport", "Reports", FormMethod.Post, new { id = "formAttendanceApprovalReport" }))
+                    {*@
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", onchange = "getSFADD();" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA:</label>
+                        @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA Type:</label>
+                        @Html.DropDownListFor(m => m.SFATypeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFAType", @Class = "form-control input-sm" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label style="display:none">From Date:</label>
+                        @*@Html.TextBoxFor(m=>m.StartDate,new {@class="form-control input-sm", @autocomplete="off",@placeholder="Select Date", @id = "txtFromDate" })*@
+                        <input  type="text" style="display:none" class="form-control input-sm" autocomplete="off" id="txtFromDate" placeholder="Select Date" />
+                        <div class="form-group">
+                            <div class="form-group">
+                                @Html.Label("Year:")
+                                @Html.DropDownList("–Select–", new List<SelectListItem>
+                                 {
+                                    new SelectListItem { Text = "-Select-", Value = "13" },
+                                    new SelectListItem { Text = "2021", Value = "2021" },
+                                    new SelectListItem { Text = "2022", Value = "2022" },
+                                    new SelectListItem { Text = "2023", Value = "2023" },
+                                        new SelectListItem { Text = "2024", Value = "2024" }
+                                    }, new { @id = "ddlYear", @class = "form-control input-sm" })
+
+                            </div>
+                            </div>
+                    </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    @Html.Label("Month:")
+                                   
+                                   
+                                        @Html.DropDownList("–Select–", new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "-Select-", Value = "13" },
+                                             new SelectListItem { Text = "January", Value = "01" },
+                                            new SelectListItem { Text = "February", Value = "02" },
+                                            new SelectListItem { Text = "March", Value = "03" },
+                                            new SelectListItem { Text = "April", Value = "04" },
+                                            new SelectListItem { Text = "May", Value = "05" },
+                                            new SelectListItem { Text = "June", Value = "06" },
+                                            new SelectListItem { Text = "July", Value = "07" },
+                                            new SelectListItem { Text = "August", Value = "08" },
+                                            new SelectListItem { Text = "September", Value = "09" },
+                                            new SelectListItem { Text = "October", Value = "10" },
+                                            new SelectListItem { Text = "November", Value = "11" },
+                                            new SelectListItem { Text = "December", Value = "12" },
+                                           }, new { @id = "ddlMonth", @class = "form-control input-sm",
+                                               onchange = "GetModifiedDate();" })
+                                    
+                                </div></div>
+                            
+                            <div class="col-lg-3">
+                                <label style="display:none">To Date:</label>
+                                @*@Html.TextBoxFor(m => m.EndDate, new { @class = "form-control input-sm",
+                                    @autocomplete = "off", @placeholder = "Select To Date", @id = "txtToDate" })*@
+                                <input type="text" style="display:none" class="form-control input-sm"
+                                       autocomplete="off" id="txtToDate" placeholder="Select To Date" />
+                            </div>                        
+   
+
+                <div class="row">
+                    <br />
+                    <div class="col-lg-offset-4 col-lg-6">
+                        <button class="btn btn-flat btn-primary" id="btnSubmit" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                        @*<button id="btnDownload"  type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> Attendance Approval Report</a></li>
+                <li class="pull-right"><button id="btnApprovalDownload" type="button" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Download Attendance Changes Report</button></li>
+                <li class="pull-right"><button id="btnFinalApprovalDownload" type="button" onclick="DownLoadSearch();" class="btn btn-success btn-flat"><i class="fa fa-download"></i> Final Approval Report</button></li>
+
+            </ul>
+            <div id="divData" class="tab-content">
+
+
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+@*<div id="exceldata" style="display:none">
+
+    </div>*@
+
+@using (Html.BeginForm("DownloadFinalReport", "Reports", FormMethod.Post))
+{
+    <input type="hidden" name="GridHtml" id="hdnDataTable" />
+    <input type="submit" id="btnFinalDownload" value="Export" style="display:none;" />
+    <input type="hidden" name="exceldata" id="exceldata" />
+}
+
+    <div class="modal fade" id="divDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmDelete">
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class='fa fa-trash'></i> Approve Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtMessage">Are you sure want to approve for selected month..? You won't be able to approve further</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Approve();"><i class="fa fa-check"></i>Yes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>

@@ -1,0 +1,525 @@
+﻿@model AMBOModels.Reports.DisplayReport
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+
+
+
+        function getBranchDD()
+        {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+
+                    $("#ddBranch").html(""); // clear before appending new list
+                    //$("#ddBranch").append($('<option></option>').val(0).html("----All Branches------"));
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    var Branch = @Model.BranchId;
+                    if(Branch !=null && Branch !=0)
+                    {
+                        $('#ddBranch').val(Branch).change();
+                        $('#ddBranch').attr('readonly', 'readonly');
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+
+        function getSFATypeDD() {
+            common.ajax_get("@Url.Action("GetSFAType", "Common")", null, "#filterBox", function (types) {
+                $("#ddSFAType").html("");
+                $.each(types, function (i, sfatype) {
+                    $("#ddSFAType").append($('<option></option>').val(sfatype.SFATypeId).html(sfatype.SFATypeName));
+                });
+                $('#ddSFAType').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddSFAType").html("");
+            });
+        }
+
+        function getStateDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetStates", "Common")',
+                success: function (states) {
+
+                    $("#ddState").html(""); // clear before appending new list
+                    //$("#ddState").append($('<option></option>').val(0).html("----All States------"));
+                    $.each(states, function (i, state) {
+                        $("#ddState").append($('<option></option>').val(state.ID).html(state.StateName));
+                    });
+                    $('#ddState').val(null).change();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddState").html("");
+                }
+            });
+        }
+
+        function getProdCatDD() {
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetProductCategories", "Common")',
+                success: function (prodcats) {
+                    $("#ddProdCat").html(""); // clear before appending new list
+                    //$("#ddProdCat").append($('<option></option>').val(0).html("----All Product Categories------"));
+                    $.each(prodcats, function (i, prodcat) {
+                        $("#ddProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                    });
+                    $('#ddProdCat').val(null).change();
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddProdCat").html("");
+                }
+            });
+
+        }
+
+
+        function getDealersDD() {
+            common.ajax_get("@Url.Action("GetAllActiveDealers", "Common")", null, "#filterBox", function (dealer) {
+                if (dealer.MessageCode == MessageCodes.Acceptable.Found) {
+                    $("#ddDealer").html('');
+                    //$("#ddDealer").append($('<option></option>').val(0).html("----All Dealers------"));
+                    $.each(dealer, function (i) {
+                        $('#ddDealer').append($('<option>', { value: dealer[i].ID }).text(dealer[i].DealerName));
+                    });
+                    $("#ddDealer").val(null).change();
+                }
+                else
+                    common.notify(dealer.Message);
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDealer").html("");
+            });
+        }
+
+        function linkBranchWithDealerAndSFA()
+        {
+            $("#ddBranch").on('change', function (e, data) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == '')) {
+                    common.ajax_post("@Url.Action("GetDealersByBranch", "Common")", { branchId: $(this).val() }, '#filterBox',
+                    function (output) {
+                        $('#ddDealer').html('');
+                        $.each(output, function (i) {
+                            $('#ddDealer').append($('<option>', { value: output[i].ID }).text(output[i].DealerName));
+                        });
+                        $('#ddDealer').val(null).change();
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddDealer').html('');
+                    common.notify('error', 'No dealer found for selected branch.');
+                });
+
+                }
+
+                else if ($(this).val() == '0' || $(this).val() == null) {
+                    getDealersDD();
+                }
+            });
+        }
+
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddState').select2({ placeholder: "---All States---" });
+
+            $('#ddProdCat').select2({ placeholder: "---All Product Categories---" });
+            $('#ddDealer').select2({ placeholder: "----All Dealers----" });
+            $('#ddSFAType').select2({ placeholder: "---All SFA types---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select From Date.";
+                return output;
+            }
+            if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+                output.status = false;
+                output.message = "Please select To Date.";
+                return output;
+            }
+
+            if (!ValidateFromToDate())
+            {
+                output.status = false;
+                output.message = "To Date Can't be less than From Date";
+                return output;
+            }
+
+            if (!ValidateCurrentDate())
+            {
+                output.status = false;
+                output.message = "From/To Date Can't be future Date  ";
+                return output;
+            }
+
+            return output;
+        }
+
+        function Search() {
+            debugger;
+
+            var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                if ($.fn.dataTable.isDataTable('#dtDisplay')) {
+                    //$('#dtDisplay').DataTable().destroy();
+                    //$('#dtDisplay tbody').empty();
+                    dtDisplayReport.destroy();
+                }
+
+                dtDisplayReport = $('#dtDisplay').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    searching: false,
+                    scrollX: true,
+                    ajax: {
+                        url: "@Url.Action("DisplayReport", "Reports")",
+                        type: 'POST',
+                        data: function (d) {
+                            d.FromDate = $('#txtFromDate').val();
+                            d.ToDate = $('#txtToDate').val();
+                            d.BranchId = $('#ddBranch').val();
+                            d.StateId = $('#ddState').val();
+                            d.ProductCategoryId = $('#ddProdCat').val();
+                            d.DealerId = $('#ddDealer').val();
+                            d.SFATypeId = parseInt($('#ddSFAType').val());
+                        }
+                    },
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Type here for search...",
+                        processing: "Please wait while we fetch data..."
+                    },
+
+                    columns: [
+                            { data: "Date" },
+                            { data: "Branch" },
+                            { data: "DealerName" },
+                            { data: "City" },
+                            { data: "Location" },
+                            { data: "Channel" },
+                            { data: "State" },
+                            { data: "SAPCode" },
+                            {data : "PartyName"},
+                            { data: "DealerCode" },
+                            { data: "DealerClassification" },
+                            { data: "SonyMaterial" },
+                            { data: "SFACode" },
+                            { data: "SFAName" },
+                            { data: "SFALevel" },
+                            { data: "SFAType" },
+                            { data: "IncentiveCate" },
+                            { data: "ProCat" },
+                            { data: "ProSubCat" },
+                            { data: "Division" },
+                            { data: "PlannedQuantity" },
+                            { data: "DisplayQuantity" },
+                            { data: "Gap" },
+
+                            { data: "SubCatGroup"},
+                                { data: "Segment"},
+                                    { data: "Resolution"},
+                                        { data: "Internet"},
+                                        { data: "S3D"},
+                                        { data: "TVType"},
+                                        {data:"FY"},
+                            //             { data: "Model" },
+                            // { data: "Brand" },
+                            //{ data: "Quantity" },
+                            {data:"CompanyName"}
+                           //{data:"QSRStatus"}
+
+                    ]
+                });
+            }
+            else {
+                common.notify('error', result.message);
+            }
+        }
+        function ValidateDownloadFilter() {
+            var result = ValidateFilters();
+            if (!result.status) {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+
+        $(document).ready(function () {
+            getBranchDD();
+            getStateDD();
+            getProdCatDD();
+            getDealersDD();
+            linkBranchWithDealerAndSFA();
+            getSFATypeDD();
+            init();
+
+            @*if('@Session["DisplayNoData"].ToString()' == "1")
+            {
+                common.notify('error',"No data found");
+                System.Web.HttpContext.Current.Session["DisplayNoData"] = "0";
+            }*@
+
+            @*$("#btnDownload").click(function () {
+                var modeldata = new Object();
+                modeldata.FromDate = $('#txtFromDate').val();
+                modeldata.ToDate = $('#txtToDate').val();
+                modeldata.BranchId = $('#ddBranch').val();
+                modeldata.StateId = $('#ddState').val();
+                modeldata.ProductCategoryId = $('#ddProdCat').val();
+                modeldata.DealerId = $('#ddDealer').val();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("DisplayExportExcel", "Reports")',
+                    data: { objGridData: modeldata },
+
+                    success: function (returnValue) {
+                        if (returnValue) {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else {
+                            common.notify('error', "Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+            });*@
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Display Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                @using (Html.BeginForm("DisplayExcel", "Reports", FormMethod.Post, new { id = "formDisplay" }))
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>From Date:</label>
+                                <input type="text" class="form-control input-sm" id="txtFromDate" autocomplete="off" placeholder="Select From Date" name="FromDate" />
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>To Date:</label>
+                                <input type="text" class="form-control input-sm" autocomplete="off" id="txtToDate" placeholder="Select To Date" name="ToDate" />
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <label>Branch:</label>
+                            @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm" })
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <label>State:</label>
+                            @Html.DropDownListFor(m => m.StateId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddState", @Class = "form-control input-sm" })
+                        </div>
+                        <div class="col-lg-3">
+                            <label>SFA Type:</label>
+                            @Html.DropDownListFor(m => m.SFATypeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFAType", @Class = "form-control input-sm" })
+                        </div>
+                        <div class="col-lg-3">
+                            <label>Outlet:</label>
+                            @Html.DropDownListFor(m => m.DealerId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddDealer", @Class = "form-control input-sm" })
+                        </div>
+                        <div class="col-lg-3">
+                            <label>Product Category:</label>
+                            @Html.DropDownListFor(m => m.ProductCategoryId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddProdCat", @Class = "form-control input-sm" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <br />
+                        <div class="col-lg-6 col-lg-offset-4">
+                            <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                            <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                            <button id="btnDownload" type="submit" class="btn btn-success btn-flat" onclick="return ValidateDownloadFilter();"><i class="fa fa-download"></i> Download to Excel</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> Display Report</a></li>
+                @*<li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtDisplay" class="table table-bordered table-striped nowrap reportstable table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Actual Date</th>
+                                <th>Branch</th>
+                                <th>Outlet Name</th>
+                                <th>City</th>
+                                <th>Location</th>
+                                <th>Channel</th>
+
+                                <th>Dealer State</th>
+                                <th>Master Code</th>
+                                <th>Party Name</th>
+                                <th>Dealer Code</th>
+                                <th>Dealer Classification</th>
+                                <th>Material Name</th>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>SFA Level</th>
+                                <th>SFA Type</th>
+                                <th>Incentive Category</th>
+                                <th>Product Category</th>
+                                <th>Product Sub Category</th>
+                                <th>Division</th>
+                                <th>PlannedQuantity</th>
+                                <th>DisplayQuantity</th>
+                                <th>Gap</th>
+                                <th>Attribute 1</th>
+                                <th>Attribute 2</th>
+                                <th>Attribute 3</th>
+                                <th>Attribute 4</th>
+                                <th>Attribute 5</th>
+                                <th>Attribute 6</th>
+                                <th>FY</th>
+                                @*<th>Model</th>
+                                    <th>Brand</th>
+                                    <th>Quantity</th>*@
+                                <th>Company Name</th>
+                                @*<th>QSR Status</th>*@
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

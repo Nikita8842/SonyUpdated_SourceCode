@@ -1,0 +1,380 @@
+﻿@model AMBOModels.IncentiveManagement.CreateBaseIncentiveForm
+@using AMBOWeb.Classes
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        SFALevelArray = new Array();
+
+        function getTargetCategoryDD() {
+            common.ajax_get("@Url.Action("GetProductTargetCategories", "Common")", null, "#tabData", function (categories) {
+                $("#ddTargetCategory").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddTargetCategory").append($('<option></option>').val(category.Id).html(category.TargetCategory));
+                });
+                $('#ddTargetCategory').val(null).change();
+                @if(Model.TargetCategoryId != 0)
+                {
+                    <text>
+                var selected = @Model.TargetCategoryId;
+                $('#ddTargetCategory').val(selected).change();
+                </text>
+
+
+                }
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddTargetCategory").html("");
+            });
+        }
+
+        function initializeTable()
+        {
+            common.ajax_get("@Url.Action("GetSFALevels", "Common")", null, "#tabData", function (response) {
+                if(response != null)
+                {
+                    debugger;
+                    var dtBaseIncentiveColumns = new Array();
+                    dtBaseIncentiveColumns.push({data : "TargetTypeId", visible: false});
+                    dtBaseIncentiveColumns.push({data : "TargetType"});
+                    dtBaseIncentiveColumns.push({data : "Minimum"});
+                    dtBaseIncentiveColumns.push({data : "Maximum"});
+
+                    $.each(response, function(i,level){
+                        SFALevelArray.push({Id: i, LevelId: level.Id, LevelName: level.SFASubLevelName});
+
+                        $('#dtBaseIncentiveDefinitionGrid thead tr').append('<th>'+ level.SFASubLevelName +'</th>');
+                        $('#dtBaseIncentiveDefinitionGrid thead tr').append('<th>'+ level.SFASubLevelName +'</th>');
+
+                        dtBaseIncentiveColumns.push({data : "SFALevelId_" + level.Id, title: "SFALevelId_" + level.Id, visible: false});
+                        dtBaseIncentiveColumns.push({data : "Amount_" + level.Id, title: level.SFASubLevelName});
+                    });
+
+                    $('#dtBaseIncentiveDefinitionGrid thead tr').append('<th>Quick Actions</th>');
+                    dtBaseIncentiveColumns.push({data : function(data, type, row){
+                        return '<a data-placement="left" title="Delete" class="btnDelete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                    }, title : "QuickActions"});
+
+                    dtBaseIncentiveDefinitionGrid = $('#dtBaseIncentiveDefinitionGrid').DataTable({
+                        paging: false,
+                        searching: false,
+                        ordering: false,
+                        columns: dtBaseIncentiveColumns,
+                    });
+
+                    @if(Model.objDefinitionData != null)
+                    {
+                        <text>var data = null;</text>
+                        foreach(AMBOModels.IncentiveManagement.BaseIncentiveDefinition mappingRow in Model.objDefinitionData)
+                        {
+                            <text>
+                    data = new Object();
+                    data.TargetTypeId = @mappingRow.TargetTypeId;
+                    data.TargetType = '@mappingRow.TargetType';
+                    data.Minimum = @mappingRow.Minimum;
+                    data.Maximum = @mappingRow.Maximum;
+                    </text>
+
+                        foreach(AMBOModels.IncentiveManagement.SFALevelAmountMap amountrow in mappingRow.objAmountMappings)
+                        {
+                            <text>
+                    data["SFALevelId_@amountrow.SFALevelId"] = @amountrow.SFALevelId;
+                    data["Amount_@amountrow.SFALevelId"] = @amountrow.Amount;
+                    </text>
+                    }
+
+                    <text>
+                    dtBaseIncentiveDefinitionGrid.row.add(data).draw(false);//create
+                    </text>
+
+                }
+            }
+                }
+                else
+                    common.notify('error','No SFA level(s) found');
+            }, function (error) {
+                if (error.statusCode == 401 || error.status == 401) {
+                    var response = $.parseJSON(error.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                common.notify('Could not get SFA levels for Base Incentive Slab Definition. Please contact your administrator.');
+            });
+        }
+
+        function getTargetTypeDD() {
+            common.ajax_get("@Url.Action("GetTargetTypes", "Common")", null, "#AddEditLoad", function (types) {
+                $(".ddTargetType").html("");
+                $.each(types, function (i, type) {
+                    $(".ddTargetType").append($('<option></option>').val(type.Id).html(type.TargetType));
+                });
+                $('.ddTargetType').val(null).change();
+            }, function (error) {
+                var response = $.parseJSON(error.responseText);
+
+                if (response.isRedirect) {
+                    window.location.href = '../Login/Index';
+                    return;
+                }
+                $(".ddTargetType").html("");
+            });
+            $('.ddTargetType').each(function (i, obj) {
+                if (!$(obj).hasClass("select2-hidden-accessible"))
+                    $(obj).select2({ placeholder: 'Select Target Type' });
+            });
+        }
+
+        function init() {
+            try {
+                $('#ddTargetCategory').select2({ placeholder: 'Select Target Category' });
+                $('#ddTargetType').select2({ placeholder: 'Select Target Type' });
+                $('#ddTargetCategory').focus();
+                getTargetCategoryDD();
+                getTargetTypeDD();
+                @if(Model.Status == true)
+                {
+                    <text>
+                $('#AddradioA').iCheck('check');
+                </text>
+                }
+                else
+                {
+                    <text>
+                $('#AddradioI').iCheck('check');
+                </text>
+                }
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+
+        function AddAmountTextBoxPerSFALevel()
+        {
+            debugger;
+            $('#AmountPerSFALevelWrapper').html("");
+            $.each(SFALevelArray,function(i){
+                debugger;
+                var textbox = '<div class="col-lg-4"><input type="hidden" value="'+ SFALevelArray[i].LevelId +'" id="txtSFALevelId_'+SFALevelArray[i].LevelId+
+                    '"/><div class="form-group"><label for="txtAmount_'+i+'">'+SFALevelArray[i].LevelName+'</label><input type="text" id="txtAmount_'+SFALevelArray[i].LevelId+
+                    '" class="form-control input-sm" placeholder="Enter Value" numeric/></div></div>';
+                $('#AmountPerSFALevelWrapper').append(textbox);
+            });
+        }
+
+        $(document).ready(function () {
+            init();
+            initializeTable();
+
+            $('#modalAddRow').on('shown.bs.modal', function () {
+                $('.ddTargetType').focus();
+            });
+
+            $('#modalAddRow').on('hidden.bs.modal', function () {
+                $('.ddTargetType').val(null).change();
+                $('#txtMinimum').val('').change();
+                $('#txtMaximum').val('').change();
+                $.each(SFALevelArray,function(i){
+                    var id = '#txtAmount_' + SFALevelArray[i].Id;
+                    $(id).val('').change();
+                });
+                $('#rowIndex').val(null).change();
+            });
+
+            $('body').on('click', '.btnDelete', function () {
+                dtBaseIncentiveDefinitionGrid.row($(this).parent().parent()).remove().draw();
+            });
+
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtBaseIncentiveDefinitionGrid.row($(this).parent().parent()).data();
+                $('#rowIndex').val(dtBaseIncentiveDefinitionGrid.row($(this).parent().parent()).index());
+                $('#ddTargetType').val(data.TargetTypeId).trigger('change');
+                $('#txtMinimum').val(data.Minimum);
+                $('#txtMaximum').val(data.Maximum);
+                $('#modalAddRowTitle').html('<i class="fa fa-pencil"></i> Update an existing row');
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddRowTitle').html('<i class="fa fa-plus"></i> Add a new row');
+                $('#rowIndex').val(null);
+                AddAmountTextBoxPerSFALevel();
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('body').on('click', '#btnBack', function () {
+                $(location).attr('href', '@Url.Action("Index", "BaseIncentive")');
+            });
+
+            $('#btnSubmitRow').on('click', function () {
+                var data = new Object();
+                data.TargetTypeId = $('#ddTargetType').val();
+                data.TargetType = $('#ddTargetType').children("option:selected").text();
+                data.Minimum = $('#txtMinimum').val();
+                data.Maximum = $('#txtMaximum').val();
+                for(var x = 0; x < SFALevelArray.length; x++)
+                {
+                    data["SFALevelId_"+SFALevelArray[x].LevelId] = $('#txtSFALevelId_'+SFALevelArray[x].LevelId).val();
+                    data["Amount_"+SFALevelArray[x].LevelId] = $('#txtAmount_'+SFALevelArray[x].LevelId).val();
+                }
+
+                if ($('#rowIndex').val() == null || $('#rowIndex').val() == undefined || $('#rowIndex').val() == "")
+                    dtBaseIncentiveDefinitionGrid.row.add(data).draw(false);//create
+                else
+                    dtBaseIncentiveDefinitionGrid.row($('#rowIndex').val()).data(data).draw(false);//update
+
+                $('#modalAddRow').modal('toggle');
+            });
+
+            $('#btnSubmit').on('click', function () {
+                //creating model from table
+                var data = new Object();
+                data.TargetCategoryId = $('#ddTargetCategory').val();
+                data.Status = $('#AddradioA').is(':checked') ? true : false;
+                data.objDefinitionData = new Array();
+                dtBaseIncentiveDefinitionGrid.rows().every(function (index, tableLoop, rowLoop) {
+                    var row = this.data();
+                    var objAmountMappings = new Array();
+                    $.each(SFALevelArray,function(i){
+                        objAmountMappings.push({
+                            SFALevelId: row["SFALevelId_" + SFALevelArray[i].LevelId],
+                            Amount: row["Amount_" + SFALevelArray[i].LevelId],
+                        });
+                    });
+
+                    data.objDefinitionData.push({
+                        TargetTypeId: row.TargetTypeId,
+                        TargetType: row.TargetType,
+                        Minimum: row.Minimum,
+                        Maximum: row.Maximum,
+                        objAmountMappings: objAmountMappings
+                    });
+                });
+
+                //ajax call to controller
+                common.ajax_post("@Url.Action("Manage", "BaseIncentive")", data, "#tabForm", function (output) {
+                    if(output.MessageCode == MessageCodes.Acceptable.Created)
+                    {
+                        $(location).attr('href','@Url.Action("Index","BaseIncentive")');
+                    }
+                    else
+                        common.notify('error', output.Message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Could not submit base incentive definition data to server. Please contact your administrator.');
+                });
+            });
+        });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddRow">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddRowTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="rowIndex" />
+                    <div class="row">
+                        <div class="col-lg-4">@Html.CustomDropDown("ddTargetType", "TargetTypeId", "Target Type", "ddTargetType")</div>
+                        <div class="col-lg-4">@Html.CustomTextBox("txtMinimum", "Minimum", "Minimum", "Enter Minimum Value", InputTypes.Numeric)</div>
+                        <div class="col-lg-4">@Html.CustomTextBox("txtMaximum", "Maximum", "Maximum", "Enter Maximum Value", InputTypes.Numeric)</div>
+                    </div>
+                    
+                    <div class="row" id="AmountPerSFALevelWrapper">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmitRow" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#tabForm" data-toggle="tab">
+                        <i class="fa fa-plus"></i> Add a new Base Incentive Definition
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabForm">
+                    @using (Html.BeginForm("Create", "BaseIncentive", FormMethod.Post, new { @id = "AddBaseIncentiveForm" }))
+                    {
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-2">
+                                @Html.CustomDropDown("ddTargetCategory", "TargetCategoryId", "Target Category", "")
+                            </div>
+                            <div class="col-lg-3 col-lg-2">
+                                @Html.Custom2RadioButtonGroup("Status", "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                            </div>
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label></label>
+                                    <button id="btnAdd" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New Row</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <table id="dtBaseIncentiveDefinitionGrid" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Target Type Id</th>
+                                            <th>Target Type</th>
+                                            <th>Minimum</th>
+                                            <th>Maximum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 text-center">
+                                <button id="btnSubmit" type="button" class="btn btn-primary btn-flat"><i class="fa fa-check"></i> Save Changes</button>
+                                <button id="btnBack" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

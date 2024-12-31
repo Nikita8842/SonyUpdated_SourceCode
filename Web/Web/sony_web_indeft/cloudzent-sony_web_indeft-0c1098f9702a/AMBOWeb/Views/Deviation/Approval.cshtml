@@ -1,0 +1,186 @@
+﻿@using AMBOWeb.Classes;
+@model AMBOModels.IncentiveManagement.DeviationApprovalSearch
+@section PageCSS{
+}
+
+@section PageJS{
+<script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+<script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: '---All Branches---' });
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#filterBox", function (branches) {
+                $(".ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $(".ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                $('.ddBranch').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddBranch").html("");
+            });
+        }
+
+        function ValidateDownloadExcelForm() {
+            if ($('#txtMonth').val() == null || $('#txtMonth').val() == undefined || $('#txtMonth').val() == "") {
+                common.notify('error', 'Please select Incentive Month.');
+                return false;
+            }
+            //if ($('#ddBranch').val() == null || $('#ddBranch').val() == undefined || $('#ddBranch').val() == "" || $('#ddBranch').val() == 0) {
+            //    common.notify('error', 'Please select Branch.');
+            //    return false;
+            //}
+            return true;
+        }
+
+        function DownloadExcel() {
+            if (ValidateDownloadExcelForm()) {
+                var data = new Object();
+                data.IncentiveMonth = $('#txtMonth').val();
+                data.BranchId = $('#ddBranch').val();
+
+                common.ajax_post('@Url.Action("ApprovalSearch", "Deviation")', data, '#filterBox', function (output) {
+                    if (output.status)
+                        window.location = '@Url.Action("Download", "Deviation")' + '?fileGuid=' + output.FileGuid
+                                      + '&filename=' + output.FileName;
+                    else
+                        common.notify('error', output.message);
+                }, function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', 'Unable to download proposed deviation approval data excel file. Please contact your administrator.');
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            init();
+            getBranchDD();
+            $('#btnDownload').click(function (e) { e.preventDefault(); DownloadExcel(); });
+            $('#btnBack').click(function (e) { $(location).attr('href', '@Url.Action("Index","Dashboard")'); });
+
+
+            $('#txtMonth').prop('data-inputmask', "'alias': 'mm/yyyy'");
+            $('#txtMonth').prop('data-mask', '');
+            $('#txtMonth').inputmask('mm/yyyy', { 'placeholder': 'mm/yyyy' })
+            $('#txtMonth').datepicker({
+                autoclose: true,
+                format: "mm/yyyy",
+                startView: "months",
+                minViewMode: "months"
+            });
+        });
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                    debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    if ('@ViewBag.BranchId' != 0) {
+                        $('#ddBranch').val(@ViewBag.BranchId);
+                        $('#ddBranch').attr("disabled", "disabled");
+                        getSFADD();
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Deviation Approval By NRDI</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <form action="@Url.Action("Approval","Deviation")" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Branch:</label>
+                                @Html.DropDownList("BranchId", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm" })
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Incentive Month:</label>
+                                <input name="IncentiveMonth" type="text" required="required" class="form-control input-sm" id="txtMonth" placeholder="Select Incnetive Month" />
+                            </div>
+                        </div>
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <button id="btnDownload" class="btn btn-flat btn-success" type="button"><i class="fa fa-download"></i> Download</button>
+                            @*<button id="btnGetReasons" class="btn btn-flat btn-success" type="button"><i class="fa fa-download"></i> Get Reasons</button>*@
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>Deviation Upload File:</label>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <button onclick="$('#fileChooser').click();" type="button" class="btn btn-primary">Browse...</button>
+                                    </div>
+                                    <input id="fileChooserValue" type="text" class="form-control" disabled>
+                                    <input name="ExcelUploadFile" type="file" class="hidden" id="fileChooser" onchange="$('#fileChooserValue').val(document.getElementById('fileChooser').files[0].name);" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <button id="btnSubmit" type="submit" class="btn btn-primary btn-flat"><i class="fa fa-upload"></i> Upload</button>
+                        </div>
+                    </div>
+                    @*<div class="row">
+                <div class="col-lg-4 col-lg-offset-5">
+                    <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index","Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                    <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                </div>
+            </div>*@
+                </form>
+               
+            </div>
+        </div>
+    </div>
+</div>

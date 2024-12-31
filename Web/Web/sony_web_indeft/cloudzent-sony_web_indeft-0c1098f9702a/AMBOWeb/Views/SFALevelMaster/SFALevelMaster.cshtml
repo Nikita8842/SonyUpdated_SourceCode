@@ -1,0 +1,337 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">Advance Search</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>SFA Level:</label>
+                        @Html.DropDownList("ddlSFALevel", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlSFALevel", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4 col-lg-offset-3">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br/>
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> SFA Level Master</a></li>
+                <li class="pull-right"><button id="AddNew" data-toggle="modal" data-target="#modalAddNew" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtSFALevel" class="table table-bordered table-striped datatable" style="width:100%">
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddNew">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmAdd">
+                    @Html.Hidden("ID","", new { id = "hdnID" })
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title"><i class="fa fa-plus"></i> Add New SFA Level</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtText">SFA Level</label>
+                            @Html.TextBox("SFA Level", "", new { id = "txtLevelName", @class = "form-control", maxlength = "50", placeholder = "Enter SFA Level" })
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                        <button type="button" class="btn btn-primary" onclick="Save();" id="btnSave"><i class="fa fa-check"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        </div>
+
+<div class="modal fade" id="divDelete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="frmDelete">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title"><i class='fa fa-trash'></i> Delete Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="txtMessage">Do you really want to delete SFA Level?</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button type="button" class="btn btn-primary" onclick="Delete();"><i class="fa fa-check"></i>Yes</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+<script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        var dt;
+        function Search()
+        {
+            if ($.fn.dataTable.isDataTable('#dtSFALevel')) {
+                $('#dtSFALevel').DataTable().destroy();
+                $('#dtSFALevel tbody').empty();
+                //dt.destroy();
+            }
+
+            dt = $('#dtSFALevel').DataTable({
+                searching: false,
+                "processing": true,
+                "scrollY": "330px",
+                "ajax": {
+                    url: "@Url.Action("SFALevelMaster", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.SFALevelIds = $('#ddlSFALevel').val();                    
+                    },
+                    dataSrc:""
+                },
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Type here for search...",
+                    "processing": "Please wait while we fetch data..."
+                },
+                "columns": [
+                    { "data": "SFALevelName", "title": "Level Name" },
+                    //{ "data": "LevelCreationDate", "title": "Creation Date" },
+                    {
+                        "data": function (data, type, row) {
+                            return '<a data-placement="left" title="Edit"><span><i class="fa fa-lg fa-pencil edit"></i></span></a>&emsp;' +
+                            '<a data-toggle="modal" data-target="#divDelete" data-placement="left" title="Delete" class="delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        "orderable": false
+                    }
+                ]
+            });
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetActiveSFALevels", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    if(result.MessageCode == 302)
+                    {
+                        $(result.Data).each(function () {
+                            $("#ddlSFALevel").append($("<option></option>").val(this.SFALevelId).html(this.SFALevelName));
+                        });
+                        $("#ddlSFALevel").val(null).trigger('change');
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlSFALevel").html("");
+                    $("#ddlSFALevel").val(null).trigger('change');
+                }
+            });
+
+            $('#ddlSFALevel').select2({ placeholder: "---All SFA Level---" });
+       
+        }
+
+        $(document).ready(function () {
+
+            populateFilters();
+
+            $('#modalAddNew').on('shown.bs.modal', function () {
+                $("#txtLevelName").focus();
+            });
+            $('#modalAddNew,#divDelete').on('hidden.bs.modal', function () {
+                $("#txtLevelName").val('');
+                $("#hdnID").val('');
+                $(".modal-title").html("<i class='fa fa-plus'></i> Add New SFA Level");
+            });
+
+            Search();
+            
+            $('#dtSFALevel').on('click', ".delete", function () {
+                $("#hdnID").val(dt.row($(this).parents('tr')).data().Id);
+            });
+            $('#dtSFALevel').on('click', ".edit", function () {
+                var Id = dt.row($(this).parents('tr')).data().Id;
+                var Name = dt.row($(this).parents('tr')).data().SFALevelName;
+                $("#txtLevelName").val(Name);
+                $("#hdnID").val(Id);
+                $(".modal-title").html("<i class='fa fa-pencil'></i> Update SFA Level");
+                $("#btnsave").text("Update");
+                $("#AddNew").trigger("click");
+            });
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.SFALevelIds = $('#ddlSFALevel').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelSFALevel", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.SFAlevel), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                        if(returnValue)
+                        {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else
+                        {
+                            common.notify('error',"Empty file returned");
+                        }
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                
+            });
+        });
+        function Save() {
+            if ($("#txtLevelName").val() == null || $("#txtLevelName").val() == "") {
+                alert("Please provide Level Name.");
+                return false;
+            }
+            if (!$("#txtLevelName").val().match(/^[0-9a-zA-Z ]+$/)) {
+                alert("Only alphanumeric values are allowed in Level Name.");
+                return false;
+            }
+            var url;
+            if ($("#hdnID").val() != null && $("#hdnID").val() != '')
+                url = '@Url.Action("UpdateSFALevelMaster", "SFALevelMaster")';
+            else
+                url = '@Url.Action("CreateSFALevelMaster", "SFALevelMaster")';
+            var Id = $("#hdnID").val();
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { LevelName: $("#txtLevelName").val(),Id:Id },
+                contentType: "application/json",
+                dataType: 'json',
+                success: function (data) {
+                    debugger;
+                    //code modified to show notification in either case
+                    if (data.ErrorCode == 1) {
+                        //common.notify('success', data.ErrorMessage);
+                        $("#modalAddNew").modal("toggle");
+                        
+                        location.reload();
+                        
+                    }
+                    else {
+                        common.notify('error', data.ErrorMessage);
+                    }
+                   
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    alert("OOPS! Something happened. Please try again.");
+                }
+            });
+        }
+        function Delete() {
+            var LevelId = $("#hdnID").val();
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("DeleteSFALevelMaster", "SFALevelMaster")',
+                data: { LevelId: LevelId },
+                contentType: "application/json",
+                dataType: 'json',
+                success: function (data) {
+                    //code modified to show notification in either case
+                    if (data.ErrorCode == 1) {
+                        $("#divDelete").modal("toggle");
+                        //common.notify('success', data.ErrorMessage);
+                        location.reload();
+                    }
+                    else {
+                        common.notify('error', data.ErrorMessage);
+                    }
+                   
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    alert("OOPS! Something happened. Please try again.");
+                }
+            });
+        }
+    </script>
+}

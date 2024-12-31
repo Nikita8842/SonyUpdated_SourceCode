@@ -1,0 +1,24 @@
+﻿@{
+    if(ViewContext.RouteData.Values["controller"].ToString().ToUpper() != "LOGIN")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+}
+<script>
+    MessageCodes = {
+        Acceptable: {
+            Created : 201,
+            Accepted : 202,
+            Found : 302
+        },
+        NotAcceptable: {
+            BadRequest : 400,
+            Unauthorized : 401,
+            Forbidden : 403,
+            NotFound : 404,
+            MethodNotAllowed : 405,
+            NotAcceptable : 406,
+            NotModified : 304
+        }
+    };
+</script>

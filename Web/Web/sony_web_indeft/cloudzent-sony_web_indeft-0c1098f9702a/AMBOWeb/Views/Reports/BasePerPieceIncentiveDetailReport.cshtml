@@ -1,0 +1,539 @@
+﻿@model AMBOModels.Reports.BaseIncentiveReport
+@using AMBOWeb.Classes
+
+@section PageCSS{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+        function getBranchDD() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetBranches", "Common")',
+                success: function (branches) {
+                    debugger;
+                    $("#ddBranch").html(""); // clear before appending new list
+                    $.each(branches, function (i, branch) {
+                        $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    });
+                    $('#ddBranch').val(null).change();
+                    if ('@ViewBag.BranchId' != 0) {
+                        $('#ddBranch').val(@ViewBag.BranchId);
+                        $('#ddBranch').attr("disabled", "disabled");
+                        getSFADD();
+                    }
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddBranch").html("");
+                }
+            });
+        }
+        function getSFADD() {
+            var BranchId = @ViewBag.BranchId;
+            if(BranchId == 0 || BranchId != '')
+                var BranchId = $("#ddBranch").val();
+            if (BranchId != null && BranchId != '' && BranchId != 0) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetSFAByBranch", "Common")',
+                    data: { branchId: BranchId },
+                    success: function (sfa) {
+                        $("#ddSFA").html(""); // clear before appending new list
+                        $("#ddSFA").append($('<option></option>').val(0).html("---All SFA---"));
+                        $.each(sfa, function (i, sfadet) {
+                            debugger;
+                            $("#ddSFA").append($('<option></option>').val(sfadet.EmployeeId).html(sfadet.SFAFullName));
+                        });
+                    },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        $("#ddSFA").html("");
+                        $('#ddSFA').attr("placeholder", "---All SFA---");
+                    }
+                });
+            }
+            else {
+                $("#ddSFA").html("");
+                $('#ddSFA').attr("placeholder", "---All SFA---");
+            }
+        }
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#tabForm", function (divisions) {
+                $("#ddDivision").html("");
+                $.each(divisions, function (i, division) {
+                    $("#ddDivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                    $("#ddDivision").val(null).change();
+                });
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDivision").html("");
+            });
+        }
+        function getProdCatsDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+        function init() {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddDivision').select2({ placeholder: "---All Division---" });
+            $('#ddProdCat').select2({ placeholder: "---All Product---" });
+            $('#txtMonth').datepicker({
+                autoclose: true,
+                format: "mm/yyyy",
+                startView: "months",
+                minViewMode: "months"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+           
+            //if($('#ddBranch').val() == null || $('#ddBranch').val() == undefined || $('#ddBranch').val() == '' ||  $('#ddBranch').val() == '0')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select Branch.";
+            //    return output;
+            //}
+            //if($('#ddSFA').val() == null || $('#ddSFA').val() == undefined || $('#ddSFA').val() == '' ||  $('#ddSFA').val() == '0')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select SFA.";
+            //    return output;
+            //}
+            //if($('#ddDivision').val() == null || $('#ddDivision').val() == undefined || $('#ddDivision').val() == '' ||  $('#ddDivision').val() == '0')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select Division.";
+            //    return output;
+            //}
+            if($('#txtMonth').val() == null || $('#txtMonth').val() == undefined || $('#txtMonth').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select Month.";
+                return output;
+            }
+            //if($('#ddProdCat').val() == null || $('#ddProdCat').val() == undefined || $('#ddProdCat').val() == '' ||  $('#ddProdCat').val() == '0')
+            //{
+            //    output.status = false;
+            //    output.message = "Please select Product Category.";
+            //    return output;
+            //}
+
+            return output;
+        }
+        function Search() {
+            debugger;
+
+            var result = ValidateFilters();
+            if (result.status) {
+                $('#filterBoxHeader').trigger('click');
+                $('#gridtable').removeClass('hidden');
+                if ($.fn.dataTable.isDataTable('#dtBaseIncentiveReport')) {
+                    $('#dtBaseIncentiveReport').DataTable().destroy();
+                    $('#dtBaseIncentiveReport tbody').empty();
+                    //dtBaseIncentiveReport.destroy();
+                }
+                var d = new Object();
+                d.BranchId = $('#ddBranch').val();
+                d.SFAId = $('#ddSFA').val();
+                d.DivisionId = $('#ddDivision').val();
+                d.Month = $('#txtMonth').val().replace("/","");
+                d.ProductCategoryId = $('#ddProdCat').val();
+                
+                $('#dtBaseIncentiveReport').DataTable({
+                    processing: true,
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Type here for search...",
+                        processing: "Please wait while we fetch data..."
+                    },
+                });
+                $('.dataTables_processing', $('#dtBaseIncentiveReport').closest('.dataTables_wrapper')).show();
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetBasePerPieceIncentiveDetailReport", "Reports")',
+                    data: {objGridData:d},
+                    success: function (Data) {
+                        debugger;
+                        var Btr = "";
+                        for (var i = 0; i < Data.BasePerPieceIncentiveDetailData.length; i++) {
+                            debugger;
+                            var Str = '<tr>';
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].BranchName + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].City + "</td>";
+
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].Location + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SFACode + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SFAName + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SFAType + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SFALevel + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SFADivision + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].Dealer + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].Channel + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].DealerState + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].MasterCode + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].DealerCode + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].IncentiveCategory + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].TargetCategory + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ProductCategory + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].QtyTarget + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ValueTarget + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].QtyAchievement + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ValueAchievement + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].QtyPercentage + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ValuePercentage + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].BaseSlabCalculated + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].BaseIncentiveAmount + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].PerPieceQty + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].PerPieceSlabCalculated + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].PerPieceIncentiveScheme + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].PerPieceIncentiveAmount + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ProposedDeviation + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].ApprovedDeviationAmount + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].Reasons + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].FirstHeader + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].FirstRemark + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SecondHeader + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].SecondRemark + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].FinalPayableAmount + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].HORemark + "</td>";
+                            Str = Str + "<td>" + Data.BasePerPieceIncentiveDetailData[i].DeviationStage + "</td>";
+                            Str = Str + '</tr>';
+                            Btr = Btr + Str;
+                        }
+                        if ($.fn.dataTable.isDataTable('#dtBaseIncentiveReport')) {
+                            $('#dtBaseIncentiveReport').DataTable().destroy();
+                            $('#dtBaseIncentiveReport tbody').empty();
+                            //dtBaseIncentiveReport.destroy();
+                        }
+                        $("#dtBaseIncentiveReport tbody").empty();
+                        $("#dtBaseIncentiveReport tbody").append(Btr);
+                        $("#dtBaseIncentiveReport").DataTable({
+                            scrollX: true
+                        });
+
+                    //    $("#divData").html(Data);
+                    //    $("#dtMonthlyAttReport").DataTable(
+                    //{
+                    //    bSort: false,
+                    //    scrollX: true,
+                    //});
+                    },
+                    error: function (output) {
+                        debugger;
+                        //if (output.statusCode == 401 || output.status == 401) {
+                        //    var response = $.parseJSON(output.responseText);
+
+                        //    if (response.isRedirect) {
+                        //        window.location.href = '../Login/Index';
+                        //        return;
+                        //    }
+                        //}
+                    }
+                });
+                @*dtDailySalesIMEIReport = $('#dtBaseIncentiveReport').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    searching: false,
+                    ordering: false,
+                    "bSort": false,
+                    scrollX: true,
+
+                    ajax: {
+                        url: "@Url.Action("GetBasePerPieceIncentiveReport", "Reports")",
+                        type: 'POST',
+                        data: function (d) {
+                            debugger;
+                            d.BranchId = $('#ddBranch').val();
+                            d.SFAId = $('#ddSFA').val();
+                            d.DivisionId = $('#ddDivision').val();
+                            d.Month = $('#txtMonth').val().replace("/","");
+                            d.ProductCategoryId = $('#ddProdCat').val();
+                        }
+                    },
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Type here for search...",
+                        processing: "Please wait while we fetch data..."
+                    },
+                    columns: [
+                            { data: "BranchName" },
+                            { data: "City" },
+                            { data: "Location" },
+                            { data: "SFACode" },
+                            { data: "SFAName" },
+                            { data: "SFAType" },
+                            { data: "SFALevel" },
+                            { data: "SFADivision" },
+                            { data: "Dealer" },
+                            { data: "Channel" },
+                            { data: "DealerState" },
+                            { data: "MasterCode" },
+                            { data: "DealerCode" },
+                            { data: "IncentiveCategory" },
+                            { data: "QtyTarget" },
+                            { data: "ValueTarget" },
+                            { data: "QtyAchievement" },
+                            { data: "ValueAchievement" },
+                            { data: "QtyPercentage" },
+                            { data: "ValuePercentage" },
+                            { data: "BaseIncentiveAmount" },
+                            { data: "PerPieceQty" },
+                            { data: "PerPieceIncentiveAmount" },
+                            { data: "ProposedDeviation" },
+                            { data: "Reasons" },
+                            { data: "FirstHeader" },
+                            { data: "FirstRemark" },
+                            { data: "SecondHeader" },
+                            { data: "SecondRemark" },
+                            { data: "FinalPayableAmount" },
+                            { data: "HORemark" },
+                            { data: "DeviationStage" },
+                    ]
+                });*@
+            }
+            else {
+                debugger;
+                common.notify('error', result.message);
+            }
+        }
+
+
+        $(document).ready(function () {
+
+            var dtBaseIncentiveReport;
+            getBranchDD();
+            init();
+            getDivisionsDD();
+            getProdCatsDD();
+           if ($.fn.dataTable.isDataTable('#dtBaseIncentiveReport')) {
+                dtBaseIncentiveReport.destroy();
+            }
+            $('#dtBaseIncentiveReport').DataTable({
+                scrollX: true
+            });
+             
+            $("#btnDownload").click(function () {
+                debugger;
+                var d = new Object();
+                d.BranchId = $('#ddBranch').val();
+                d.SFAId = $('#ddSFA').val();
+                d.DivisionId = $('#ddDivision').val();
+                d.Month = $('#txtMonth').val().replace("/","");
+                d.ProductCategoryId = $('#ddProdCat').val();
+
+                if(d.BranchId == null)
+                    d.BranchId = "0";
+                if(d.SFAId == null)
+                    d.SFAId = "0";
+                if(d.DivisionId == null)
+                    d.DivisionId = "0";
+                if(d.Month == null)
+                    d.Month = "0";
+                if(d.ProductCategoryId == null)
+                    d.ProductCategoryId = "0";
+
+                var result = ValidateFilters();
+                if (result.status) {
+                    window.location = "../Reports/BasePerPieceIncentiveDetailExport?BranchId=" + d.BranchId + "&SFAId="+d.SFAId + "&DivisionId="+d.DivisionId + "&Month="+d.Month + "&ProductCategoryId="+d.ProductCategoryId;
+                }
+                else
+                {
+                    common.notify('error', result.message);
+                }
+             
+
+            });
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Base Per Piece Incentive Detail Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Branch:</label>
+                        @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddBranch", @Class = "form-control input-sm", onchange = "getSFADD();" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>SFA:</label>
+                        @Html.DropDownListFor(m => m.SFAId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddSFA", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Division:</label>
+                        @Html.DropDownListFor(m => m.DivisionId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddDivision", @Class = "form-control input-sm" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Month:</label>
+                        <input type="text" class="form-control input-sm" id="txtMonth" placeholder="Select Month" autocomplete = "off" />
+                    </div>
+                    <div class="col-lg-4">
+                        <label>Product Category:</label>
+                        @Html.DropDownListFor(m => m.ProdCatId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddProdCat", @Class = "form-control input-sm" })
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <button class="btn btn-flat btn-primary" onclick="Search();" style="margin-top: 21px;"><i class="fa fa-search"></i> Search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*<div class="row hidden" id="divDataTable">*@
+<div class="row" id="divDataTable">
+    <div class="col-lg-12">
+        <div class="box box-primary">
+            <div class="box-body">
+
+                <table id="dtBaseIncentiveReport" class="table table-bordered table-striped nowrap reportstable">
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>City</th>
+                            <th>Location</th>
+                            <th>SFA Code</th>
+                            <th>SFA Name</th>
+                            <th>SFA Type</th>
+                            <th>SFA Level</th>
+                            <th>SFA Division</th>
+                            <th>Dealer</th>
+                            <th>Channel</th>
+                            <th>Dealer State</th>
+                            <th>Master Code</th>
+                            <th>Dealer Code</th>
+                            <th>Incentive Category</th>
+                            <th>Target Category</th>
+                            <th>Product Category</th>
+                            <th>Qty Target</th>
+                            <th>Value Target</th>
+                            <th>Qty Ach</th>
+                            <th>Value Ach</th>
+                            <th>Qty Percentage</th>
+                            <th>Value Percentage</th>
+                            <th>Base Slab Calculated</th>
+                            <th>Base Incentive</th>
+                            <th>Per Piece Qty</th>
+                            <th>Per Piece Slab Calculated</th>
+                            <th>Per Piece Incentive Scheme</th>
+                            <th>Per Piece Incentive Amount</th>
+                            <th>Proposed Deviation</th>
+                            <th>Approved Deviation Amount</th>
+                            <th>Reasons</th>
+                            <th>First Header</th>
+                            <th>First Remark</th>
+                            <th>Second Header</th>
+                            <th>Second Remark</th>
+                            <th>Final Payable Amount</th>
+                            <th>HO Remark</th>
+                            <th>Deviation Stage</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                @*</div>*@
+                @*</div>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="gridtable">
+        <div class="col-lg-12">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i>Base Per Piece Incentive Detail Report</a></li>
+                    <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+                </ul>
+                <div id="divData" class="tab-content">
+
+                    <!-- /.tab-pane -->
+                </div>
+                <!-- /.tab-content -->
+            </div>
+        </div>
+    </div>

@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8CA2C640-0140-4BC1-B273-B4E0606023B2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>APIAccessLayer</RootNamespace>
+    <AssemblyName>APIAccessLayer</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helper\APIClient.cs" />
+    <Compile Include="Helper\EncryptDecrypt.cs" />
+    <Compile Include="Helper\HttpStatusCodes.cs" />
+    <Compile Include="IMPLEMENTATION\APIAssetAssignment.cs" />
+    <Compile Include="IMPLEMENTATION\APIAssetData.cs" />
+    <Compile Include="IMPLEMENTATION\APIAssetIssuedToSFA.cs" />
+    <Compile Include="IMPLEMENTATION\APIBranchData.cs" />
+    <Compile Include="IMPLEMENTATION\APIBroadcastMessage.cs" />
+    <Compile Include="IMPLEMENTATION\APIChannelData.cs" />
+    <Compile Include="IMPLEMENTATION\APICityData.cs" />
+    <Compile Include="IMPLEMENTATION\APICommon.cs" />
+    <Compile Include="IMPLEMENTATION\APICompetitorMasterData.cs" />
+    <Compile Include="IMPLEMENTATION\APIDealerData.cs" />
+    <Compile Include="IMPLEMENTATION\APIDealerMasterCodeUpdate.cs" />
+    <Compile Include="IMPLEMENTATION\APIDeviationData.cs" />
+    <Compile Include="IMPLEMENTATION\APIEmployeeData.cs" />
+    <Compile Include="IMPLEMENTATION\APIFeedbackData.cs" />
+    <Compile Include="IMPLEMENTATION\APIGridData.cs" />
+    <Compile Include="Helper\Envelope.cs" />
+    <Compile Include="IMPLEMENTATION\APIIncentiveCalculationDateSetting.cs" />
+    <Compile Include="IMPLEMENTATION\APIIncentiveData.cs" />
+    <Compile Include="IMPLEMENTATION\APILocationData.cs" />
+    <Compile Include="IMPLEMENTATION\APIMappingData.cs" />
+    <Compile Include="IMPLEMENTATION\APIMaterialData.cs" />
+    <Compile Include="IMPLEMENTATION\APIProductCategoryData.cs" />
+    <Compile Include="IMPLEMENTATION\APIProductCategoryGroup.cs" />
+    <Compile Include="IMPLEMENTATION\APIProductSubCategoryData.cs" />
+    <Compile Include="IMPLEMENTATION\APIProductTargetCategoryData.cs" />
+    <Compile Include="IMPLEMENTATION\APIRegionData.cs" />
+    <Compile Include="IMPLEMENTATION\APIRoleRightsData.cs" />
+    <Compile Include="IMPLEMENTATION\APISFAData.cs" />
+    <Compile Include="IMPLEMENTATION\APISFAMasterforHRData.cs" />
+    <Compile Include="IMPLEMENTATION\APISFASalaryMaster.cs" />
+    <Compile Include="IMPLEMENTATION\APIShiftData.cs" />
+    <Compile Include="IMPLEMENTATION\APIStateData.cs" />
+    <Compile Include="IMPLEMENTATION\APITargetDateSettingMaster.cs" />
+    <Compile Include="IMPLEMENTATION\APIWebReportsData.cs" />
+    <Compile Include="IMPLEMENTATION\SFALevelMaster.cs" />
+    <Compile Include="IMPLEMENTATION\UserValidation.cs" />
+    <Compile Include="INTERFACE\IAPIAssetAssignment.cs" />
+    <Compile Include="INTERFACE\IAPIAssetData.cs" />
+    <Compile Include="INTERFACE\IAPIAssetIssuedToSFA.cs" />
+    <Compile Include="INTERFACE\IAPIBranchData.cs" />
+    <Compile Include="INTERFACE\IAPIBroadcastMessage.cs" />
+    <Compile Include="INTERFACE\IAPIChannelData.cs" />
+    <Compile Include="INTERFACE\IAPICityData.cs" />
+    <Compile Include="INTERFACE\IAPICommon.cs" />
+    <Compile Include="INTERFACE\IAPICompetitorMasterData.cs" />
+    <Compile Include="INTERFACE\IAPIDealerData.cs" />
+    <Compile Include="INTERFACE\IAPIDealerMasterCodeUpdate.cs" />
+    <Compile Include="INTERFACE\IAPIDeviationData.cs" />
+    <Compile Include="INTERFACE\IAPIEmployeeData.cs" />
+    <Compile Include="INTERFACE\IAPIFeedbackData.cs" />
+    <Compile Include="INTERFACE\IAPIGridData.cs" />
+    <Compile Include="INTERFACE\IAPIIncentiveCalculationDateSetting.cs" />
+    <Compile Include="INTERFACE\IAPIIncentiveData.cs" />
+    <Compile Include="INTERFACE\IAPILocationData.cs" />
+    <Compile Include="INTERFACE\IAPIMappingData.cs" />
+    <Compile Include="INTERFACE\IAPIMaterialData.cs" />
+    <Compile Include="INTERFACE\IAPIProductCategoryData.cs" />
+    <Compile Include="INTERFACE\IAPIProductCategoryGroup.cs" />
+    <Compile Include="INTERFACE\IAPIProductSubCategoryData.cs" />
+    <Compile Include="INTERFACE\IAPIProductTargetCategoryData.cs" />
+    <Compile Include="INTERFACE\IAPIRegionData.cs" />
+    <Compile Include="INTERFACE\IAPIRoleRightsData.cs" />
+    <Compile Include="INTERFACE\IAPISFAData.cs" />
+    <Compile Include="INTERFACE\IAPISFAMasterforHRData.cs" />
+    <Compile Include="INTERFACE\IAPISFASalaryMaster.cs" />
+    <Compile Include="INTERFACE\IAPIShiftData.cs" />
+    <Compile Include="INTERFACE\IAPIStateData.cs" />
+    <Compile Include="INTERFACE\IAPITargetDateSettingMaster.cs" />
+    <Compile Include="INTERFACE\IAPITrainingData.cs" />
+    <Compile Include="INTERFACE\IAPIWebReportsData.cs" />
+    <Compile Include="INTERFACE\ISFALevelMaster.cs" />
+    <Compile Include="INTERFACE\IUserValidation.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AMBOModels\AMBOModels.csproj">
+      <Project>{e90f58a1-cd2d-4294-9cb1-7f78eb437579}</Project>
+      <Name>AMBOModels</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

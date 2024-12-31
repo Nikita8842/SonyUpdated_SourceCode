@@ -1,0 +1,356 @@
+﻿@using AMBOWeb.Classes
+@{
+    Layout = null;
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>WhizT Ambo | @ViewBag.PageTitle</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link href="~/Content/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/BootStrapDatePicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/ionicons/css/ionicons.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/iCheck/all.css" rel="stylesheet" />
+    <link href="~/Content/plugins/datatables/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/select2/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="~/Content/css/basetheme.css" rel="stylesheet" />
+    <link href="~/Content/css/skins/_all-skins.min.css" rel="stylesheet" />
+    <link href="~/Content/plugins/noty-3.1.4/css/noty.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+    <link href="~/Content/css/custom.css" rel="stylesheet" />
+    @RenderSection("PageCSS",false)
+</head>
+<body class="hold-transition skin-blue fixed">
+    <div class="wrapper">
+        <header class="main-header">
+            
+            <a href="@Url.Action("Index","Dashboard")" class="logo">
+                <!-- mini logo for sidebar mini 50x50 pixels -->
+                <span class="logo-mini"><b>WhizT</b> Ambo</span>
+                <!-- logo for regular state and mobile devices -->
+                <span class="logo-lg"><b>WhizT</b> Ambo</span>
+            </a>
+            
+            <nav class="navbar navbar-static-top">
+                <!-- Sidebar toggle button-->
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button" id="btnSidebarToggle">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <!-- User Account: style can be found in dropdown.less -->
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <img src="~/Content/img/default.png" class="user-image" alt="User Image"/>
+                                <span class="hidden-xs">@UserSession.UserName</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="~/Content/img/default.png" class="img-circle" alt="User Image" />
+                                    <p>
+                                        @UserSession.UserName
+                                        <small><b>Last Login: </b> @UserSession.LastLoginDate.ToString("dd/MM/yyyy HH:mm:ss")</small>
+                                    </p>
+                                </li>
+                                <!-- Menu Body -->
+                                <li class="user-body">
+                                    <div class="row">
+                                        <div class="col-xs-6 text-center">
+                                            @Html.ActionLink("Change Password", "ChangePassword", "Dashboard", "", new { @class = "btn btn-default btn-flat" })
+                                        </div>
+                                        <div class="col-xs-6 text-center">
+                                            @Html.ActionLink("Sign out", "LogOut", "Login","", new {@class="btn btn-default btn-flat" })
+                                        </div>
+                                    </div>
+                                    <!-- /.row -->
+                                </li>
+                                <!-- Menu Footer-->
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        
+        <!-- Left side column. contains the sidebar -->
+        <aside class="main-sidebar">
+            <!-- sidebar: style can be found in sidebar.less -->
+            <section class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel">
+                    <div class="pull-left image">
+                        <img src="~/Content/img/default.png" class="img-circle" alt="User Image" />
+                    </div>
+                    <div class="pull-left info">
+                        <p>@UserSession.UserName</p>
+                        <small><b>Designation: </b> @UserSession.RoleName</small>
+                        @*<a href="#" id="hubStatus"><i class="fa fa-circle text-success"></i> Online</a>*@
+                    </div>
+                </div>
+                @{Html.RenderAction("GetMenu", "Dashboard");}
+                <!-- sidebar menu: : style can be found in sidebar.less 
+                <ul class="sidebar-menu" style="word-wrap:break-word" data-widget="tree">
+                    <li><a href="@Url.Action("Index", "Dashboard")"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-id-card"></i>
+                            <span>SFA Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index", "SFA")"><i class="fa fa-circle-o"></i> SFA Master</a></li>
+                            <li><a href="@Url.Action("SFALevelMaster", "SFALevelMaster")"><i class="fa fa-circle-o"></i> SFA Level Master</a></li>
+                            <li><a href="@Url.Action("SFASubLevelMaster", "SFALevelMaster")"><i class="fa fa-circle-o"></i> SFA Sub Level Master</a></li>
+                            <li><a href="@Url.Action("Index", "DealerSFAMapping")"><i class="fa fa-circle-o"></i> Dealer SFA Mapping</a></li>
+                            <li><a href="@Url.Action("Index", "ProductCategorySFAMapping")"><i class="fa fa-circle-o"></i> Product Category SFA Mapping</a></li>
+                            <li><a href="@Url.Action("Index", "IncentiveCategorySFAMapping")"><i class="fa fa-circle-o"></i> Assign Incentive Category</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-shopping-bag"></i>
+                            <span>Dealer Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","Dealer")"><i class="fa fa-circle-o"></i> Dealer Master</a></li>
+                            <li><a href="@Url.Action("Index","DealerMasterCodeUpdate")"><i class="fa fa-circle-o"></i> Dealer Master Code Updation</a></li>
+                            <li><a href="@Url.Action("Index","DealerClassificationMapping")"><i class="fa fa-circle-o"></i> Dealer Classification Mapping</a></li>
+                            <li><a href="@Url.Action("Index","Channel")"><i class="fa fa-circle-o"></i> Channel Master</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-user-plus"></i>
+                            <span>Employee Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","Employee")"><i class="fa fa-circle-o"></i> Employee Master</a></li>
+                            <li><a href="@Url.Action("Index","EmployeeStructureMapping")"><i class="fa fa-circle-o"></i> Employee Structure Mapping</a></li>
+                            @*<li><a href="#"><i class="fa fa-circle-o"></i> Employee Location Mapping</a></li>*@
+                            <li><a href="@Url.Action("Index","SalesPICOutletMapping")"><i class="fa fa-circle-o"></i> Sales PIC Outlet Mapping</a></li>
+                            <li><a href="@Url.Action("Index","UserBranchChannelPCMapping")"><i class="fa fa-circle-o"></i> User Branch Channel Product <br />&emsp;&nbsp;&nbsp;&nbsp;Category Mapping</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-pencil"></i>
+                            <span>SFA Scheme Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","ProductTargetCategory")"><i class="fa fa-circle-o"></i> Product Target Category<br />&emsp;&nbsp;&nbsp;&nbsp;Mapping</a></li>
+                            <li><a href="@Url.Action("Index","TargetDateSettingMaster")"><i class="fa fa-circle-o"></i> Target Date Setting Master</a></li>
+                            <li><a href="@Url.Action("Index","ProductDefinitionUnderTargetCategory")"><i class="fa fa-circle-o"></i> Product Definition Under<br />&emsp;&nbsp;&nbsp;&nbsp;Target Category</a></li>
+                            <li><a href="@Url.Action("Index","IncentiveTargetCategoryMapping")"><i class="fa fa-circle-o"></i> Incentive Target Category<br />&emsp;&nbsp;&nbsp;&nbsp;Mapping</a></li>
+                            <li><a href="@Url.Action("Index","PerPieceIncentive")"><i class="fa fa-circle-o"></i> Per Piece Incentive Definition</a></li>
+                            <li><a href="@Url.Action("Index","BaseIncentive")"><i class="fa fa-circle-o"></i> Base Incentive Definition</a></li>
+                            <li><a href="@Url.Action("Index","FestivalIncentive")"><i class="fa fa-circle-o"></i> Festival Incentive Definition</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-inr"></i>
+                            <span>Incentive Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("UploadByRDI","Deviation")"><i class="fa fa-circle-o"></i> Deviation Upload by RDI</a></li>
+                            <li><a href="@Url.Action("Approval","Deviation")"><i class="fa fa-circle-o"></i> Deviation Approval</a></li>
+                            <li><a href="@Url.Action("FinalUpload","Deviation")"><i class="fa fa-circle-o"></i> Final Deviation Upload</a></li>
+                            <li><a href="@Url.Action("AssignFestivalTarget","AssignTargetToSFA")"><i class="fa fa-circle-o"></i> Assign Festival Target</a></li>
+                            <li><a href="@Url.Action("Index","AssignTargetToSFA")"><i class="fa fa-circle-o"></i> Assign Target To SFA</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-location-arrow"></i>
+                            <span>Location Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","Region")"><i class="fa fa-circle-o"></i> Region Master</a></li>
+                            <li><a href="@Url.Action("Index","State")"><i class="fa fa-circle-o"></i> State Master</a></li>
+                            <li><a href="@Url.Action("Index","City")"><i class="fa fa-circle-o"></i> City Master</a></li>
+                            <li><a href="@Url.Action("Index","Location")"><i class="fa fa-circle-o"></i> Location Master</a></li>
+                            <li><a href="@Url.Action("Index","Branch")"><i class="fa fa-circle-o"></i> Branch Master</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-desktop"></i>
+                            <span>Product Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","ProductCategory")"><i class="fa fa-circle-o"></i> Product Category Master</a></li>
+                            <li><a href="@Url.Action("Index","ProductSubCategory")"><i class="fa fa-circle-o"></i> Sub Category Master</a></li>
+                            <li><a href="@Url.Action("Index","Material")"><i class="fa fa-circle-o"></i> Material Master</a></li>
+                            <li><a href="@Url.Action("CompetitorMaster", "Competitor")"><i class="fa fa-circle-o"></i> Competitor Master</a></li>
+                            <li><a href="@Url.Action("CompetitorProductMaster","Competitor")"><i class="fa fa-circle-o"></i> Competitor Product Master</a></li>
+                            <li><a href="@Url.Action("CompetitorModelMaster","Competitor")"><i class="fa fa-circle-o"></i> Competitor Model Master</a></li>
+                            <li><a href="@Url.Action("Index","ProductCategoryGroup")"><i class="fa fa-circle-o"></i> Product Category Group</a></li>
+                        </ul>
+                    </li>                    
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-plug"></i>
+                            <span>Asset Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index","Asset")"><i class="fa fa-circle-o"></i> Asset Master</a></li>
+                            <li><a href="@Url.Action("Index","AssetAssignmentToRDI")"><i class="fa fa-circle-o"></i> Asset Assignment to RDI</a></li>
+                            <li><a href="@Url.Action("IssueAssetToSFA","AssetAssignmentToSFA")"><i class="fa fa-circle-o"></i> Asset Issue to SFA</a></li>
+                            <li><a href="@Url.Action("Index","AssetCollectionFromSFA")"><i class="fa fa-circle-o"></i> Asset Collection from SFA</a></li>
+                        </ul>
+                    </li>                    
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-comments"></i>
+                            <span>Communication</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index", "BroadcastMessage")"><i class="fa fa-circle-o"></i> Broadcast Message</a></li>
+                            <li><a href="@Url.Action("Forms", "Feedback")"><i class="fa fa-circle-o"></i> Feedback Forms</a></li>
+                            <li><a href="@Url.Action("Index", "Training")"><i class="fa fa-circle-o"></i> Trainings</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-bar-chart"></i>
+                            <span>Reports</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">  
+                            <li><a href="@Url.Action("DailySalesWithAttributeIndex","Reports")"><i class="fa fa-circle-o"></i> Daily Sales Report with <br/>Attributes</a></li> 
+                            <li><a href="@Url.Action("TargetVsAchievementReport","Reports")"><i class="fa fa-circle-o"></i> Target Vs Achievement Report</a></li>
+                            <li><a href="@Url.Action("TodayTimingReport","Reports")"><i class="fa fa-circle-o"></i> Daily Timing Report</a></li>                            
+                            <li><a href="@Url.Action("MonthlyAttendanceReport","Reports")"><i class="fa fa-circle-o"></i> Monthly Attendance Report</a></li>
+                            <li><a href="@Url.Action("Display","Reports")"><i class="fa fa-circle-o"></i> Display Report</a></li>
+                            <li><a href="@Url.Action("Stock","Reports")"><i class="fa fa-circle-o"></i> Stock Report</a></li>                            
+                            <li><a href="@Url.Action("CompetitionDisplayReport","Reports")"><i class="fa fa-circle-o"></i> Competition Display Report</a></li>
+                            <li><a href="@Url.Action("CompetitionSFACountReport","Reports")"><i class="fa fa-circle-o"></i> Competition SFA Count Report</a></li>
+                            <li><a href="@Url.Action("MessageReport","Reports")"><i class="fa fa-circle-o"></i> Message Report</a></li>                           
+                            <li><a href="@Url.Action("BaseIncentiveReport","Reports")"><i class="fa fa-circle-o"></i> Base Per Piece Incentive </a></li>
+                            <li><a href="@Url.Action("BasePerPieceIncentiveDetailReport","Reports")"><i class="fa fa-circle-o"></i> Base Per Piece Incentive Detail </a></li>
+                            @*<li><a href="@Url.Action("PerPieceIncentiveReport","Reports")"><i class="fa fa-circle-o"></i> Per Piece Incentive Report</a></li>*@
+                            <li><a href="@Url.Action("FestivalIncentiveReport","Reports")"><i class="fa fa-circle-o"></i> Festival Incentive Report</a></li>
+                            <li><a href="@Url.Action("DailySalesIMEI","Reports")"><i class="fa fa-circle-o"></i> Daily Sales (IMEI) Report</a></li>
+                            <li><a href="@Url.Action("TrainingReportIndex","Reports")"><i class="fa fa-circle-o"></i> Training Report</a></li>
+
+                    <li><a href="@Url.Action("#", "Reports")"><i class="fa fa-circle-o"></i> SFA Branch History</a></li>
+                    <li><a href="@Url.Action("#","Reports")"><i class="fa fa-circle-o"></i>SFA Dealer MappingHistory</a></li>
+                            
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-star"></i>
+                            <span>HR Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index", "SFAMasterforHR")"><i class="fa fa-circle-o"></i> SFA Master For HR</a></li>
+                            <li><a href="@Url.Action("Index", "SFASalaryMaster")"><i class="fa fa-circle-o"></i> SFA Salary Master</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-shield"></i>
+                            <span>Security Management</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("Index", "RoleRightMapping")"><i class="fa fa-link"></i> Role Rights Mapping</a></li>
+                            @*<li><a href="#"><i class="fa fa-circle-o"></i> Feedback</a></li>*@
+                        </ul>
+                    </li>
+                </ul>-->
+            </section>
+            <!-- /.sidebar -->
+        </aside>
+        <!-- =============================================== -->
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Main content -->
+            <section class="content">
+                @RenderSection("PageModals",false)
+                @RenderBody()
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+    </div>
+    <!-- ./wrapper -->
+
+    <script src="~/Content/js/jquery.min.js"></script>
+    <script src="~/Content/plugins/jquery-validation-1.17.0/jquery.validate.min.js"></script>
+    <script src="~/Content/plugins/jquery-validation-unobtrusive-master/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/Content/js/bootstrap.min.js"></script>
+    <script src="~/Content/plugins/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="~/Content/plugins/fastclick/lib/fastclick.js"></script>
+    <script src="~/Content/plugins/iCheck/icheck.min.js"></script>
+    <script src="~/Content/js/basetheme.min.js"></script>
+    <script src="~/Content/plugins/noty-3.1.4/js/noty.min.js"></script>
+    <script src="~/Content/js/common.js"></script>
+    @RenderSection("PageJS",false)
+    <script>
+        //Bug Id: 0001900
+        //Added by Nikhil Thakral
+        $(document).ready(function () {
+            $('.sidebar').slimScroll({ disableFadeOut: true, color: '#b8c7ce' });
+        });
+
+        @if(TempData.ContainsKey("Notification"))
+        {
+            var Notifications = TempData["Notification"] as List<AMBOWeb.Controllers.SonyNotification>;
+            foreach(AMBOWeb.Controllers.SonyNotification Notification in Notifications)
+            {
+                @Html.Raw("common.notify('"+ Notification.Type + "','" + Notification.Message + "');")
+            }
+        }
+
+        history.pushState(null, document.title, location.href);
+        window.addEventListener('popstate', function (event) {
+            $(location).attr('href', '@Url.Action("SessionTimeout","Login")');
+        });
+    </script>
+</body>
+</html>

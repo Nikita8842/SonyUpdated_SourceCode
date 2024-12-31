@@ -1,0 +1,672 @@
+﻿@using AMBOWeb.Classes
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+
+<script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+<script src="~/Content/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
+    <script>
+        function getProdCatsDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#tabForm", function (categories) {
+                $("#ddProdCat").html("");
+                $.each(categories, function (i, category) {
+                    $("#ddProdCat").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                });
+                $('#ddProdCat').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddProdCat").html("");
+            });
+        }
+
+        function getChannelsDD() {
+            common.ajax_get("@Url.Action("GetChannels", "Common")", null, "#tabForm", function (channels) {
+                $("#ddChannel").html("");
+                $.each(channels, function (i, channel) {
+                    $("#ddChannel").append($('<option></option>').val(channel.Id).html(channel.ChannelName));
+                });
+                $('#ddChannel').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddChannel").html("");
+            });
+        }
+
+        function getFormsDD() {
+            common.ajax_get("@Url.Action("GetActiveFeedbackForms", "Common")", null, "#tabForm", function (forms) {
+                $("#ddFeedbackForm").html("");
+                $.each(forms.Data, function (i, form) {
+                    $("#ddFeedbackForm").append($('<option></option>').val(form.FormId).html(form.FormName));
+                });
+                $('#ddFeedbackForm').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFeedbackForm").html("");
+            });
+        }
+
+        function resetFields()
+        {
+            $('#txtCourseName').val('');
+            $('#txtTrainerName').val('');
+            $('#txtFromDate').val('');
+            $('#txtToDate').val('');
+            $('#ddProdCat').val(null);
+            $('#ddChannel').val(null);
+            $('#ddFeedbackForm').val(null);
+        }
+
+        function validateTrainingData(data)
+        {
+            var output = new Object();
+            output.status = true;
+
+            if(data.CourseName == null || data.CourseName == undefined || data.CourseName.trim() == '')
+            {
+                output.status = false;
+                output.message = 'Please enter Course Name';
+                return output;
+            }
+
+            if (data.TrainerName == null || data.TrainerName == undefined || data.TrainerName.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter Trainer Name';
+                return output;
+            }
+
+            if (data.FromDate == null || data.FromDate == undefined || data.FromDate.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter From Date';
+                return output;
+            }
+
+            if (data.ToDate == null || data.ToDate == undefined || data.ToDate.trim() == '') {
+                output.status = false;
+                output.message = 'Please enter To Date';
+                return output;
+            }
+
+            if (data.ProdCatId == null || data.ProdCatId == undefined || data.ProdCatId.trim() == '' || data.ProdCatId.trim() == 0) {
+                output.status = false;
+                output.message = 'Please select Product Category';
+                return output;
+            }
+
+            if (data.ChannelId == null || data.ChannelId == undefined || data.ChannelId.trim() == '' || data.ChannelId.trim() == 0) {
+                output.status = false;
+                output.message = 'Please select Channel';
+                return output;
+            }
+
+            if (data.FormId == null || data.FormId == undefined || data.FormId.trim() == '' || data.FormId.trim() == 0) {
+                output.status = false;
+                output.message = 'Please select Applicable Feedback Form';
+                return output;
+            }
+
+            return output;
+        }
+
+        function createTraining()
+        {
+            debugger;
+            var data = new Object();
+            data.CourseName = $('#txtCourseName').val();
+            data.TrainerName = $('#txtTrainerName').val();
+            data.FromDate = $('#txtFromDate').val();
+            data.ToDate = $('#txtToDate').val();
+            data.ProdCatId = $('#ddProdCat').val();
+            data.ChannelId = $('#ddChannel').val();
+            data.FormId = $('#ddFeedbackForm').val();
+
+            var validate = validateTrainingData(data);
+            if (validate.status) {
+                common.ajax_post('@Url.Action("Create","Training")', data, '#tabForm',
+                    //success function
+                    function (output) {
+                        debugger;
+                        if (output.MessageCode == MessageCodes.Acceptable.Created) {
+                            common.notify('success', output.Message);
+                            resetFields();
+                        }
+                        else
+                            common.notify('error', output.message);
+                    },
+                    //error function
+                    function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', 'Error occured while creating training. Please contact your administrator.');
+                    });
+            }
+            else
+                common.notify('error', validate.message);
+        }
+
+        function PopulateBranch() {
+            $.ajax({
+                url: "@Url.Action("GetBranches", "Common")",
+                type: "GET",
+                success: function (result) {
+                    debugger;
+                    //$("#ddlBranch").append($("<option></option>").val(0).html("---All Branches---"));
+                    $(result).each(function () {
+                        $("#ddlBranch").append($("<option></option>").val(this.BranchId).html(this.BranchName));
+                    });
+
+                    //$("#ddlBranchCode").append($("<option></option>").val(0).html("---All Codes---"));
+
+                },
+                error: function (result) {
+
+                    var response = $.parseJSON(result.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+
+                    $("#ddlBranch").html("");
+                    //$("#ddlBranch").append($('<option></option>').val(0).html("---All Branches---"));
+
+                    $("#ddlBranchCode").html("");
+                    //$("#ddlBranchCode").append($('<option></option>').val(0).html("---All Codes---"));
+
+                }
+            });
+          
+        }
+
+    </script>
+
+    <script>
+        var ProductIds = [];
+        var BranchIds = [];
+        var Chanelids = [];
+
+        $(document).ready(function () {
+            //Grid initialization
+            dtTrainings = $('#dtTrainings').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [[0,'asc']],
+                ajax: {
+                    url: "@Url.Action("TrainingMasterGrid", "Grid")",
+                    type: 'POST'
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "CourseName" },
+                    { data: "TrainerName" },
+                    //{ data: "ProductCategory" },
+                    //{ data: "Channel" },
+                    { data: "FromDate" },
+                    { data: "ToDate" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row, meta) {
+                            if (data["Status"]) {
+                                return '<form method="post" action="@Url.Action("Update", "Training")"><input name="TrainingId" type="hidden" value="' + data.TrainingId + '"/>&emsp;' +
+                                    '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="View"><i class="fa fa-lg fa-eye"></i></span></a>' +
+                                    '  '+'<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>&emsp;' +
+                                '</form>';
+                            }
+                            else {
+                                return '';
+                            }
+                        },
+                        orderable: false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"])
+                        $('td', row).eq(4).html('<span class="badge bg-green">Active</span>');
+                    else
+                        $('td', row).eq(4).html('<span class="badge bg-red">InActive</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $(location).attr('href', '@Url.Action("Create", "Training")');
+            });
+
+            //Delete button click
+            //$('body').on('click', '.btnDelete', function () {
+            //    //var data = dtPerPieceIncentiveGrid.row($(this).parent().parent()).data();
+            //    //$('#txtDeleteSchemeId').val(data.SchemeId);
+            //    //$('#displaySchemeName').html('Scheme: ' + data.SchemeName);
+            //   // $('#modalDelete').modal('toggle');
+            //});
+
+            //Delete button click
+            @*$('body').on('click', '#btnDelete', function () {
+                var data = new Object();
+                data.SchemeId = $('#txtDeleteSchemeId').val();
+                if(data.SchemeId == null || data.SchemeId == undefined || data.SchemeId == 0 || data.SchemeId == '')
+                    common.notify('error','Could not initiate deletion of this record. Please contact your administrator.');
+                else
+                {
+                    common.ajax_post('@Url.Action("Delete","PerPieceIncentive")',data,'#DeleteLoad',
+                        //success
+                        function(output){
+                            if(output.MessageCode == MessageCodes.Acceptable.Accepted)
+                            {
+                                common.notify('success',output.Message);
+                                $('#modalDelete').modal('toggle');
+                                dtPerPieceIncentiveGrid.ajax.reload();
+                            }
+                            else
+                                common.notify('error',output.Message);
+                        },
+                        //error
+                        function(output){
+                            common.notify('error','Could not delete this record. Please contact your administrator.');
+                        });
+                }
+            });*@
+
+            //Edit button click
+            $('body').on('click', '.btnEdit', function () {
+                //var form = $(this).parent();
+                var data = dtTrainings.row($(this).parent().parent()).data();
+                $('#txtCourseName').val(data.CourseName);
+                $('#txtUpdateBranchCode').val(data.BranchCode);
+                $('#txtUpdateBranchName').val(data.BranchName);
+                //form.submit();
+
+                $('#txtCourseName').val(data.CourseName);
+                $('#txtTrainerName').val(data.TrainerName);
+                $('#txtFromDate').val(data.FromDate);
+                $('#txtToDate').val(data.ToDate);
+                
+                debugger;
+                $('#ddFeedbackForm').val(data.FORMId);
+
+                $.ajax({
+                    url: "@Url.Action("TrainingDataBYID", "Grid")",
+                    type: "POST",
+                data: data,
+                success: function (result) {
+                    debugger;
+                  
+                    IsEdit = 1;
+
+                    for (var i = 0; i < result.ProductCategoryid.length; i++)
+                    {
+                        debugger;
+                        ProductIds[i] = result.ProductCategoryid[i];
+                    }
+                    $("#ddProdCat").val(ProductIds);
+                    $("#ddProdCat").trigger("change");
+
+
+                    for (var i = 0; i < result.BranchIds.length; i++)
+                    {
+                        debugger;
+                        BranchIds[i] = result.BranchIds[i];
+
+                    }
+                    $("#ddlBranch").val(BranchIds);
+                    $("#ddlBranch").trigger("change");
+
+
+                    for (var i = 0; i < result.Channelid.length; i++)
+                    {
+                        debugger;
+                        Chanelids[i] = result.Channelid[i];
+
+                    }
+                 
+                    $("#ddChannel").val(Chanelids);
+                    $("#ddChannel").trigger("change");
+
+                    $('#ddlBranch').attr("readonly", "readonly");
+                    $('#ddChannel').attr("readonly", "readonly");
+                    $('#ddProdCat').attr("readonly", "readonly");
+
+                },
+                error: function (result) {
+                    if (result.statusCode == 401 || result.status == 401) {
+                        var response = $.parseJSON(result.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddAddSFA").html("");
+                    $("#ddAddSFADivision").html("");
+                    $("#ddAddBranch").html("");
+                    $("#ddAddSID").html("");
+
+                }
+            });
+
+
+                $('#modalUpdate').modal('toggle');
+            });
+
+
+            $('body').on('click', '.btnDelete', function () {
+                debugger;
+                var data = dtTrainings.row($(this).parent().parent()).data();
+                if (data.Status) {
+                    $('#txtDeleteTrainingMsgID').val(data.TrainingId);
+                    $('#displayBranchName').html(data.TrainerName);
+                    $('#modalDelete').modal('toggle');
+                }
+                else
+                    common.notify('error', 'Broadcast Message: ' + data.Subject + ' is already inactive.');
+            });
+            $('body').on('click', '#btnDelete', function () {
+                debugger;
+                var url = "@Url.Action("Delete", "Training")";
+                var data = new Object();
+                data.Id = $("#txtDeleteTrainingMsgID").val();
+                var ajaxCall = common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                    if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                        //alert(output.Message);
+                        common.notify('success', output.Message);
+                        dtTrainings.ajax.reload();
+                    }
+                    else {
+                        common.notify('error', output.Message);
+                    }
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', output.Message);
+                });
+            });
+
+
+
+        });
+
+        $(document).ready(function () {
+
+            function init() {
+                try {
+                    $("#ddChannel").select2({ placeholder: "Select Channel" });
+                    $("#ddFeedbackForm").select2({ placeholder: "Select Feedback Form" });
+                    $("#ddProdCat").select2({ placeholder: "Select Product Category" });
+                    $('#ddlBranch').select2({ placeholder: "---All Branches---" });
+
+                    $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+                    $('#txtFromDate').prop('data-mask', '');
+                    $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                    $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+                    $('#txtToDate').prop('data-mask', '');
+                    $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+                    $('#txtFromDate').datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy",
+                    });
+                    $('#txtToDate').datepicker({
+                        autoclose: true,
+                        format: "dd/mm/yyyy"
+                    });
+                }
+                catch (ex) {
+                    common.notify('error', 'Could not initialize form. Please try after some time.');
+                }
+            }
+
+            $('#btnBack').on('click', function (e) {
+                $(location).attr('href', '@Url.Action("Index", "Training")');
+            });
+
+            $('#btnSubmit').on('click', function (e) {
+                createTraining();
+            });
+
+            init();
+            getProdCatsDD();
+            getChannelsDD();
+            getFormsDD();
+            PopulateBranch();
+
+            $('.select2-selection').css('width', 525);
+            $('.select2-dropdown').css('width', 525);
+
+            $('.select2-selection').on('click', function () {
+                debugger;
+                $('.select2-dropdown').css('width', 525);
+            });
+            $('.select2-selection').on('keyup', function () {
+                debugger;
+                $('.select2-dropdown').css('width', 525);
+            });
+
+        });
+
+    </script>
+}
+
+@section PageModals
+{
+    <!-- #region Delete form -->
+    @*<div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content" id="DeleteLoad">
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-trash", "Delete an existing Per Piece Incentive Definition")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtDeleteSchemeId", "SchemeId")
+                    <strong><span id="displaySchemeName"></span></strong> will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>*@
+    <!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-pencil"></i> Trainings</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtTrainings" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Course Name</th>
+                                <th>Trainer Name</th>
+                                @*<th>Product Category</th>
+                                <th>Channel</th>*@
+                                <th>From Date</th>
+                                <th>To Date</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modalUpdate">
+<div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#tabForm" data-toggle="tab">
+                    <i class="fa fa-pencil"></i> Your Training
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tabForm">
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="txtCourseName">Course Name<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control input-sm" id="txtCourseName" placeholder="Enter Course Name Here..." />
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="txtTrainerName">Trainer Name<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control input-sm" id="txtTrainerName" placeholder="Enter Trainer Name Here..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="txtFromDate">From Date & Time<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control input-sm" id="txtFromDate" autocomplete="off" placeholder="Enter From Date Here..." />
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="txtToDate">To Date & Time<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control input-sm" id="txtToDate" autocomplete="off" placeholder="Enter To Date Here..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            @*<label for="ddProdCat">Product Category<span class="text-danger">*</span></label>
+                    <select class="form-control input-sm" id="ddProdCat" style="width:100%"></select>*@
+                            <label for="ddProdCat">Product Category<span class="text-danger">*</span></label>
+                            <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                            <div>
+                                @Html.DropDownList("ProductCatIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddProdCat", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+                           </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="ddChannel">Channel<span class="text-danger">*</span></label>
+                            @*<select class="form-control input-sm" id="ddChannel" style="width:100%"></select>*@
+                            <span class="text-blue small"><span class="selectAllDD">Select All</span>/<span class="removeAllDD">Remove All</span></span>
+                            <div>
+                                @Html.DropDownList("ChannelId", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddChannel", @Class = "form-control input-sm", @multiple = "multiple" })
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <div class="form-group">
+                                <label for="ddFeedbackForm">Feedback Form Applicable<span class="text-danger">*</span></label>
+                                <select class="form-control input-sm" id="ddFeedbackForm" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <br />
+                            <div class="form-group">
+                                <label>Branch:</label>
+                                <div>
+                                    @Html.DropDownList("ddlBranch", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlBranch", @Class = "form-control input-sm", @multiple = "multiple" })
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <br />
+                            <div class="form-group">
+                                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- #region Delete form -->
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+            @using (Html.BeginForm("Delete", "Training", FormMethod.Post, new { @id = "DeleteBranchForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-trash", "InActive an existing Training")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtDeleteTrainingMsgID", "Id")
+                    Are you sure you want to inactive the Training of Trainer <strong><span id="displayBranchName"></span></strong> ?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Delete form -->

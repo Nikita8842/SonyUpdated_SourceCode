@@ -1,0 +1,273 @@
+﻿@model System.Data.DataTable
+@using System.Data;
+
+@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            if ($('#Status').val() == '2') {
+                common.notify('success', $('#Message').val());
+                $("#gridrow").removeClass("hidden");
+                $('#dtCollectionFromSFA').dataTable({
+                    "scrollX":true,
+                    "scrollY": true,
+                    order: [ 1, 'asc' ]
+                });
+            }
+            else if ($('#Status').val() == '1' || $('#Status').val() == '3')
+            {
+                common.notify('error', $('#Message').val());
+                $("#gridrow").removeClass("hidden");
+                $("#fileUpload").val('');
+            }
+
+
+            PopulateSFA();
+            $('#ddAddSFA').select2({ placeholder: "---All SFA---" });
+            //if ($('#Message').val() != null && $('#Message').val() != "") {
+            //debugger;
+
+            @*if ('@ViewBag.Status' != "0") {
+                    debugger;
+                    if ('@ViewBag.Status' == "1" || '@ViewBag.Status' == "3") {
+                        common.notify('error', '@ViewBag.Message');
+                    }
+                    if ('@ViewBag.Status' == "2") {
+                        common.notify('success', '@ViewBag.Message');
+                        @if (ViewBag.returnTable != null)
+                        {
+                    @Html.Raw("$('#dtCollectionFromSFA').DataTable({data: " + ViewBag.returnTable + "," + "columns: [{ data: 'SFACode' },{ data: 'SFAName' },{ data: 'MaterialCode' },{ data: 'ProductName' },{ data: 'IssuedQty' },{ data: 'IssuedDate'},{ data: 'ReturnQty' },{ data: 'Reason' },{ data: 'Remarks' },{ data: 'status' }]" + "});")
+                        }
+                    }*@
+            //}
+
+
+
+            
+
+
+            
+
+            $("#btnDownloadFormat").click(function () {
+                debugger;
+                var realvalues = new Array(); //storing the selected values inside an array
+
+                $('#ddAddSFA :selected').each(function(i, selected) {
+                    realvalues[i] = $(selected).val();
+                });
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("CreateFormat", "AssetCollectionFromSFA")',
+                    data: {SFACode: realvalues},
+
+                    success: function (returnValue) {
+                        debugger;
+                        if (returnValue) {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else {
+                            common.notify('error', "Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.status == 401 || returnValue.statusCode == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+
+
+            });
+
+            //$("#btnUpload").click(function () {
+            //    if (jQuery('#fileUpload').val())
+            //    {
+            //        $.ajax({
+            //            url: "/AssetCollectionFromSFA/UploadFile",
+            //            type: "POST",
+            //            data: function () {
+            //                var data = new FormData();
+            //                data.append("file", jQuery("#fileUpload").get(0).files[0]);
+            //                return data;
+            //            }(),
+            //            contentType: false,
+            //            processData: false,
+            //            success: function (output) {
+            //                debugger;
+            //                if(output.Data)
+            //                {
+            //                    if (output.Data.MessageCode == "404") {
+
+            //                    }
+            //                }
+            //            },
+            //            error: function (jqXHR, textStatus, errorMessage) {
+            //                console.log(errorMessage);
+            //            }
+            //        });
+            //    }
+            //    else
+            //    {
+            //        alert("Please select an Excel file to upload data");
+            //    }
+            //    });
+
+            $("#btnUpload").click(function () {
+                var fileval = $('#file').val();
+                if (fileval == '' || fileval == null) {
+                    common.notify('error', "Please select an Excel file to upload data");
+                    return false;
+                }
+                var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+                /*Checks whether the file is a valid excel file*/
+                if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                    debugger;
+                    common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                    return false;
+                }
+                return true;
+            });
+        });
+
+
+        function PopulateSFA()
+        {
+            common.ajax_post("@Url.Action("GetSFAByBranch", "Common")", { branchId: @ViewBag.BranchId }, '#filterBox',
+        function (output) {
+            $('#ddAddSFA').html('');
+            $.each(output, function (i) {
+                $('#ddAddSFA').append($('<option>', { value: output[i].EmployeeId }).text(output[i].SFAFullName));
+            });
+            $('#ddAddSFA').val(null).change();
+        })
+            }
+    </script>
+}
+
+@section PageModals
+{
+}
+
+
+<div class="row">
+
+    <div class="col-lg-12">
+        <div class="box box-solid">
+            <div class="box-body">
+                <div class="row">
+                    @using (Html.BeginForm("UploadFile", "AssetCollectionFromSFA", FormMethod.Post, new { id = "frmExcelUpload", enctype = "multipart/form-data" }))
+                    {
+
+                        <div class="col-lg-4">
+                            @*@Html.AmboDropdownMultipleFor(Model => Model.SFAIds, "ddAddSFA", "SFA Names", "ddSFA")*@
+                            <label>SFA Names</label>
+                            @Html.DropDownList("SFAIds", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddAddSFA", @Class = "form-control input-sm", @multiple = "multiple" })
+
+
+                        </div>
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <div class="form-group">
+                                <button type="button" id="btnDownloadFormat" class="btn btn-flat btn-success"><i class="fa fa-download"> Download Format</i></button>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <br />
+                                @Html.TextBox("file", "", new { type = "file", id = "file", @class = "form-control input-sm" })
+                                @*<label>Select File For Upload</label>
+                                    <input type="file" id="fileUpload" class="form-control input-sm" />*@
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2 text-center">
+                            <br />
+                            <div class="form-group">
+                                <button type="submit" id="btnUpload" class="btn btn-flat btn-primary"><i class="fa fa-upload"> Upload</i></button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="row hidden" id="gridrow">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Asset Collection from SFA</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtCollectionFromSFA" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>SFA Code</th>
+                                <th>SFA Name</th>
+                                <th>Material Code</th>
+                                <th>Product Name</th>
+                                <th>Issued Qty</th>
+                                <th>Issued Date</th>
+                                <th>Return Qty</th>                                
+                                <th>Remark</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model != null)
+                            {
+                                foreach (DataRow row in Model.Rows)
+                                {
+                                    <tr>
+                                        @foreach (DataColumn col in Model.Columns)
+                                        {
+                                            if (col.ColumnName != "Id")
+                                            {
+                                                <td>@row[col.ColumnName]</td>
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+
+
+
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+@Html.Hidden("Status", (string)ViewBag.Status, new { id = "Status", @name = "result" })
+@Html.Hidden("Message", (string)ViewBag.Message, new { id = "Message" })

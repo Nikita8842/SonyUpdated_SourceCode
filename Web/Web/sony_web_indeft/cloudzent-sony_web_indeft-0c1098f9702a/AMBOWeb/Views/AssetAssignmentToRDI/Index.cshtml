@@ -1,0 +1,547 @@
+﻿@model AMBOModels.Modules.AssetAssignmentToRDIGrid
+
+@section PageCSS{
+
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        function validatefile() {
+            debugger;
+            var fileval = $('#fileUpload').val();
+            if (fileval == '' || fileval == null) {
+                common.notify('error', "Please select an Excel file to upload data");
+                return false;
+            }
+            var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+            /*Checks whether the file is a valid excel file*/
+            if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                debugger;
+                common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                return false;
+            }
+            return true;
+        }
+        $(document).ready(function () {
+            var dt;
+
+            if ($('#Message').val() != null && $('#Message').val() != "") {
+                debugger;
+
+                if ($('#Status').val() == '1') {
+                    common.notify('success', $('#Message').val());
+                }
+
+                else if ($('#Status').val() == '0') {
+                    common.notify('error', $('#Message').val());
+                }
+            }
+
+            $.ajax({
+                url: "@Url.Action("GetReferenceId", "Common")",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    //$("#ddlReferenceCode").append($("<option></option>").val("").html("Select reference"));
+                    $(result).each(function () {
+                        $("#ddlReferenceCode").append($("<option></option>").val(this.Reference).html(this.Reference));
+                    });
+                    $("#ddlReferenceCode").val('');
+                },
+                error: function (data) {
+                    if (data.status == 401 || data.statusCode == 401) {
+                        var response = $.parseJSON(data.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error', "Error occured while loading references.")
+                }
+            });
+
+
+            if ($('#Message').val() != null && $('#Message').val() != "") {
+                debugger;
+
+                if ($('#Status').val() == '201' || $('#Status').val() == '1') {
+                    common.notify('success', $('#Message').val());
+                }
+                else if ($('#Status').val() == '404' || $('#Status').val() == '0') {
+                    common.notify('error', $('#Message').val());
+                }
+            }
+
+            //$("#btnUpload").click(function () {
+            //    debugger;
+            //    $.ajax({
+
+            //        url: "/AssetAssignmentToRDI/UploadFilePartial",
+            //        type: "POST",
+            //        data: function () {
+            //            var data = new FormData();
+            //            data.append("file", jQuery("#fileUpload").get(0).files[0]);
+            //            return data;
+            //        }(),
+            //        contentType: "application/json; charset=utf-8",
+            //        datatype: "json",
+            //        success: function (data) {
+            //            debugger;
+            //            $('#myModalContent').html(data);
+            //            $('#myModal').modal(options);
+            //            $('#myModal').modal('show');
+            //        },
+            //        error: function () {
+            //            alert("Content load failed.");
+            //        }
+            //    });
+            //});
+            $("#closbtn").click(function () {
+                debugger;
+                $('#myModal').modal('hide');
+            });
+
+            $("#btnDownloadFormat").click(function () {
+                debugger;
+                //if (SaveRef()) {
+                    debugger;
+                    var valref = $("#ddlReferenceCode").val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("CreateFormat", "AssetAssignmentToRDI")',
+                        data: { ReferenceNumber: valref },
+
+                        success: function (returnValue) {
+                            debugger;
+                            if (returnValue) {
+                                window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                                common.notify('success', "File downloaded successfully");
+                            }
+                            else {
+                                common.notify('error', "Empty file returned");
+                            }
+                        },
+                        error: function (returnValue) {
+                            if (returnValue.status == 401 || returnValue.statusCode == 401) {
+                                var response = $.parseJSON(returnValue.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', "Error while downloading file.")
+                        }
+                    });
+                //}
+
+            });
+
+            function SaveRef() {
+                if ($("#ddlReferenceCode").val() == null || $("#ddlReferenceCode").val() == "") {
+                    common.notify('error', "Please select Reference Code");
+                    return false;
+                }
+                return true;
+            }
+
+            $("#ddlReferenceCode").change(function () {
+                debugger;
+                if (SaveRef()) {
+                    var valref = $("#ddlReferenceCode").val();
+                    $('#txtReferenceNo').val(valref);
+                    if ($.fn.DataTable.isDataTable('#dtAssignmentToRDI')) {
+                        $('#dtAssignmentToRDI').DataTable().destroy();
+                        $('#dtAssignmentToRDI tbody').empty();
+                    }
+
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetAssetAssignmentToRDIByReference", "Grid")",
+                        data: { ReferenceNumber: $("#ddlReferenceCode").val() },
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (data) {
+                            $("#resultTable").addClass("hidden");
+                            $("#gridrow").removeClass("hidden");
+                            dt = $('#dtAssignmentToRDI').DataTable({
+                                scrollX: true,
+                                scrollY: true,
+                                searching: false,
+                                data: data,
+                                order: [[0, "asc"]],
+
+                                columns: [
+                                 { data: "Id", "visible": false },
+                                 { data: "Reference" },
+                                 { data: "IssuedDate" },
+                                 { data: "MaterialCode" },
+                                 { data: "ProductName" },
+                                 { data: "RDIName" },
+                                 { data: "RDICode" },
+                                 { data: "Place" },
+                                 { data: "Reason" },
+                                 { data: "IssuedQty" },
+                                 {
+                                     data: function (data, type, row) {
+                                         return '<a class="edit" data-toggle="tooltip" data-placement="right" title="Update"><span><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;';
+                                     },
+                                     orderable: false
+                                 }
+                                ],
+                                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+
+                            });
+
+                        },
+                        error: function (result) {
+                            debugger;
+                            if (result.statusCode == 401 || result.status == 401) {
+                                var response = $.parseJSON(result.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            $("#resultTable").addClass("hidden");
+                            $("#gridrow").removeClass("hidden");
+                            if ($.fn.dataTable.isDataTable('#dtAssignmentToRDI')) {
+                                $('#dtAssignmentToRDI').DataTable().destroy();
+                                $('#dtAssignmentToRDI tbody').empty();
+                            }
+                            $('#dtAssignmentToRDI').DataTable({
+                                scrollX: true,
+                                scrollY: true
+                            });
+                            common.notify('error', 'No data found');
+                        }
+                    });
+                }
+            });
+
+
+
+            $("#modalUpdate").hide();
+            $('#ddlReferenceCode').select2();
+
+
+            $('#modalUpdate').on('shown.bs.modal', function () { $('#txtNewIssuedQty').focus(); });
+            $('#modalUpdate').on('hidden.bs.modal', function () { $('#txtAAtoRDIID').val(''); $('#txtNewIssuedQty').val(''); $('#txtOldIssuedQty').val(''); });
+
+            $('body').on('click', ".edit", function () {
+                debugger;
+                var data = dt.row($(this).parent().parent()).data();
+                $('#modalUpdate').modal('toggle');
+                $('#txtAAtoRDIID').val(data.Id);
+                $('#txtOldIssuedQty').val(data.IssuedQty);
+            });
+
+            $('#btnSubmit').click(function () {
+                
+                var data = new Object();
+                url = '@Url.Action("UpdateAssetAssignmentToRDI", "AssetAssignmentToRDI")';
+                data.Id = $("#txtAAtoRDIID").val();
+                data.IssuedQty = $("#txtNewIssuedQty").val();
+
+                if (Save()) {
+                    var ajaxCall = common.ajax_post(url, data, '#UpdateLoad', function (output) {
+                        if (output.Data) {
+                            $('#modalUpdate').modal('toggle');
+                            common.notify('success', output.Message)
+
+                            if ($.fn.DataTable.isDataTable('#dtAssignmentToRDI')) {
+                                $('#dtAssignmentToRDI').DataTable().destroy();
+                                $('#dtAssignmentToRDI tbody').empty();
+                            }
+                            var reference = $("#txtReferenceNo").val();
+                            $("#ddlReferenceCode").val(reference).change();
+                        }
+                        else {
+                            common.notify('error', output.Message)
+                        }
+                    },
+                    function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('success', output.Message)
+                    });
+                }
+            });
+
+            $("#btnUpload").click(function () {
+                if (validatefile()) {
+                    if (jQuery('#fileUpload').val()) {
+                        var options = {
+                            "backdrop": "static",
+                            keyboard: true
+                        };
+                        $.ajax({
+                            url: "@Url.Action("UploadFilePartial", "AssetAssignmentToRDI")",
+                            type: "POST",
+                            data: function () {
+                                var data = new FormData();
+                                data.append("file", jQuery("#fileUpload").get(0).files[0]);
+                                return data;
+                            }(),
+                            contentType: false,
+                            processData: false,
+                            beforeSend: function () {
+                                var loader = '<div class="overlay" id="whizTloader"><i class="fa fa-refresh fa-spin"></i></div>';
+                                $("#gridrow").append(loader);
+                            },
+                            success: function (response) {
+                                debugger;
+                                if (response.Data != null) {
+                                    if ($.fn.dataTable.isDataTable('#dtUpload')) {
+                                        $('#dtUpload').DataTable().destroy();
+                                        $('#dtUpload tbody').empty();
+                                    }
+                                    $("#gridrow").addClass("hidden");
+                                    $("#resultTable").removeClass("hidden");
+                                    dtresult = $('#dtUpload').DataTable({
+                                        "scrollX": true,
+                                        "scrollY": true,
+                                        data: response.Data,
+                                        order: [[0, "asc"]],
+
+                                        columns: [
+                                                   //{ data: "Id", "visible": false },
+                                                   { data: "Reference" },
+                                                   { data: "MaterialCode" },
+                                                   { data: "ProductName" },
+                                                   { data: "IssuedQty" },
+                                                   { data: "IssuedDate" },
+                                                   { data: "RDIName" },
+                                                   { data: "Place" },
+                                                   { data: "ReturnDate" },
+                                                   { data: "Status" },
+                                                   { data: "Reason" },
+
+                                        ]
+                                    });
+                                    common.notify('success', response.Message);
+                                }
+                                else {
+                                    common.notify('error', response.Message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorMessage) {
+                                //console.log(errorMessage);
+
+                                common.notify('error', errorMessage)
+                            },
+                            complete: function () {
+                                $("#gridrow").find('.overlay').remove();
+                            }
+                        });
+                    }
+                }
+
+            });
+        });
+
+
+
+            function Save() {
+                if ($("#txtNewIssuedQty").val() == null || $("#txtNewIssuedQty").val() == "") {
+                    common.notify('error', "Please enter new Issued Qty.");
+                    return false;
+                }
+
+                var key4 = $('#txtNewIssuedQty').val();
+                var regex = new RegExp("^[0-9]+$");
+                if (key4 != "") {
+                    debugger;
+                    if (!regex.test(key4)) {
+                        common.notify('error', 'Only numbers are allowed.');
+                        return false;
+                    }
+                }
+
+                if ($("#txtNewIssuedQty").val() <= 0) {
+                    common.notify('error', "New issued quantity value should be greater than 0.");
+                    return false;
+                }
+                if ($("#txtNewIssuedQty").val() > 100000) {
+                    common.notify('error', "Please enter a valid new issued quantity.");
+                    return false;
+                }
+                return true;
+            }
+
+            function isNumberKey(evt) {
+                var charCode = (evt.which) ? evt.which : evt.keyCode;
+                if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57))
+                    return false;
+                return true;
+            }
+    </script>
+}
+
+@section PageModals
+{
+    <div class="modal fade" id="modalUpdate">
+        <div class="modal-dialog">
+            <div class="modal-content" id="UpdateLoad">
+                <form id="formUpdate">
+                    @Html.HiddenFor(m => m.Id, new { @id = "txtAAtoRDIID" })
+
+                    <div class="modal-header custom-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="modal-title"><i class="fa fa-edit"></i> Update Issued Qty in Asset Assignment to RDI</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label >Old Issued Qty</label>
+                            @Html.TextBox("txtOldIssuedQty", "",new { @class = "form-control input-sm", @id = "txtOldIssuedQty", @readonly = "readonly" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lblNewIssuedQty">New Issued Qty <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(m => m.IssuedQty, new { @class = "form-control input-sm", @id = "txtNewIssuedQty", @placeholder = "Enter Issued Qty", @onkeypress = "return isNumberKey(event)" })
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Cancel</button>
+                        <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+    
+    
+}
+
+
+<div class="row">
+
+    <div class="col-lg-12">
+        <div class="box box-solid">
+            <div class="box-body">
+                <div class="row">
+                    @Html.Hidden("txtReferenceNo", new { @id = "txtReferenceNo" })
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label>Reference Code : </label>
+                            @Html.DropDownList("Reference", new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlReferenceCode", @style = "width:100%" })
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button type="button"  id="btnDownloadFormat" class="btn btn-flat btn-success"><i class="fa fa-download"> Download Format</i></button>
+                        </div>
+                    </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Select File For Upload</label>
+                                <input type="file" id="fileUpload" class="form-control input-sm" />
+                            </div>
+                        </div>
+
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button type="button" id="btnUpload" class="btn btn-flat btn-primary" ><i class="fa fa-upload"> Upload</i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="row hidden" id="gridrow">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Asset Assignment to RDI</a></li>
+                @*<li class="pull-right"><button data-toggle="modal" data-target="#modalAddNew" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat" id="btnAdd"><i class="fa fa-plus"></i> Add New</button></li>*@
+                @*<li class="pull-right"><button style="margin-top:2px" type="button" id="btnDownloadFormat" class="btn btn-block btn-success btn-flat" ><i class="fa fa-download"></i> Download Format</button></li>*@
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtAssignmentToRDI" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Reference</th>
+                                <th>Issued Date</th>
+                                <th>Material Code</th>
+                                <th>Product Name</th>
+                                <th>RDI</th>
+                                <th>RDI Code</th>
+                                <th>Place</th>
+                                <th>Reason</th>
+                                @*<th>Return Date</th>*@
+                                <th>Issued Qty</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+<div id='resultTable' class="row hidden">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-th"></i> Asset Assignment to RDI</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    <table id="dtUpload" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>                                
+                                <th>Material Code</th>
+                                <th>Product Name</th>
+                                <th>Issued Qty</th>
+                                <th>Issued Date</th>
+                                <th>RDI Name</th>
+                                <th>Place</th>
+                                <th>Return Date</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+
+@Html.Hidden("Status", (string)ViewBag.Status, new { id = "Status", @name = "result" })
+@Html.Hidden("Message", (string)ViewBag.Message, new { id = "Message" })

@@ -1,0 +1,492 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Reports.MessageReportFilters
+
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+
+@section PageCSS
+{
+    <style>
+        #filterBoxHeader:hover {
+            cursor: pointer;
+        }
+
+        .select2-selection--multiple {
+            height: 280px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="~/Content/plugins/datatables/css/responsive.dataTables.min.css" rel="stylesheet" />
+}
+
+@section PageJS
+{
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script src="~/Content/plugins/BootStrapDatePicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript">
+
+        function clickfile(url) {
+            debugger;
+            window.open(url, '_blank');
+        }
+
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#filterBox", function (branches) {
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                var Branch = @Model.BranchId;
+                if(Branch !=null && Branch !=0)
+                {
+                    $('#ddBranch').val(Branch).change();
+                    $('#ddBranch').attr('readonly', 'readonly');
+                }
+                else
+                    $('#ddBranch').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+            });
+        }
+
+        function getStateDD() {
+            common.ajax_get("@Url.Action("GetStates", "Common")", null, "#filterBox", function (states) {
+                $("#ddState").html("");
+                $.each(states, function (i, state) {
+                    $("#ddState").append($('<option></option>').val(state.ID).html(state.StateName));
+                });
+                $('#ddState').val(null).change();
+
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddState").html("");
+            });
+        }
+
+        function getDivisionsDD() {
+            common.ajax_get("@Url.Action("GetDivisions", "Common")", null, "#filterBox", function (divisions) {
+                $(".ddSFADivision").html("");
+                $.each(divisions, function (i, division) {
+                    $(".ddSFADivision").append($('<option></option>').val(division.Id).html(division.DivisionName));
+                });
+                $('.ddSFADivision').val(null).change();
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $(".ddSFADivision").html("");
+            });
+        }
+
+        function getDealersDD() {
+            common.ajax_get("@Url.Action("GetAllActiveDealers", "Common")", null, "#filterBox", function (dealer) {
+                if (dealer.MessageCode == MessageCodes.Acceptable.Found) {
+                    $("#ddDealer").html('');
+                    var list = '';
+                    var options = [];
+                    for (var i = 0; i < dealer.Data.length; i++) {
+                        list += '<option value="' + dealer.Data[i].DealerId + '">' + dealer.Data[i].DealerName + '</option>';
+                    }
+                    $("#ddDealer").html(list);
+                }
+                else
+                    common.notify(dealer.Message);
+            }, function (output) {
+                if (output.statusCode == 401 || output.status == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddDealer").html("");
+            });
+        }
+
+        function getMessageTypeDD()
+        {
+            $("#ddMessageType").append($('<option></option>').val(0).html('Broadcast'));
+            $("#ddMessageType").append($('<option></option>').val(1).html('Feedback'));
+        }
+
+        function linkBranchWithDealerAndSFA()
+        {
+            $("#ddBranch").on('change', function (e, data) {
+                if (!($(this).val() == null || $(this).val() == undefined || $(this).val() == '0' || $(this).val() == ''))
+                {
+                    common.ajax_post("@Url.Action("GetDealersByBranch", "Common")", { branchId: $(this).val() }, '#filterBox',
+                    function (output) {
+                        $("#ddDealer").html('');
+                        var list = '';
+                        var options = [];
+                        for (var i = 0; i < output.length; i++) {
+                            list += '<option selected value="' + output[i].ID + '">' + output[i].DealerName + '</option>';
+                        }
+                        $('#ddDealer').val(null).change();
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddDealer').html('');
+                    common.notify('error', 'No dealer found for selected branch.');
+                });
+
+                    common.ajax_post("@Url.Action("GetSFAByBranch", "Common")", { branchId: $(this).val() }, '#filterBox',
+                    function (output) {
+                        $('#ddSFA').html('');
+                        $.each(output, function (i) {
+                            $('#ddSFA').append($('<option>', { value: output[i].EmployeeId }).text(output[i].SFAFullName));
+                        });
+                        $('#ddSFA').val(null).change();
+                    },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $('#ddSFA').html('');
+                    common.notify('error', 'No SFA found for selected branch.');
+                });
+
+                }
+            });
+        }
+
+        function init()
+        {
+            $('#ddBranch').select2({ placeholder: "---All Branches---" });
+            $('#ddState').select2({ placeholder: "---All States---" });
+            $('#ddSFA').select2({ placeholder: "---All SFA---" });
+            $('#ddDealer').select2({ placeholder: "Select Dealer Names" });
+            $('#ddSFADivision').select2({ placeholder: "---All SFA Divisions---" });
+            $('#ddMessageType').select2({ placeholder: "---Select Message Type---" });
+            $('#txtFromDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtFromDate').prop('data-mask', '');
+            $('#txtFromDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtToDate').prop('data-inputmask', "'alias': 'dd/mm/yyyy'");
+            $('#txtToDate').prop('data-mask', '');
+            $('#txtToDate').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
+            $('#txtFromDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy",
+            });
+            $('#txtToDate').datepicker({
+                autoclose: true,
+                format: "dd/mm/yyyy"
+            });
+            $('body').on('click', '#collapseFilters', function (event) {
+                event.preventDefault();
+            });
+        }
+
+        function ValidateFilters()
+        {
+            var output = new Object();
+            output.status = true;
+            output.message = "";
+            if($('#txtFromDate').val() == null || $('#txtFromDate').val() == undefined || $('#txtFromDate').val() == '')
+            {
+                output.status = false;
+                output.message = "Please select From Date.";
+                return output;
+            }
+            if ($('#txtToDate').val() == null || $('#txtToDate').val() == undefined || $('#txtToDate').val() == '') {
+                output.status = false;
+                output.message = "Please select To Date.";
+                return output;
+            }
+            //if ($('#ddDealer').val() == null || $('#ddDealer').val() == undefined || $('#ddDealer').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select at least one dealer for generating report.";
+            //    return output;
+            //}
+            //if ($('#ddMessageType').val() == null || $('#ddMessageType').val() == undefined || $('#ddMessageType').val() == '') {
+            //    output.status = false;
+            //    output.message = "Please select the message type for generating report.";
+            //    return output;
+            //}
+            if (!ValidateFromToDate()) {
+                output.status = false;
+                output.message = "To Date Can't be less than From Date";
+                return output;
+            }
+
+
+            if (!ValidateCurrentDate()) {
+                output.status = false;
+                output.message = "From/To Date Can't be future Date  ";
+                return output;
+            }
+
+            return output;
+        }
+
+        function Search()
+        {
+
+            var result = ValidateFilters();
+            if (result.status)
+            {
+                $('#filterBoxHeader').trigger('click');
+                $('#divDataTable').removeClass('hidden');
+                if ($.fn.dataTable.isDataTable('#dtMessageReport')) {
+                    dtMessageReport.destroy();
+                }
+                dtMessageReport = $('#dtMessageReport').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    searching: false,
+                    ordering: false,
+                    scrollX: true,
+                    ajax: {
+                        url: "@Url.Action("MessageReport", "Reports")",
+                    type: 'POST',
+                    data: function (d) {
+                        d.FromDate = $('#txtFromDate').val();
+                        d.ToDate = $('#txtToDate').val();
+                        d.BranchId = $('#ddBranch').val();
+                        d.StateId = $('#ddState').val();
+                        d.SFAId = $('#ddSFA').val();
+                        d.DivisionId = $('#ddSFADivision').val();
+                        d.MessageTypeId = $('#ddMessageType').val();
+                        d.DealerIds = $('#ddDealer').val();
+                    }
+                },
+                    language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                    },
+                columns: [
+                    { data: "SendDate" },
+                    { data: "ReplyDate" },
+                    { data: "Branch" },
+                    { data: "Dealer" },
+                    { data: "MasterCode" },
+                    { data: "DealerCode" },
+                    { data: "State" },
+                    { data: "City" },
+                    { data: "Location" },
+                    { data: "Channel" },
+                    { data: "SFACode" },
+                    { data: "SFA" },
+                    { data: "SFALevel" },
+                    { data: "SFADivision" },
+                    { data: "IncentiveCategory" },
+                    { data: "Message" },
+                    //{ data: "MessageFile" },
+
+                     {
+                         data: function (data, type, row) {
+                             if (data.MessageFile != "") {
+                                 var url = "@Url.Action("Broadcast", "Uploads")" + '/' + data.MessageFile;
+                                 // return '<a href="' + url + '"><span>' + data.FileName + '</span></a>';
+                                 return '<a class="clickfile" href="javascript:clickfile(\'' + url + '\');"><span>' + data.MessageFile + '</span></a>';
+                             }
+                             else
+                                 return '';
+                         }
+
+                     },
+
+                    //
+                    { data: "Reply" },
+                    { 
+                        data: function (data, type, row) {
+                            if (data.ReplyFile != "" && data.ReplyFile != "N/A") {
+                                //var url = "@Url.Action("Broadcast", "Uploads")" + '/' + data.ReplyFile;
+                                // return '<a href="' + url + '"><span>' + data.FileName + '</span></a>';
+                                return '<a class="clickfile" href="javascript:clickfile(\'' + '@System.Configuration.ConfigurationManager.AppSettings["APIUrl"]'+'PhotoReport/BroadcastMessageReply/'+data.ReplyFile + '\');"><span>' + data.ReplyFile + '</span></a>';
+                            }
+                            else
+                                return '';
+                        }
+                    },
+                    { data: "ValidFrom" },
+                    { data: "ValidTo" },
+                    { data: "MessageType" }
+                ]
+            });
+            }
+            else
+            {
+                common.notify('error', result.message);
+            }
+        }
+        function ValidateDownloadFilter() {
+            var result = ValidateFilters();
+            if (!result.status) {
+                common.notify('error', result.message);
+                return false;
+            }
+        }
+
+        $(document).ready(function () {
+            getBranchDD();
+            getStateDD();
+            getDivisionsDD();
+            getDealersDD();
+            getMessageTypeDD();
+            linkBranchWithDealerAndSFA();
+            init();
+
+            if ('@UserSession.RoleName' == 'RDI')
+            {
+                @Html.Raw("$('.text-blue.small.clearDD').css('display','none')");
+            }
+
+            if ('@Session["MessageReportNoData"].ToString()' == "1") {
+                common.notify('error', "No data found");
+                System.Web.HttpContext.Current.Session["MessageReportNoData"] = "0";
+            }
+        });
+
+    </script>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h3 class="box-title">Message Report</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <form action="@Url.Action("DownloadMessageReport","Reports")" method="post">
+                    <div class="row">
+
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>From Date:</label>
+                                <input name="FromDate" type="text" class="form-control input-sm" id="txtFromDate" autocomplete = "off" placeholder="Select From Date" />
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>To Date:</label>
+                                <input name="ToDate" type="text" class="form-control input-sm" id="txtToDate" autocomplete = "off" placeholder="Select To Date" />
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            @Html.AmboDropdownFor(Model => Model.BranchId, "ddBranch", "Branch Name:", "ddBranch")
+                        </div>
+                        <div class="col-lg-3">
+                            @Html.AmboDropdownFor(Model => Model.StateId, "ddState", "State:", "ddState")
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            @Html.AmboDropdownFor(Model => Model.SFAId, "ddSFA", "SFA Name:", "ddSFA")
+                        </div>
+                        <div class="col-lg-3">
+                            @Html.AmboDropdownFor(Model => Model.DivisionId, "ddSFADivision", "SFA Division:", "ddSFADivision")
+                        </div>
+                        <div class="col-lg-3" style="display:none">
+                            @Html.AmboDropdownFor(Model => Model.MessageTypeId, "ddMessageType", "Message:", "ddMessageType")
+                        </div>
+                        <div class="col-lg-6">
+                            @Html.AmboDropdownMultipleFor(Model => Model.DealerIds, "ddDealer", "Dealer Names:", "ddDealer")
+                        </div>
+                    </div>
+                    @*<div class="row">
+                        
+                    </div>*@
+                    <div class="row">
+                        <div class="col-lg-6 col-lg-offset-4">
+                            <button class="btn btn-flat btn-default" type="button" onclick="$(location).attr('href','@Url.Action("Index","Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>
+                            <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+                            <button class="btn btn-flat btn-success" type="submit"  onclick="return ValidateDownloadFilter();"><i class="fa fa-download"></i> Download</button>
+                        </div>
+                    </div>
+                    </form>
+</div>
+        </div>
+    </div>
+</div>
+
+<div class="row hidden" id="divDataTable">
+    <div class="col-lg-12">
+        <div class="box">
+            <div class="box-body">
+                @*<div class="row">
+                    <div class="col-lg-12">*@
+                @*<div class="table-responsive">*@
+                <table id="dtMessageReport" class="table table-bordered table-striped nowrap reportstable">
+                    <thead>
+                        <tr>
+                            <th>Send Date</th>
+                            <th>Reply Date</th>
+                            <th>Branch</th>
+                            <th>Dealer</th>
+                            <th>Master Code</th>
+                            <th>Dealer Code</th>
+                            <th>State</th>
+                            <th>City</th>
+                            <th>Location</th>
+                            <th>Channel</th>
+                            <th>SFA Code</th>
+                            <th>SFA</th>
+                            <th>SFA Level</th>
+                            <th>SFA Division</th>
+                            <th>IncentiveCategory</th>
+                            <th>Message</th>
+                            <th>Message File</th>
+                            <th>Reply</th>
+                            <th>Reply File</th>
+                            <th>Valid From</th>
+                            <th>Valid To</th>
+                            <th>Message Type</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                @*</div>*@
+                @*</div>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+</div>

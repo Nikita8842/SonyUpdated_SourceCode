@@ -1,0 +1,429 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.MasterMaintenance.UpdateStateForm
+@section PageCSS{
+}
+
+@section PageJS{
+
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+
+function ChangeValue(_val)
+    {
+        if(_val=="4000")
+        {
+            $('#ddlStatus').val('');
+        }
+    }
+        function Search()
+        {
+            debugger;
+            if ($.fn.dataTable.isDataTable('#dtState')) {
+                $('#dtState').DataTable().destroy();
+                $('#dtState tbody').empty();
+                //dt.destroy();
+            }
+
+            //Grid initialization
+            dtStateGrid = $('#dtState').DataTable({
+                processing: true,
+                searching: false,
+                order: [[1, "asc"]],
+                ajax: {
+                    url: "@Url.Action("GetStateGrid", "Grid")",
+                    type: 'POST',
+                    data:function (d) {
+                        d.RegionIds = $('#ddlRegion').val();
+                        d.StateIds = $('#ddlState').val();
+                        d.Status = $('#ddlStatus').val();
+                    
+                    },
+                    dataSrc:""
+                },
+                language: {
+                    search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                    { data: "StateName" },
+                    { data: "RegionName" },
+                    { data: "Status" },
+                    {
+                        data: function (data, type, row) {
+                            return '<a class="btnEdit" ><span data-toggle="tooltip" data-placement="left" title="Edit"><i class="fa fa-lg fa-pencil"></i></span></a>&emsp;' +
+                            '<a class="btnDelete text-red" ><span data-toggle="tooltip" data-placement="left" title="Delete"><i class="fa fa-lg fa-trash"></i></span></a>';
+                        },
+                        orderable : false
+                    }
+                ],
+                createdRow: function (row, data, index) {
+                    if (data["Status"] == "Active")
+                        $('td', row).eq(2).html('<span class="badge bg-green">' + data["Status"] + '</span>');
+                    else
+                        $('td', row).eq(2).html('<span class="badge bg-red">' + data["Status"] + '</span>');
+                },
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+            });
+            //Grid initialization till here
+        }
+
+        function populateFilters()
+        {
+            $.ajax({
+                url: "@Url.Action("GetStates", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlState").append($("<option></option>").val("").html("---All States---"));
+                    $(result).each(function () {
+                        $("#ddlState").append($("<option></option>").val(this.ID).html(this.StateName));
+                    });
+
+
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlState").html("");
+                    $("#ddlState").append($('<option></option>').val(0).html("---All States---"));
+
+                }
+            });
+
+            
+            $.ajax({
+                url: "@Url.Action("GetRegion", "Common")",
+                type: "GET",
+                success: function (result)
+                {
+                    debugger;
+                    $("#ddlRegion").append($("<option></option>").val(0).html("---All regions---"));
+                    $(result).each(function () {
+                        $("#ddlRegion").append($("<option></option>").val(this.ID).html(this.RegionName));
+                    });               
+                    
+                },
+                error: function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddlRegion").html("");
+                    $("#ddlRegion").append($('<option></option>').val(0).html("---All regions---"));
+                
+                }
+            });
+
+
+            $('#ddlState').select2({ placeholder: "---All States---" });
+            $('#ddlRegion').select2({ placeholder: "---All Regions---" });
+            $('#ddlStatus').select2({ placeholder: "---Select status---" });
+        }
+
+        function getRegionDD()
+        {
+            common.ajax_get("@Url.Action("GetRegion", "Common")", null, '#AddLoad, #UpdateLoad',
+                function (data) {
+                    $('.ddRegion').html('');
+                    $.each(data, function (i) {
+                        $('.ddRegion').append($('<option>', { value: data[i].ID }).text(data[i].RegionName));
+                    });
+                    $('.ddRegion').val(null).change();
+                },
+                function (output) {
+                    if (output.statusCode == 401 || output.status == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    common.notify('error','Could not initialize Region dropdown. Please contact your administrator.'); });
+        }
+
+        function init()
+        {
+            $('.ddRegion').select2({ placeholder: 'Select Region' });
+        }
+
+        function resetAddForm() {
+            $('#txtAddStateName').val('');
+            $('#ddAddRegion').val(null).change();
+            $('#AddradioA, #AddradioI').iCheck('uncheck');
+            $("#AddStateForm").validate().resetForm();
+            $("#AddStateForm").find('.has-error').removeClass('has-error');
+            $("#AddStateForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetUpdateForm() {
+            $('#txtUpdateStateName').val('');
+            $('#txtUpdateStateID').val('');
+            $('#ddUpdateRegion').val(null).change();
+            $('#UpdateradioA, #UpdateradioI').iCheck('uncheck');
+            $("#UpdateStateForm").validate().resetForm();
+            $("#UpdateStateForm").find('.has-error').removeClass('has-error');
+            $("#UpdateStateForm").find('.has-success').removeClass('has-success');
+        }
+
+        function resetDeleteForm() {
+            $('#txtDeleteRegionID').val('');
+            $('#displayRegionName').html('');
+        }
+        $(document).ready(function () {
+
+            populateFilters();
+            Search();
+
+            //Modal popup hide/show events
+            $('#modalAdd').on('shown.bs.modal', function () {
+                resetAddForm();
+                $('#txtAddStateName').focus();
+                $('#AddradioA').iCheck('check');
+            });
+            $('#modalAdd').on('hidden.bs.modal', function () { resetAddForm(); });
+            $('#modalUpdate').on('shown.bs.modal', function () { $('#txtUpdateStateName').focus(); });
+            $('#modalUpdate').on('hidden.bs.modal', function () { resetUpdateForm(); });
+            $('#modalDelete').on('hidden.bs.modal', function () { resetDeleteForm(); });
+            //Modal popup hide/show events till here
+
+            //Add button click
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAdd').modal('toggle');
+                $('.text-blue').hide();
+            });
+
+            //Update button click
+            $('body').on('click', '.btnEdit', function () {
+                var data = dtStateGrid.row($(this).parent().parent()).data();
+                $('#txtUpdateStateID').val(data.ID);
+                $('#txtUpdateStateName').val(data.StateName);
+                $("#ddUpdateRegion").val(data.RegionID).change();
+                if (data.Status == 'Active')
+                    $('#UpdateradioA').iCheck('check');
+                else
+                    $('#UpdateradioI').iCheck('check');
+                $('#modalUpdate').modal('toggle');
+            });
+
+            //Delete button click
+            $('body').on('click', '.btnDelete', function () {
+                var data = dtStateGrid.row($(this).parent().parent()).data();
+                if (data.Status == 'Active')
+                {
+                    $('#txtDeleteStateID').val(data.ID);
+                    $('#displayStateName').html(data.StateName);
+                    $('#modalDelete').modal('toggle');
+                }
+                else
+                    common.notify('error', 'State: ' + data.StateName + ' is already inactive.');
+            });
+
+            getRegionDD();
+            init();
+
+            $("#btnDownload").click(function () {
+
+                var modeldata =new Object();
+                modeldata.RegionIds = $('#ddlRegion').val();
+                modeldata.StateIds = $('#ddlState').val();
+                modeldata.Status = $('#ddlStatus').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ExportExcelState", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.State), InputParam : modeldata  },
+
+                success: function (returnValue) {
+                if(returnValue)
+                {
+                    window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                    common.notify('success', "File downloaded successfully");
+                }
+                else
+                {
+                    common.notify('error',"Empty file returned");
+                }
+            },
+                    error: function (output) {
+                        if (output.statusCode == 401 || output.status == 401) {
+                            var response = $.parseJSON(output.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                common.notify('error', "Error while downloading file.")
+            }
+        });
+
+        });
+        });
+    </script>
+    <script src="~/Content/js/validations/state.js"></script>
+}
+
+@section PageModals
+{
+<!-- #region Add form -->
+<div class="modal fade" id="modalAdd">
+    <div class="modal-dialog">
+        <div class="modal-content" id="AddLoad">
+            @using (Html.BeginForm("Create", "State", FormMethod.Post, new { @id = "AddStateForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-plus", "Add a new state")
+                <div class="modal-body">
+                    @Html.CustomDropDown("ddAddRegion", "RegionID", "Region Name", "ddRegion")
+                    @Html.AmboTextboxFor(Model => Model.StateName, "txtAddStateName", "State Name", "Enter State Name Here...", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.Ambo2RadioButtonGroupFor(Model => Model.IsActive, "Status", "AddradioA", "true", "Active", "AddradioI", "false", "InActive")
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Add State</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Add form -->
+
+<!-- #region Update form -->
+<div class="modal fade" id="modalUpdate">
+    <div class="modal-dialog">
+        <div class="modal-content" id="UpdateLoad">
+            @using (Html.BeginForm("Update", "State", FormMethod.Post, new { @id = "UpdateStateForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.CustomModalHeader("fa-pencil", "Update an existing state")
+                <div class="modal-body">
+                    @Html.CustomHiddenBox("txtUpdateStateID", "ID")
+                    @Html.CustomDropDown("ddUpdateRegion", "RegionID", "Region Name", "ddRegion")
+                    @Html.AmboTextboxFor(Model => Model.StateName, "txtUpdateStateName", "State Name", "Enter State Name Here...", "", InputTypes.AlphaNumericWithSpace)
+                    @Html.Ambo2RadioButtonGroupFor(Model => Model.IsActive, "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")
+                    @*@Html.Custom2RadioButtonGroup("IsActive", "Status", "UpdateradioA", "true", "Active", "UpdateradioI", "false", "InActive")*@
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="submit" class="btn btn-primary"><i class="fa fa-pencil"></i> Update State</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- #endregion Update form -->
+
+<!-- #region Delete form -->
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content" id="DeleteLoad">
+        @using (Html.BeginForm("Delete", "State", FormMethod.Post, new { @id = "DeleteStateForm" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.CustomModalHeader("fa-trash", "InActive an existing state")
+            <div class="modal-body">
+                @Html.CustomHiddenBox("txtDeleteStateID", "ID")
+                Are you sure you want to inactive the region <strong><span id="displayStateName"></span></strong> ?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                <button id="btnDelete" type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+            </div>
+        }
+        </div>
+    </div>
+</div>
+<!-- #endregion Delete form -->
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid" id="filterBox">
+            <div class="box-header with-border text-center" id="filterBoxHeader" data-widget="collapse">
+                <h4 class="box-title">State Master Filters</h4>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="collapseFilters">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <label>Region:</label>
+                        @Html.DropDownList("ddlRegion", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlRegion", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                    <div class="col-lg-4">
+                        <label>State:</label>
+                        @Html.DropDownList("ddlState", new SelectList(Enumerable.Empty<SelectListItem>()), new { @Id = "ddlState", @Class = "form-control input-sm", @multiple = "multiple" })
+                    </div>
+                                     
+                    <div class="col-lg-4">
+                        <label>Status:</label>
+                        @Html.DropDownList("ddlStatus", new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="select", Value = "" },
+                                        new SelectListItem{ Text="Active", Value = "1" },
+                                        new SelectListItem{ Text="InActive", Value = "0" },
+                                        new SelectListItem{ Text="Select All", Value = "4000" },
+                                       }, new { @Id = "ddlStatus", @Class = "form-control input-sm",@onchange="ChangeValue(this.value);" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-5">
+                        @*<button class="btn btn-flat btn-default" onclick="$(location).attr('href','@Url.Action("Index", "Dashboard")');"><i class="fa fa-mail-reply"></i> Exit</button>*@
+                        <br />
+                        <button class="btn btn-flat btn-primary" type="button" onclick="Search();"><i class="fa fa-search"></i> Search</button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData" data-toggle="tab"><i class="fa fa-location-arrow"></i> State Master</a></li>
+                <li class="pull-right"><button id="btnAdd" style="margin-top:2px" type="button" class="btn btn-block btn-primary btn-flat"><i class="fa fa-plus"></i> Add New</button></li>
+                <li class="pull-right"><button id="btnDownload" style="margin-top:2px" type="button" class="btn btn-block btn-success btn-flat"><i class="fa fa-download"></i> Download to Excel</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabData">
+                    <table id="dtState" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>State Name</th>
+                                <th>Region Name</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>

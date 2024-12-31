@@ -1,0 +1,71 @@
+﻿@model AMBOModels.Mappings.NavigationProductCategorySFAMapping
+@using AMBOWeb.Classes;
+
+<div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#tabForm" data-toggle="tab">
+                    @Html.Raw("<i class=\"fa fa-plus\"></i> Map Product Category with SFA")
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tabForm">
+                @using (Html.BeginForm("Create", "ProductCategorySFAMapping", FormMethod.Post, new { @id = "formProductSFA" }))
+                {
+                    @Html.HiddenFor(m => m.DealerId, new { Id = "txtDealerId", @value = Model.DealerId })
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddBranchPro">Branch Name</label>
+                                @Html.DropDownListFor(m => m.BranchId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm select", @id = "ddBranchPro", @style = "width:100%", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ddDealerPro">Dealer Name</label>
+                                @Html.TextBoxFor(m => m.DealerName, new { @class = "form-control input-sm select", @id = "txtDealerName", @style = "width:100%", @readonly = "readonly" })
+                            </div>
+                        </div>
+
+                    </div>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="ddSFAPro">SFA Name</label>
+                                    @Html.DropDownListFor(m => m.EmployeeId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm select", @id = "ddSFAPro", @style = "width:100%", @readonly = "readonly" })
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="ddIncenCatPro">Incentive Category <span class="text-danger">*</span></label> <span class="text-danger">@Html.ValidationMessageFor(m => m.IncentiveCategoryId)</span>
+                                    @Html.DropDownListFor(m => m.IncentiveCategoryId, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddIncenCatPro", @style = "width:100%"})
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">                            
+                            <div class="col-lg-6">
+                                
+                                    @*@Html.AmboDropdownMultipleFor(m => m.ProductCategoryIds, "ddProdCatsPro", "Product Category(s):", "ddProdCatsPro")*@
+                                <label for="ddLocation">Product Category <span class="text-danger">*</span></label>  <a id="btnSelectall" onclick="select()">Select All</a> / <a id="btnDselectAll" onclick="deselect()">Remove All</a><span class="text-danger">@Html.ValidationMessageFor(m => m.ProductCategoryIds)</span>
+                                @Html.DropDownListFor(m => m.ProductCategoryIds, new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm procatfill", @id = "ddProdCatsPro", @style = "width:100%", @multiple = "multiple" })
+                                
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-offset-4 col-lg-4 col-md-4">
+                                <div class="form-group">
+                                    <button id="btnSubmitPro" type="button" class="btn btn-primary btn-flat" onclick="SubmitPro()"><i class="fa fa-check"></i> Save Changes</button>
+                                    <button id="btnBackPro" type="button" class="btn btn-default btn-flat"><i class="fa fa-close"></i> Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

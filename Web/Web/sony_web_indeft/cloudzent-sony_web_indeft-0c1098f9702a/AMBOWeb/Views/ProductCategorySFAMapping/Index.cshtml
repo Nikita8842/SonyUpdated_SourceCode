@@ -1,0 +1,558 @@
+﻿@using AMBOWeb.Classes
+@model AMBOModels.Mappings.ProductCategorySFAMapping
+@{
+    var UserSession = Session["BaseSession"] as AMBOModels.UserValidation.BaseSession;
+}
+@section PageCSS{
+}
+
+@section PageJS{
+    <script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+    <script>
+        function getBranchDD() {
+            common.ajax_get("@Url.Action("GetBranches", "Common")", null, "#AddEditLoad", function (branches) {
+                $("#ddFilterBranch").html("");
+                $("#ddBranch").html("");
+                $.each(branches, function (i, branch) {
+                    debugger;
+                    $("#ddBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                    $("#ddFilterBranch").append($('<option></option>').val(branch.BranchId).html(branch.BranchCode + "-" + branch.BranchName));
+                });
+                debugger;
+                var Branch = @Model.BranchId;
+                if(Branch !=null && Branch !=0)
+                {
+                    $('#ddBranch').val(Branch).change();
+                   
+                    $('#ddFilterBranch').val(Branch).change();
+                    
+                }
+		        else
+		        {
+                    $('#ddBranch').val(null).change();
+                    $('#ddFilterBranch').val(null).change();
+	            }
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddBranch").html("");
+                $("#ddFilterBranch").html("");
+            });
+        }
+
+        function getCityDD() {
+            common.ajax_get("@Url.Action("GetAllCities", "Common")", null, "#filterBox", function (cities) {
+                $("#ddFilterCity").html("");
+                $.each(cities, function (i, city) {
+                    $("#ddFilterCity").append($('<option></option>').val(city.CityId).html(city.CityName));
+                });
+                $('#ddFilterCity').val(null).change();
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFilterCity").html("");
+            });
+        }
+
+        function getLocationDD() {
+            common.ajax_get("@Url.Action("GetAllLocations", "Common")", null, "#filterBox", function (locations) {
+                $("#ddFilterLocation").html("");
+                $.each(locations, function (i, location) {
+                    $("#ddFilterLocation").append($('<option></option>').val(location.ID).html(location.LocationName));
+                });
+                $('#ddFilterLocation').val(null).change();
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFilterLocation").html("");
+            });
+        }
+
+        function getDealerDD() {
+            common.ajax_get("@Url.Action("GetAllActiveDealers", "Common")", null, "#filterBox", function (dealers) {
+                $("#ddFilterDealer").html("");
+                if(dealers.MessageCode == MessageCodes.Acceptable.Found)
+                {
+                    $.each(dealers.Data, function (i, dealer) {
+                        $("#ddFilterDealer").append($('<option></option>').val(dealer.DealerId).html(dealer.DealerName));
+                    });
+                    $('#ddFilterDealer').val(null).change();
+                }
+                else
+                    common.notify('error','Unable to add dealers in filters.');
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFilterDealer").html("");
+            });
+        }
+
+        function getProdCatDD() {
+            common.ajax_get("@Url.Action("GetProductCategories", "Common")", null, "#filterBox", function (prodcats) {
+                $("#ddFilterProdCat").html("");
+                $.each(prodcats, function (i, prodcat) {
+                    $("#ddFilterProdCat").append($('<option></option>').val(prodcat.ID).html(prodcat.CategoryName));
+                });
+                $('#ddFilterProdCat').val(null).change();
+            }, function (output) {
+                if (output.status == 401 || output.statusCode == 401) {
+                    var response = $.parseJSON(output.responseText);
+
+                    if (response.isRedirect) {
+                        window.location.href = '../Login/Index';
+                        return;
+                    }
+                }
+                $("#ddFilterProdCat").html("");
+            });
+        }
+
+        
+
+        @*function getSFADD() {
+            var url = '@Url.Action("GetSFADropdown", "Common")';
+
+                common.ajax_get(url, null, "#AddEditLoad", function (employees) {
+                    $("#ddFilterSFA").html("");
+                    $.each(employees, function (i, employee) {
+                        $("#ddFilterSFA").append($('<option></option>').val(employee.Id).html(employee.SFAName));
+                    });
+                    $("#ddFilterSFA").val(null).change();
+                }, function (output) {
+                    if (output.status == 401 || output.statusCode == 401) {
+                        var response = $.parseJSON(output.responseText);
+
+                        if (response.isRedirect) {
+                            window.location.href = '../Login/Index';
+                            return;
+                        }
+                    }
+                    $("#ddFilterSFA").html("");
+                });
+        }*@
+
+        function init()
+        {
+            try
+            {
+                $('#ddBranch').select2({ placeholder: 'Select Branch' });
+                $('#ddDealer').select2({ placeholder: 'Select Dealer' });
+                $('#ddSFA').select2({ placeholder: 'Select SFA' });
+                $('#ddProdCats').select2({ placeholder: 'Select Categories', multiple: true });
+
+                $('#ddFilterBranch').select2({ placeholder: 'Select Branches'});
+                $('#ddFilterCity').select2({ placeholder: 'Select Cities'});
+                $('#ddFilterLocation').select2({ placeholder: 'Select Locations'});
+                $('#ddFilterDealer').select2({ placeholder: 'Select Dealers'});
+                //$('#ddFilterSFA').select2({ placeholder: 'Select SFA'});
+                $('#ddFilterProdCat').select2({ placeholder: 'Select Categories'});
+            }
+            catch(ex)
+            {
+                common.notify('error','Could not initialize form. Please try after some time.');
+                console.log(ex);
+            }
+        }
+
+        function clearAllDD()
+        {
+            $('#ddBranch').val(null).change();
+            $('#ddDealer').val(null).change();
+            $('#ddSFA').val(null).change();
+            $('#ddProdCats').val(null).change();
+            $('#txtMappingID').val(0);
+        }
+
+        $(document).ready(function () {
+
+            if ('@UserSession.RoleName' == 'RDI')
+            {            
+                @Html.Raw("$('#ddBranch').attr('readonly', 'readonly');");
+                @Html.Raw("$('#ddFilterBranch').attr('readonly', 'readonly');");
+                @Html.Raw("$('.text-blue.small').css('display','none')");
+            }
+
+
+
+            getBranchDD();
+                    getCityDD();
+                    getLocationDD();
+                    getDealerDD();
+                    getProdCatDD();
+                    init();
+
+                    dtProductCategorySFAMappingGrid = $('#dtProductCategorySFAMapping').DataTable({
+                        serverSide: true,
+                searching: false,
+                processing: true,
+                ajax: {
+                            url: "@Url.Action("ProductCategorySFAMappingGrid", "Grid")",
+                    type: 'POST',
+                    data: function(d){
+                                var Branch = @Model.BranchId;
+                                if(Branch !=null && Branch !=0)
+                                {
+                                    d.BranchIds = Branch;
+                                }
+                                else
+                                    d.BranchIds = $('#ddFilterBranch').val();
+                                d.CityIds = $('#ddFilterCity').val();
+                                d.LocationIds = $('#ddFilterLocation').val();
+                                d.DealerIds = $('#ddFilterDealer').val();
+                                d.SFAIds = $('#ddlSFA').val();
+                                d.ProductCategoryIds = $('#ddFilterProdCat').val();
+                            }
+                        },
+                language: {
+                            search: "",
+                    searchPlaceholder: "Type here for search...",
+                    processing: "Please wait while we fetch data..."
+                },
+                columns: [
+                            { data: "BranchName" },
+                    { data: "DealerName" },
+                    { data: "SFAName" },
+                    { data: "ProductCategoryName" },
+                    {
+                            data: function (data, type, row) {
+                                return '<a class="btnDelete" data-toggle="tooltip" data-placement="right" title="Delete"><span><i class="fa fa-lg fa-trash"></i></span></a>';
+                            },
+                        orderable: false
+                    }
+                ],
+                fnDrawCallback: function (oSettings) { $('[data-toggle="tooltip"]').tooltip(); }
+                    });
+
+            
+            //getSFADD();
+
+            $('body').on('click','#btnSelectall',function(){
+                        debugger;
+                $("#ddProdCats > option").prop("selected", "selected");
+                $("#ddProdCats").trigger("change");
+
+                    });
+
+            $('body').on('click','#btnDselectAll',function(){
+                        debugger;
+                $("#ddProdCats").val('').trigger("change");
+
+                    });
+
+            $('body').on('click','#btnSearch',function(){
+                $('#filterBoxHeader').trigger('click');
+                        dtProductCategorySFAMappingGrid.ajax.reload();
+                    });
+
+            $('#ddBranch').on('change', function (e) {
+                        var url = '@Url.Action("GetDealersByBranch", "Common")';
+                        var ajaxCall = common.ajax_post(url, {branchId: this.value}, "#AddEditLoad", function (dealers) {
+                    $("#ddDealer").html("");
+                    $.each(dealers, function (i, dealer) {
+                        $("#ddDealer").append($('<option></option>').val(dealer.ID).html(dealer.DealerName));
+                            });
+                    $("#ddDealer").val(null).change();
+                        }, function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                    $("#ddDealer").html("");
+                        });
+                    });
+
+            $('#ddDealer').on('change', function (e) {
+
+                        var url = '@Url.Action("GetSFAByDealer", "Common")';
+                        var data = new Object();
+                        data.dealerId = this.value;
+                        var ajaxCall = common.ajax_post(url, data, "#AddEditLoad", function (employees) {
+                    $("#ddSFA").html("");
+                    $.each(employees, function (i, employee) {
+                        $("#ddSFA").append($('<option></option>').val(employee.EmployeeId).html(employee.SFAFullName));
+                            });
+                    $("#ddSFA").val(null).change();
+                        }, function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                    $("#ddSFA").html("");
+                        });
+                    });
+
+            $('#ddSFA').on('change', function (e) {
+                        var url = '@Url.Action("GetUnmappedProdCatsForSFA", "Common")';
+                        var data = new Object();
+                        data.sfaId = this.value;
+                        var ajaxCall = common.ajax_post(url, data, "#AddEditLoad", function (categories) {
+                    $("#ddProdCats").html("");
+                    $.each(categories, function (i, category) {
+                        $("#ddProdCats").append($('<option></option>').val(category.ID).html(category.CategoryName));
+                            });
+                    $("#ddProdCats").val(null).change();
+                        }, function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                    $("#ddProdCats").html("");
+                        });
+                    });
+
+            $('#modalAddEdit').on('shown.bs.modal', function () {
+                $('#ddBranch').focus();
+                    });
+            $('#modalAddEdit').on('hidden.bs.modal', function () {
+                        clearAllDD();
+                    });
+
+            $('#modalDelete').on('hidden.bs.modal', function () {
+                $('#txtMappingID').val(0);
+                    });
+
+            $('body').on('click', '#btnAdd', function () {
+                $('#modalAddEditTitle').html('<i class="fa fa-plus"></i> Add a new mapping');
+                $('#modalAddEdit').modal('toggle');
+                    });
+
+            $('body').on('click', '#btnSubmit', function () {
+                        var data = new Object();
+                        var url = '';
+                        url = '@Url.Action("Create", "ProductCategorySFAMapping")';
+                        data.EmployeeId = parseInt($("#ddSFA").val());
+                        data.ProductCategoryIds = $("#ddProdCats").val();
+
+                        if(isNaN(data.EmployeeId) || data.EmployeeId == 0)
+                        {
+                            common.notify("error","Please select an SFA.");
+                            return;
+                        }
+                        if(data.ProductCategoryIds == null || data.ProductCategoryIds == undefined || data.ProductCategoryIds == '')
+                        {
+                            common.notify("error","Please select at least one product category.");
+                            return;
+                        }
+                        common.ajax_post(url, data, '#AddEditLoad', function (output) {
+                            if (output.Data) {
+                        $('#modalAddEdit').modal('toggle');
+                                common.notify('success', output.Message);
+                                dt.ajax.reload();
+                            }
+                            else {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message);
+                        });
+
+                    });
+
+            $('body').on('click', '.btnDelete', function () {
+                        var data = dtProductCategorySFAMappingGrid.row($(this).parent().parent()).data();
+                $('#modalDelete').modal('toggle');
+                $('#txtMappingID').val(data.ID);
+                $('#displayMappingName').html('SFA: ' + data.SFAName + ' --- Product Category: ' + data.ProductCategoryName);
+                    });
+
+            $('body').on('click', '#btnDelete', function () {
+                        var url = "@Url.Action("Delete", "ProductCategorySFAMapping")";
+                        var data = new Object();
+                        data.ID = $("#txtMappingID").val();
+                        common.ajax_post(url, data, '#DeleteLoad', function (output) {
+                            if (output.Data) {
+                        $('#modalDelete').modal('toggle');
+                                common.notify('success', output.Message);
+                                dt.ajax.reload();
+                            }
+                            else {
+                                common.notify('error', output.Message);
+                            }
+                        },
+                function (output) {
+                            if (output.status == 401 || output.statusCode == 401) {
+                                var response = $.parseJSON(output.responseText);
+
+                                if (response.isRedirect) {
+                                    window.location.href = '../Login/Index';
+                                    return;
+                                }
+                            }
+                            common.notify('error', output.Message);
+                        });
+                    });
+
+            $("#btnDownload").click(function () {
+
+                        var modeldata =new Object();
+                        modeldata.BranchIds = $('#ddFilterBranch').val();
+                        modeldata.CityIds = $('#ddFilterCity').val();
+                        modeldata.LocationIds = $('#ddFilterLocation').val();
+                        modeldata.DealerIds = $('#ddFilterDealer').val();
+                        modeldata.SFAIds = $('#ddlSFA').val();
+                        modeldata.ProductCategoryIds = $('#ddFilterProdCat').val();
+
+                $.ajax({
+                            type: 'POST',
+                    url: '@Url.Action("ExportExcelProductSFA", "Grid")',
+                    data: { ModuleId: @((int)Common.Module.ProductSFA), InputParam : modeldata },
+
+                    success: function (returnValue) {
+                                if(returnValue)
+                                {
+                                    window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                                    common.notify('success', "File downloaded successfully");
+                                }
+                                else
+                                {
+                                    common.notify('error',"Empty file returned");
+                                }
+                            },
+                    error: function (output) {
+                                if (output.status == 401 || output.statusCode == 401) {
+                                    var response = $.parseJSON(output.responseText);
+
+                                    if (response.isRedirect) {
+                                        window.location.href = '../Login/Index';
+                                        return;
+                                    }
+                                }
+                                common.notify('error', "Error while downloading file.")
+                    }
+                        });
+
+                    });
+                });
+    </script>
+}
+
+
+@section PageModals
+{
+    <div class="modal fade" id="modalAddEdit">
+        <div class="modal-dialog">
+            <div class="modal-content" id="AddEditLoad">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAddEditTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    <div class="form-group">
+                        <label for="ddBranch">Branch Name</label>
+                        @Html.DropDownListFor(m => m.BranchId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddBranch", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddDealer">Dealer Name</label>
+                        @Html.DropDownListFor(m => m.DealerId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddDealer", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddSFA">SFA Name</label>
+                        @Html.DropDownListFor(m => m.EmployeeId, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddSFA", @style = "width:100%" })
+                    </div>
+                    <div class="form-group">
+                        <label for="ddProdCats">Product Categories</label> <a id="btnSelectall" >Select All</a> / <a id="btnDselectAll" >Remove All</a>
+                        @Html.DropDownListFor(m => m.ProductCategoryIds, new List<SelectListItem>(), new { @class = "form-control input-sm", @id = "ddProdCats", @style = "width:100%" })
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnSubmit" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header custom-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalDeleteTitle"><i class="fa fa-trash"></i> Delete an existing mapping</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(m => m.ID, new { @id = "txtMappingID" })
+                    <strong><span id="displayMappingName"></span></strong> mapping will be deleted from the system. Are you sure to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+                    <button id="btnDelete" type="button" class="btn btn-primary"><i class="fa fa-check"></i> Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@{Html.RenderAction("GetProductCategorySFAMapFilters", "ProductCategorySFAMapping");}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box box-primary box-solid">
+            <div class="box-body">
+                <table id="dtProductCategorySFAMapping" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Branch Name</th>
+                            <th>Dealer Name</th>
+                            <th>SFA Name</th>
+                            <th>Product Category</th>
+                            <th>Quick Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

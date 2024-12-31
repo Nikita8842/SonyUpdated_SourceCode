@@ -1,0 +1,241 @@
+﻿@{
+    ViewBag.Title = "AssesAssignmentToSFA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section PageCSS{
+}
+
+
+    <div class="">
+        <div class="box box-solid">
+            <div class="box-body">
+                @using (Html.BeginForm("IssueAssetToSFA", "AssetAssignmentToSFA", FormMethod.Post, new { id = "frmExcelUpload", enctype = "multipart/form-data" }))
+                {
+                    <div class="col-lg-4">
+                        
+                            <label>Asset Name : </label>
+                            @Html.DropDownList("ddlAsset", new SelectList(Enumerable.Empty<SelectListItem>()), new { @class = "form-control input-sm", @id = "ddlAsset", @style = "width:100%" })
+                        
+                    </div>
+
+                    <div class="col-lg-3 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button type="button" id="btnDownloadFormat" class="btn btn-flat btn-success"><i class="fa fa-download"> Download Format</i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <br />
+                            @Html.TextBox("file", "", new { type = "file", id = "file", @class = "form-control input-sm" })
+
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 text-center">
+                        <br />
+                        <div class="form-group">
+                            <button type="submit" id="btnUpload" class="btn btn-flat btn-primary"><i class="fa fa-upload"> Upload</i></button>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+        </div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tabData"><i class="fa fa-th"></i> Asset Issued to SFA</a></li>
+                
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="#tabData">
+                    @*<table id="dtResult" class="table table-bordered table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Material Code</th>
+                                <th>Product Name</th>
+                                <th>Issued Qty</th>
+                                <th>SFA Name</th>
+                                <th>SFA Code</th>
+                                <th>Remarks</th>
+                                <th>Reason</th>
+                            </tr>
+                            
+                        </thead>
+                        <tbody>@foreach (DataRow row in Model.Rows)
+                        {
+                            <tr>
+                                <td>@row["MaterialCode"]</td>
+                                <td>@row["ProductName"]</td>
+                                <td>@row["IssuedQty"]</td>
+                                <td>@row["SFAName"]</td>
+                                <td>@row["SFACode"]</td>
+                                <td>@row["Remarks"]</td>
+                                <td>@row["Reason"]</td>
+                            </tr>
+                        }</tbody>
+                    </table>*@
+
+                    <table id="dtResult" class="table table-bordered table-striped table-hover datatable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Material Code</th>
+                                <th>Product Name</th>
+                                <th>Issued Qty</th>
+                                <th>Issued Date</th>
+                                <th>SFA Name</th>
+                                <th>SFA Code</th>
+                                <th>Remarks</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+
+                        </thead>
+                        <tbody>
+                        
+                    </tbody>
+                </table>
+
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+ @section PageJS{
+<script src="~/Content/plugins/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/plugins/datatables/js/dataTables.bootstrap.min.js"></script>
+<script src="~/Content/plugins/select2/dist/js/select2.full.min.js"></script>
+        <script>
+            $(document).ready(function () {
+
+                if ('@ViewBag.Status' != "0") {
+                    debugger;
+                    if ('@ViewBag.Status' == "1" || '@ViewBag.Status' == "3") {
+                        common.notify('error', '@ViewBag.Message');
+                    }
+                    if ('@ViewBag.Status' == "2") {
+                        common.notify('success', '@ViewBag.Message');
+                        @if (ViewBag.returnTable != null)
+                           {
+                    @Html.Raw("$('#dtResult').DataTable({order: [[ 4, 'asc' ]],data: " + ViewBag.returnTable + "," + "columns: [{ data: 'MaterialCode' },{ data: 'ProductName' },{ data: 'IssuedQty' },{ data: 'IssuedDate'},{ data: 'SFAName' },{ data: 'SFACode' },{ data: 'Remarks' },{ data: 'Status' },{ data: 'Reason' }]" + "});")
+                               }
+                    }
+                }
+
+                $.ajax({
+                    url: "@Url.Action("GetAssetsDropdown", "AssetAssignmentToSFA")",
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    datatype: JSON,
+                    success: function (result) {
+                        //$("#ddlReferenceCode").append($("<option></option>").val("").html("Select reference"));
+                        $(result).each(function () {
+                            $("#ddlAsset").append($("<option></option>").val(this.Id).html(this.MaterialName));
+                        });
+                        $("#ddlAsset").val('');
+                    },
+                    error: function (data) {
+                        if (data.status == 401 || data.statusCode == 401) {
+                            var response = $.parseJSON(data.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error occured while loading assets.")
+                    }
+                });
+
+                $('#ddlAsset').select2();
+            });
+
+            $("#btnDownloadFormat").click(function () {
+                debugger;
+                var modeldata = new Object();
+                modeldata.MaterialName = $("#ddlAsset").find("option:selected").text();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("DownloadTemplate", "AssetAssignmentToSFA")',
+                    data: {InputParam: modeldata},
+                    success: function (returnValue) {
+                        debugger;
+                        if (returnValue) {
+                            window.location.href = "@Url.RouteUrl(new { Controller = "Grid", Action = "Download"})/?file=" + returnValue.fileName;
+                            common.notify('success', "File downloaded successfully");
+                        }
+                        else {
+                            common.notify('error', "Empty file returned");
+                        }
+                    },
+                    error: function (returnValue) {
+                        if (returnValue.status == 401 || returnValue.statusCode == 401) {
+                            var response = $.parseJSON(returnValue.responseText);
+
+                            if (response.isRedirect) {
+                                window.location.href = '../Login/Index';
+                                return;
+                            }
+                        }
+                        common.notify('error', "Error while downloading file.")
+                    }
+                });
+                //}
+
+            });
+
+            $("#btnUpload").click(function () {
+                var fileval = $('#file').val();
+                if (fileval == '' || fileval == null) {
+                    common.notify('error', "Please select an Excel file to upload data");
+                    return false;
+                }
+                var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx|.xls)$/;
+                /*Checks whether the file is a valid excel file*/
+                if (!(regex.test(fileval)) && (fileval.indexOf(".xlsx") <= 0 || fileval.indexOf(".xls") <= 0)) {
+                    debugger;
+                    common.notify('error', 'Only .xls and .xlsx file extensions supported.');
+                    return false;
+                }
+                return true;
+            });
+            @*$("#btnUpload").click(function () {
+                if (jQuery('#fileUpload').val())
+                {
+                    $.ajax({
+                        url: "/AssetAssignmentToSFA/IssueAssetToSFA",
+                        type: "POST",
+                        data: function () {
+                            var data = new FormData();
+                            data.append("file", jQuery("#fileUpload").get(0).files[0]);
+                            return data;
+                        }(),
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            debugger;
+                            var objectArray = [@TempData["ErrorStatus"]];
+                            common.notify('success', objectArray[1]);
+                        },
+                        error: function (jqXHR, textStatus, errorMessage) {
+                            alert(errorMessage);
+                        }
+                    });
+                }
+                else
+                {
+                    alert("Please select an Excel file to upload data");
+                }
+            });*@
+        </script>
+    }
+   
+
